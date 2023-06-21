@@ -8,8 +8,6 @@ import { ZiggyVue } from '../../vendor/tightenco/ziggy/dist/vue.m';
 
 import 'vuetify/styles'
 import { createVuetify } from 'vuetify'
-import * as components from 'vuetify/components'
-import * as directives from 'vuetify/directives'
 import { es } from 'vuetify/locale'
 import { VDataTable } from 'vuetify/labs/VDataTable'
 
@@ -21,8 +19,6 @@ import "@mdi/font/css/materialdesignicons.css"
 const appName = window.document.getElementsByTagName('title')[0]?.innerText || 'Laravel';
 
 const vuetify = createVuetify({
-    components,
-    directives,
     theme: {
         defaultTheme: "customLight",
         themes: {
