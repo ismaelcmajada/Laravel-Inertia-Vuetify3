@@ -16,6 +16,8 @@ import link from "@/Plugins/link";
 import { aliases, mdi } from "vuetify/lib/iconsets/mdi"
 import "@mdi/font/css/materialdesignicons.css"
 
+import Dashboard from '@/Layouts/Dashboard.vue';
+
 const appName = window.document.getElementsByTagName('title')[0]?.innerText || 'Laravel';
 
 const vuetify = createVuetify({
@@ -60,7 +62,13 @@ const vuetify = createVuetify({
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
-    resolve: (name) => resolvePageComponent(`./Pages/${name}.vue`, import.meta.glob('./Pages/**/*.vue')),
+    resolve: async name => {
+        const page = await resolvePageComponent(`./Pages/${name}.vue`, import.meta.glob("./Pages/**/*.vue"));
+        if (name.startsWith('Dashboard/')){
+         page.default.layout ??= Dashboard;
+        }
+        return page;
+    },
     setup({ el, App, props, plugin }) {
         return createApp({ render: () => h(App, props) })
             .use(plugin)
