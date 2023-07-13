@@ -115,6 +115,8 @@ export default {
    * @returns validate
    */
   ruleNumber: (v, label = null) => {
-    return v != 0 || `El ${label ?? "campo"} debe ser un número válido`
+    return (
+      Number.isInteger(Number(v)) || `El ${label ?? "campo"} debe ser un número`
+    )
   },
 }
