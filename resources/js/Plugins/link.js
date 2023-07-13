@@ -15,7 +15,7 @@ export default {
             if (e.shiftKey || e.metaKey || e.ctrlKey) return
             e.preventDefault()
             router.visit(href, {
-                method: e.currentTarget.getAttribute('method') || 'get'
+              method: e.currentTarget.getAttribute("method") || "get",
             })
           },
         }

@@ -1,9 +1,8 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
-use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
+
+use App\Http\Controllers\SuscriptorController;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,19 +17,25 @@ use Inertia\Inertia;
 
 
 Route::middleware('auth')->prefix('dashboard')->group(function () {
-    Route::get('/', function () {
-        return Inertia::render('Dashboard/Home');
-    })->name('dashboard.home');
 
-    Route::get('/another', function () {
-        return Inertia::render('Dashboard/Another');
-    })->name('dashboard.another');
-});
+    //Routes must have the following structure to work with the dialogs:
+    // index: /item
+    // store: /item
+    // update: /item/{id}
+    // destroy: /item/{id}
+    // destroyPermanent: /item/{id}/permanent
+    // restore: /item/{id}/restore
+    // exportExcel: /item/export-excel
 
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    //Suscriptor
+    Route::get('/suscriptores', [SuscriptorController::class, 'index'])->name('dashboard.suscriptores');
+    Route::post('/suscriptores', [SuscriptorController::class, 'store'])->name('dashboard.suscriptores.store');
+    Route::put('/suscriptores/{subscriber}', [SuscriptorController::class, 'update'])->name('dashboard.suscriptores.update');
+    Route::delete('/suscriptores/{subscriber}', [SuscriptorController::class, 'destroy'])->name('dashboard.suscriptores.destroy');
+    Route::delete('/suscriptores/{subscriber}/permanent', [SuscriptorController::class, 'destroyPermanent'])->name('dashboard.suscriptores.destroyPermanent');
+    Route::post('/suscriptores/{id}/restore', [SuscriptorController::class, 'restore'])->name('dashboard.suscriptores.restore');
+    Route::get('/suscriptores/export-excel', [SuscriptorController::class, 'exportExcel'])->name('dashboard.suscriptores.exportExcel');
 });
 
 require __DIR__ . '/auth.php';

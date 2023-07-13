@@ -19,6 +19,12 @@ return new class extends Migration
             $table->rememberToken();
             $table->timestamps();
         });
+
+        DB::table('users')->insert([
+            'name' => env('DEFAULT_USER_NAME', 'Default'),
+            'email' => env('DEFAULT_USER_EMAIL', 'default@default.com'),
+            'password' => bcrypt(env('DEFAULT_USER_PASSWORD', '1234')),
+        ]);
     }
 
     /**

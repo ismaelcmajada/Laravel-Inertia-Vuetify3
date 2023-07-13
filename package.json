@@ -1,23 +1,26 @@
 {
-    "private": true,
-    "type": "module",
-    "scripts": {
-        "dev": "vite",
-        "build": "vite build"
-    },
-    "devDependencies": {
-        "@inertiajs/vue3": "^1.0.0",
-        "@mdi/font": "^7.2.96",
-        "@vitejs/plugin-vue": "^4.0.0",
-        "autoprefixer": "^10.4.12",
-        "axios": "^1.1.2",
-        "laravel-vite-plugin": "^0.7.5",
-        "postcss": "^8.4.18",
-        "vite": "^4.0.0",
-        "vue": "^3.2.41"
-    },
-    "dependencies": {
-        "vite-plugin-vuetify": "^1.0.2",
-        "vuetify": "^3.3.5"
-    }
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "devDependencies": {
+    "@inertiajs/vue3": "^1.0.0",
+    "@mdi/font": "^7.2.96",
+    "@vitejs/plugin-vue": "^4.0.0",
+    "autoprefixer": "^10.4.12",
+    "axios": "^1.1.2",
+    "laravel-vite-plugin": "^0.7.5",
+    "postcss": "^8.4.18",
+    "vite": "^4.0.0",
+    "vue": "^3.2.41"
+  },
+  "dependencies": {
+    "lodash.debounce": "^4.0.8",
+    "vite-plugin-vuetify": "^1.0.2",
+    "vue-toastification": "^2.0.0-rc.5",
+    "vuetify": "^3.3.5",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.0/xlsx-0.20.0.tgz"
+  }
 }
