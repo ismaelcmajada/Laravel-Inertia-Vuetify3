@@ -15,6 +15,11 @@ class SuscriptorController extends Controller
     
     public function index()
     {
+        return Inertia::render('Dashboard/Suscriptor');
+    }
+
+    public function loadItems() 
+    {
         $itemsPerPage = Request::get('itemsPerPage', 10);
         $sortBy = json_decode(Request::get('sortBy', '[]'), true);
         $search = json_decode(Request::get('search', '[]'), true);
@@ -46,19 +51,21 @@ class SuscriptorController extends Controller
 
         if ($itemsPerPage == -1) {
             $itemsPerPage = $query->count();
-        }
+        }    
 
-        return Inertia::render('Dashboard/Suscriptor', [
-            'tableData' => Inertia::lazy(fn () => [
-                'items' => ($items = $query->paginate($itemsPerPage))->items(),
+        $items = $query->paginate($itemsPerPage);
+
+        return [
+            'tableData' => [
+                'items' => $items->items(),
                 'itemsLength' => $items->total(),
                 'itemsPerPage' => $items->perPage(),
                 'page' => $items->currentPage(),
                 'sortBy' => $sortBy,
                 'search' => $search, 
-                'deleted' => $deleted
-            ]),
-        ]);
+                'deleted' => $deleted,
+            ]
+        ];
     }
 
     public function store()

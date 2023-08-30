@@ -3,6 +3,7 @@ import FormDialog from "@/Components/Suscriptor/FormDialog.vue"
 import DestroyDialog from "@/Components/DestroyDialog.vue"
 import RestoreDialog from "@/Components/RestoreDialog.vue"
 import DestroyPermanentDialog from "@/Components/DestroyPermanentDialog.vue"
+import LoadingOverlay from "@/Components/LoadingOverlay.vue"
 import ExpandableText from "@/Components/ExpandableText.vue"
 import ExpandableList from "@/Components/ExpandableList.vue"
 import useTableServer from "@/Composables/useTableServer"
@@ -54,26 +55,30 @@ endPoint.value = "/dashboard/suscriptores"
 <template>
   <form-dialog
     :show="showFormDialog"
-    @updateDialog="showFormDialog = $event"
+    @closeDialog="showFormDialog = false"
+    @reloadItems="loadItems()"
     :type="formDialogType"
-    :item="item"
+    v-model:item="item"
     :endPoint="endPoint"
   />
   <destroy-dialog
     :show="showDestroyDialog"
-    @updateDialog="showDestroyDialog = $event"
+    @closeDialog="showDestroyDialog = false"
+    @reloadItems="loadItems()"
     :item="item"
     :endPoint="endPoint"
   />
   <restore-dialog
     :show="showRestoreDialog"
-    @updateDialog="showRestoreDialog = $event"
+    @closeDialog="showRestoreDialog = false"
+    @reloadItems="loadItems()"
     :item="item"
     :endPoint="endPoint"
   />
   <destroy-permanent-dialog
     :show="showDestroyPermanentDialog"
-    @updateDialog="showDestroyPermanentDialog = $event"
+    @closeDialog="showDestroyPermanentDialog = false"
+    @reloadItems="loadItems()"
     :item="item"
     :endPoint="endPoint"
   />
@@ -99,16 +104,10 @@ endPoint.value = "/dashboard/suscriptores"
           </v-toolbar-title>
           <v-divider class="mx-4" inset vertical></v-divider>
           <div v-if="!tableData.deleted">
-            <v-btn :disabled="loading" icon="mdi-refresh" @click="resetTable">
+            <v-btn icon="mdi-refresh" @click="resetTable"> </v-btn>
+            <v-btn icon="mdi-file-plus-outline" @click="openDialog('create')">
             </v-btn>
             <v-btn
-              :disabled="loading"
-              icon="mdi-file-plus-outline"
-              @click="openDialog('create')"
-            >
-            </v-btn>
-            <v-btn
-              :disabled="loading"
               icon="mdi-file-excel-outline"
               @click="exportToExcel(endPoint, headers, modifiedRows)"
             >
@@ -116,7 +115,6 @@ endPoint.value = "/dashboard/suscriptores"
           </div>
           <v-btn
             :active="tableData.deleted"
-            :disabled="loading"
             icon="mdi-delete-variant"
             @click="tableData.deleted = !tableData.deleted"
           >
@@ -154,14 +152,12 @@ endPoint.value = "/dashboard/suscriptores"
         <div v-if="!tableData.deleted">
           <v-btn
             density="compact"
-            :disabled="loading"
             variant="text"
             icon="mdi-pencil"
             @click="openDialog('edit', item.raw)"
           ></v-btn>
           <v-btn
             density="compact"
-            :disabled="loading"
             variant="text"
             icon="mdi-delete"
             @click="openDialog('destroy', item.raw)"
@@ -170,14 +166,12 @@ endPoint.value = "/dashboard/suscriptores"
         <div v-if="tableData.deleted">
           <v-btn
             density="compact"
-            :disabled="loading"
             variant="text"
             icon="mdi-restore"
             @click="openDialog('restore', item.raw)"
           ></v-btn>
           <v-btn
             density="compact"
-            :disabled="loading"
             variant="text"
             icon="mdi-delete-alert"
             @click="openDialog('destroyPermanent', item.raw)"
@@ -185,5 +179,6 @@ endPoint.value = "/dashboard/suscriptores"
         </div>
       </template>
     </v-data-table-server>
+    <loading-overlay v-if="loading" />
   </v-card>
 </template>

@@ -30,6 +30,7 @@ Route::middleware('auth')->prefix('dashboard')->group(function () {
 
     //Suscriptor
     Route::get('/suscriptores', [SuscriptorController::class, 'index'])->name('dashboard.suscriptores');
+    Route::post('/suscriptores/load-items', [SuscriptorController::class, 'loadItems'])->name('dashboard.suscriptores.load-items');
     Route::post('/suscriptores', [SuscriptorController::class, 'store'])->name('dashboard.suscriptores.store');
     Route::put('/suscriptores/{subscriber}', [SuscriptorController::class, 'update'])->name('dashboard.suscriptores.update');
     Route::delete('/suscriptores/{subscriber}', [SuscriptorController::class, 'destroy'])->name('dashboard.suscriptores.destroy');

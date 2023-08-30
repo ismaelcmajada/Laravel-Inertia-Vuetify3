@@ -1,16 +1,16 @@
 <script setup>
 import { useForm } from "@inertiajs/vue3"
-import { computed, watchEffect, ref } from "vue"
+import { computed, watch, ref } from "vue"
 import rules from "@/Utils/rules"
 import { sexoItems } from "@/Utils/arrays"
 
 const props = defineProps(["show", "item", "type", "endPoint"])
-const emit = defineEmits(["updateDialog"])
+const emit = defineEmits(["closeDialog", "reloadItems"])
 
 const dialogState = computed({
   get: () => props.show,
   set: (value) => {
-    emit("updateDialog", value)
+    emit("closeDialog", value)
   },
 })
 
@@ -25,11 +25,20 @@ const formData = useForm({
   sexo: "",
 })
 
-watchEffect(() => {
-  if (dialogState.value && props.item && props.type === "edit") {
-    Object.assign(formData, props.item)
-  } else if (dialogState.value && props.type === "create") {
-    formData.reset()
+watch(dialogState, (value) => {
+  if (value) {
+    if (props.type === "edit") {
+      Object.assign(formData, props.item)
+    } else if (props.type === "create") {
+      formData.nombre = ""
+      formData.apellidos = ""
+      formData.dni = ""
+      formData.email = ""
+      formData.telefono = ""
+      formData.sexo = ""
+    }
+  } else {
+    emit("reloadItems")
   }
 })
 
@@ -39,7 +48,6 @@ const submit = () => {
       only: ["tableData", "flash", "errors"],
       onSuccess: () => {
         dialogState.value = false
-        formData.reset()
       },
     })
   } else if (props.type === "create") {
@@ -47,7 +55,6 @@ const submit = () => {
       only: ["tableData", "flash", "errors"],
       onSuccess: () => {
         dialogState.value = false
-        formData.reset()
       },
     })
   }

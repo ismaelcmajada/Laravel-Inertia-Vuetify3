@@ -1,6 +1,4 @@
 import { ref, watch, reactive } from "vue"
-import { getUrlParam } from "@/Utils/url"
-import { usePage, router } from "@inertiajs/vue3"
 import debounce from "lodash.debounce"
 
 export default function useTableServer() {
@@ -28,74 +26,46 @@ export default function useTableServer() {
   const updateItems = debounce(() => loadItems(), 500)
 
   const loadItems = () => {
-    const options = { ...tableData }
-
-    if (!usePage().props.hasOwnProperty("tableData")) {
-      options.page = getUrlParam("page") ? getUrlParam("page") : 1
-      options.itemsPerPage = getUrlParam("itemsPerPage")
-        ? getUrlParam("itemsPerPage")
-        : 10
-      options.sortBy = getUrlParam("sortBy")
-        ? JSON.parse(getUrlParam("sortBy"))
-        : []
-      options.search = getUrlParam("search")
-        ? JSON.parse(getUrlParam("search"))
-        : {}
-      options.deleted = getUrlParam("deleted")
-        ? JSON.parse(getUrlParam("deleted"))
-        : false
+    if (loading.value) {
+      return
     }
 
-    const cleanedSearch = Object.entries(options.search).reduce(
+    loading.value = true
+
+    const cleanedSearch = Object.entries(tableData.search).reduce(
       (a, [k, v]) => (v !== "" ? ((a[k] = v), a) : a),
       {}
     )
 
     const searchJson = JSON.stringify(cleanedSearch)
-    const sortByJson = JSON.stringify(options.sortBy)
+    const sortByJson = JSON.stringify(tableData.sortBy)
 
-    loading.value = true
-
-    router.get(
-      endPoint.value,
-      {
-        page: options.page,
-        itemsPerPage: options.itemsPerPage,
+    axios
+      .post(`${endPoint.value}/load-items`, {
+        page: tableData.page,
+        itemsPerPage: tableData.itemsPerPage,
         sortBy: sortByJson,
         search: searchJson,
-        deleted: options.deleted,
-      },
-      {
-        only: ["tableData", "flash", "errors"],
-        replace: true,
-        preserveState: true,
-        preserveScroll: true,
-        onSuccess: () => {
-          loading.value = false
-        },
-      }
-    )
+        deleted: tableData.deleted,
+      })
+      .then((response) => {
+        tableData.items = response.data.tableData.items
+        tableData.itemsLength = response.data.tableData.itemsLength
+        loading.value = false
+      })
   }
 
   const resetTable = () => {
-    router.get(
-      endPoint.value,
-      {},
-      {
-        replace: true,
-        preserveState: false,
-        preserveScroll: true,
-      }
-    )
-  }
+    tableData.page = 1
+    tableData.itemsPerPage = 10
+    tableData.sortBy = []
+    tableData.search = {}
+    tableData.itemsLength = 0
+    tableData.deleted = false
+    tableData.items = []
 
-  watch(
-    () => usePage().props.tableData,
-    (newTableData) => {
-      Object.assign(tableData, newTableData)
-    },
-    { deep: true }
-  )
+    loadItems()
+  }
 
   watch(
     () => tableData.deleted,

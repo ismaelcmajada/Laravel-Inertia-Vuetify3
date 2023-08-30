@@ -2,48 +2,89 @@
 import { computed } from "vue"
 import { router } from "@inertiajs/vue3"
 
-const props = defineProps(["show", "elementName", "item", "endPoint"])
+const props = defineProps(["show", "elementName", "item", "items", "endPoint"])
 
-const emit = defineEmits(["updateDialog"])
+const emit = defineEmits(["closeDialog", "reloadItems"])
 
 const dialogState = computed({
   get: () => props.show,
-  set: (value) => {
-    emit("updateDialog", value)
+  set: () => {
+    emit("closeDialog")
   },
 })
 
 const submit = () => {
-  router.delete(`${props.endPoint}/${props.item.id}/permanent`, {
-    only: ["tableData", "flash", "errors"],
-  })
-  dialogState.value = false
+  if (props.items && props.items.length > 0) {
+    router.post(`${props.endPoint}/delete-permanent-many`, props.items, {
+      onSuccess: () => {
+        emit("reloadItems")
+        dialogState.value = false
+      },
+    })
+  } else if (props.item.id) {
+    router.delete(`${props.endPoint}/${props.item.id}/permanent`, {
+      onSuccess: () => {
+        emit("reloadItems")
+        dialogState.value = false
+      },
+    })
+  } else {
+    dialogState.value = false
+  }
 }
 </script>
 
 <template>
-  <v-dialog v-model="dialogState" width="auto">
+  <v-dialog scrollable v-model="dialogState" width="auto">
     <v-card>
       <v-card-title>
         <span class="text-h5"
-          >Eliminar {{ props.elementName ?? "elemento" }}
+          >Eliminar
+          {{ props.items && props.items.length > 0 ? "elementos" : "elemento" }}
           <span class="text-red">PERMANENTEMENTE</span></span
         >
       </v-card-title>
+
+      <v-divider></v-divider>
+
       <v-card-text>
-        <v-container class="text-center">
+        <v-container v-if="props.items && props.items.length > 0">
+          ¿Seguro que desea eliminar los elementos de forma
+          <span class="text-red">PERMANENTE</span>?<br />
+          No se podrán recuperar una vez sean eliminados.
+          <v-list v-if="props.elementName">
+            <v-list-item
+              v-for="item in props.items"
+              :key="item.id"
+              :title="item[props.elementName]"
+            >
+              <template v-slot:prepend>
+                <v-icon icon="mdi-menu-right"></v-icon>
+              </template>
+            </v-list-item>
+          </v-list>
+        </v-container>
+        <v-container v-else>
           ¿Seguro que desea eliminar el elemento de forma
           <span class="text-red">PERMANENTE</span>?<br />
           No se podrá recuperar una vez sea eliminado.
+          <v-list v-if="props.elementName">
+            <v-list-item
+              :key="props.item.id"
+              :title="props.item[props.elementName]"
+            >
+              <template v-slot:prepend>
+                <v-icon icon="mdi-menu-right"></v-icon>
+              </template>
+            </v-list-item>
+          </v-list>
         </v-container>
       </v-card-text>
-      <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn
-          color="blue-darken-1"
-          variant="text"
-          @click="dialogState = false"
-        >
+
+      <v-divider></v-divider>
+
+      <v-card-actions class="d-flex justify-center">
+        <v-btn color="red-darken-1" variant="text" @click="dialogState = false">
           Cerrar
         </v-btn>
         <v-btn color="red" variant="text" @click="submit"> Eliminar </v-btn>
