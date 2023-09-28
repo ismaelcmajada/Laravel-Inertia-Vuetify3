@@ -1,7 +1,7 @@
 <script setup>
 import { useForm } from "@inertiajs/vue3"
 import { computed, watch, ref } from "vue"
-import rules from "@/Utils/rules"
+import { ruleRequired, ruleMaxLength, ruleTelephone } from "@/Utils/rules"
 import { sexoItems } from "@/Utils/arrays"
 
 const props = defineProps(["show", "item", "type", "endPoint"])
@@ -67,11 +67,7 @@ const submit = () => {
       <v-card-title>
         <span class="text-h5"
           >{{
-            props.type == "create"
-              ? "Crear"
-              : props.type == "edit"
-              ? "Editar"
-              : ""
+            props.type == "create" ? "Crear" : props.type == "edit" ? "Editar" : ""
           }}
           suscriptor</span
         >
@@ -84,49 +80,35 @@ const submit = () => {
               <v-col cols="12" sm="6">
                 <v-text-field
                   label="Nombre*"
-                  :rules="[
-                    rules.ruleRequired,
-                    (v) => rules.ruleMaxLength(v, 191),
-                  ]"
+                  :rules="[ruleRequired, (v) => ruleMaxLength(v, 191)]"
                   v-model="formData.nombre"
                 ></v-text-field>
               </v-col>
               <v-col cols="12" sm="6">
                 <v-text-field
                   label="Apellidos*"
-                  :rules="[
-                    rules.ruleRequired,
-                    (v) => rules.ruleMaxLength(v, 191),
-                  ]"
+                  :rules="[ruleRequired, (v) => ruleMaxLength(v, 191)]"
                   v-model="formData.apellidos"
                 ></v-text-field>
               </v-col>
               <v-col cols="12" sm="6">
                 <v-text-field
                   label="DNI*"
-                  :rules="[
-                    rules.ruleRequired,
-                    (v) => rules.ruleMaxLength(v, 191),
-                    rules.ruleDNI,
-                  ]"
+                  :rules="[ruleRequired, (v) => ruleMaxLength(v, 191), rules.ruleDNI]"
                   v-model="formData.dni"
                 ></v-text-field>
               </v-col>
               <v-col cols="12" sm="6">
                 <v-text-field
                   label="Correo*"
-                  :rules="[
-                    rules.ruleRequired,
-                    (v) => rules.ruleMaxLength(v, 191),
-                    rules.ruleEmail,
-                  ]"
+                  :rules="[ruleRequired, (v) => ruleMaxLength(v, 191), rules.ruleEmail]"
                   v-model="formData.email"
                 ></v-text-field>
               </v-col>
               <v-col cols="12" sm="6">
                 <v-text-field
                   label="Teléfono"
-                  :rules="[rules.ruleTelephone]"
+                  :rules="[ruleTelephone]"
                   v-model="formData.telefono"
                   type="number"
                 ></v-text-field>
@@ -134,10 +116,7 @@ const submit = () => {
               <v-col cols="12" sm="6">
                 <v-select
                   label="Sexo*"
-                  :rules="[
-                    rules.ruleRequired,
-                    (v) => rules.ruleMaxLength(v, 191),
-                  ]"
+                  :rules="[ruleRequired, (v) => ruleMaxLength(v, 191)]"
                   v-model="formData.sexo"
                   :items="sexoItems"
                 ></v-select>
@@ -149,19 +128,8 @@ const submit = () => {
 
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn
-          color="blue-darken-1"
-          variant="text"
-          @click="dialogState = false"
-        >
-          Cerrar
-        </v-btn>
-        <v-btn
-          color="blue-darken-1"
-          :disabled="!form"
-          variant="text"
-          @click="submit"
-        >
+        <v-btn color="blue-darken-1" variant="text" @click="dialogState = false"> Cerrar </v-btn>
+        <v-btn color="blue-darken-1" :disabled="!form" variant="text" @click="submit">
           Guardar
         </v-btn>
       </v-card-actions>
