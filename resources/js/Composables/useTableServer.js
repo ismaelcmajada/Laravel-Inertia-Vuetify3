@@ -23,24 +23,13 @@ export default function useTableServer() {
     { value: 100, title: "100" },
   ]
 
-  const tableHeaders = computed(() => {
-    let headers = []
-
-    itemHeaders.value.forEach((e) => {
-      if (selectedHeaders.value.includes(e.key)) headers.push({ ...e })
-    })
-
-    return headers
-  })
+  const tableHeaders = computed(() =>
+    itemHeaders.value.filter((e) => selectedHeaders.value.includes(e.key))
+  )
   const selectedHeaders = ref([])
   const itemHeaders = ref([])
-
-  const checkHeader = (key) => {
-    if (selectedHeaders.value.includes(key)) return true
-    else return false
-  }
-
   const allHeaders = computed(() => selectedHeaders.value.length == itemHeaders.value.length)
+
   const toggleAllHeaders = () => {
     if (allHeaders.value) selectedHeaders.value = []
     else selectedHeaders.value = itemHeaders.value.map((i) => i.key)
@@ -107,7 +96,6 @@ export default function useTableServer() {
     loading,
     updateItems,
     itemsPerPageOptions,
-    checkHeader,
     toggleAllHeaders,
     loadItems,
     resetTable,

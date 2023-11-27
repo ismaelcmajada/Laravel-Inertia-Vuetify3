@@ -21,7 +21,6 @@ const {
   selectedHeaders,
   allHeaders,
   itemHeaders,
-  checkHeader,
   toggleAllHeaders,
   loadItems,
   resetTable,
@@ -137,7 +136,7 @@ endPoint.value = "/dashboard/suscriptores"
         <tr>
           <td
             v-for="header in headers.filter(
-              (header) => checkHeader(header.key) && header.key != 'actions'
+              (header) => selectedHeaders.includes(header.key) && header.key != 'actions'
             )"
             :key="header.key"
           >
