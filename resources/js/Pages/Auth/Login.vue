@@ -1,7 +1,7 @@
 <script setup>
 import { Head, useForm } from "@inertiajs/vue3"
 import { ref } from "vue"
-import rules from "@/Utils/rules"
+import { ruleRequired, ruleEmail } from "@/Utils/rules"
 
 defineProps({
   status: String,
@@ -41,23 +41,18 @@ const submit = () => {
             type="Email"
             v-model="formData.email"
             label="Correo"
-            :rules="[rules.ruleRequired, rules.ruleEmail]"
+            :rules="[ruleRequired, ruleEmail]"
           ></v-text-field>
 
           <v-text-field
             type="password"
             v-model="formData.password"
             label="Contraseña"
-            :rules="[rules.ruleRequired]"
+            :rules="[ruleRequired]"
             class="mt-2"
           ></v-text-field>
 
-          <v-btn
-            :disabled="!form"
-            type="submit"
-            color="primary"
-            block
-            class="mt-2"
+          <v-btn :disabled="!form" type="submit" color="primary" block class="mt-2"
             >Iniciar sesión</v-btn
           >
         </v-form>

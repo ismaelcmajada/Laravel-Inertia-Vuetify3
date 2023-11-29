@@ -1,4 +1,4 @@
-import { ref, watch, reactive } from "vue"
+import { ref, watch, reactive, computed } from "vue"
 import debounce from "lodash.debounce"
 
 export default function useTableServer() {
@@ -22,6 +22,18 @@ export default function useTableServer() {
     { value: 50, title: "50" },
     { value: 100, title: "100" },
   ]
+
+  const tableHeaders = computed(() =>
+    itemHeaders.value.filter((e) => selectedHeaders.value.includes(e.key))
+  )
+  const selectedHeaders = ref([])
+  const itemHeaders = ref([])
+  const allHeaders = computed(() => selectedHeaders.value.length == itemHeaders.value.length)
+
+  const toggleAllHeaders = () => {
+    if (allHeaders.value) selectedHeaders.value = []
+    else selectedHeaders.value = itemHeaders.value.map((i) => i.key)
+  }
 
   const updateItems = debounce(() => loadItems(), 500)
 
@@ -76,10 +88,15 @@ export default function useTableServer() {
 
   return {
     tableData,
+    tableHeaders,
+    selectedHeaders,
+    allHeaders,
+    itemHeaders,
     endPoint,
     loading,
     updateItems,
     itemsPerPageOptions,
+    toggleAllHeaders,
     loadItems,
     resetTable,
   }
