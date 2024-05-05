@@ -11,6 +11,14 @@ import useTableServer from "@/Composables/useTableServer"
 import useDialogs from "@/Composables/useDialogs"
 import { exportToExcel } from "@/Utils/excel"
 
+const props = defineProps({
+  formFields: Object,
+  tableHeaders: Array,
+})
+
+console.log(props.formFields)
+console.log(props.tableHeaders)
+
 const {
   endPoint,
   loading,
@@ -36,22 +44,7 @@ const {
   openDialog,
 } = useDialogs()
 
-const headers = [
-  { title: "Id", key: "id", align: "center" },
-  { title: "Nombre", key: "nombre", align: "center" },
-  { title: "Apellidos", key: "apellidos", align: "center" },
-  { title: "DNI", key: "dni", align: "center" },
-  { title: "Email", key: "email", align: "center" },
-  { title: "Teléfono", key: "telefono", align: "center" },
-  { title: "Sexo", key: "sexo", align: "center" },
-  {
-    title: "Acciones",
-    key: "actions",
-    align: "center",
-    sortable: false,
-    exportable: false,
-  },
-]
+const headers = props.tableHeaders
 
 onBeforeMount(() => {
   itemHeaders.value = headers
@@ -116,7 +109,8 @@ endPoint.value = "/dashboard/suscriptores"
           <v-divider class="mx-4" inset vertical></v-divider>
           <div v-if="!tableData.deleted">
             <v-btn icon="mdi-refresh" @click="resetTable"> </v-btn>
-            <v-btn icon="mdi-file-plus-outline" @click="openDialog('create')"> </v-btn>
+            <v-btn icon="mdi-file-plus-outline" @click="openDialog('create')">
+            </v-btn>
             <v-btn
               icon="mdi-file-excel-outline"
               @click="exportToExcel(endPoint, headers, modifiedRows)"
@@ -136,7 +130,8 @@ endPoint.value = "/dashboard/suscriptores"
         <tr>
           <td
             v-for="header in headers.filter(
-              (header) => selectedHeaders.includes(header.key) && header.key != 'actions'
+              (header) =>
+                selectedHeaders.includes(header.key) && header.key != 'actions'
             )"
             :key="header.key"
           >
@@ -181,7 +176,10 @@ endPoint.value = "/dashboard/suscriptores"
         </tr>
       </template>
 
-      <template v-for="(modifier, key) in modifiedRows" v-slot:[`item.${key}`]="{ item }">
+      <template
+        v-for="(modifier, key) in modifiedRows"
+        v-slot:[`item.${key}`]="{ item }"
+      >
         {{ modifier(item.raw[key]) }}
       </template>
 
