@@ -20,7 +20,7 @@
     "lodash.debounce": "^4.0.8",
     "vite-plugin-vuetify": "^1.0.2",
     "vue-toastification": "^2.0.0-rc.5",
-    "vuetify": "^3.3.5",
+    "vuetify": "^3.4.9",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.0/xlsx-0.20.0.tgz"
   }
 }

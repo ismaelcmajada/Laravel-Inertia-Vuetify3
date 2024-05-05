@@ -17,8 +17,7 @@ class SuscriptorController extends Controller
     {
         $suscriptor = new Suscriptor();
         return Inertia::render('Dashboard/Suscriptor', [
-            'formFields' => $suscriptor->formFields(),
-            'tableHeaders' => $suscriptor->tableHeaders(),
+           'model' => $suscriptor->getModel(),
         ]);
     }
 

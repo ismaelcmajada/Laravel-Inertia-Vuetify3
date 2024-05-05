@@ -16,7 +16,7 @@ class Suscriptor extends BaseModel
 
     protected function setEndPoint()
     {
-        return 'suscriptores';
+        return '/dashboard/suscriptores';
     }
 
     protected function setFields()
@@ -33,7 +33,7 @@ class Suscriptor extends BaseModel
             [
                 'name' => 'Nombre', 
                 'field' => 'nombre', 
-                'type' => 'text', 
+                'type' => 'string', 
                 'unique' => false, 
                 'table' => true, 
                 'form' => true
@@ -41,7 +41,7 @@ class Suscriptor extends BaseModel
             [
                 'name' => 'Apellidos', 
                 'field' => 'apellidos', 
-                'type' => 'text', 
+                'type' => 'string', 
                 'unique' => false, 
                 'table' => true, 
                 'form' => true
@@ -65,7 +65,7 @@ class Suscriptor extends BaseModel
             [
                 'name' => 'Nivel formativo', 
                 'field' => 'nivel_formativo', 
-                'type' => 'text', 
+                'type' => 'string', 
                 'unique' => false, 
                 'table' => true, 
                 'form' => true
@@ -73,7 +73,7 @@ class Suscriptor extends BaseModel
             [
                 'name' => 'Situación', 
                 'field' => 'situacion', 
-                'type' => 'text', 
+                'type' => 'string', 
                 'unique' => false, 
                 'table' => true, 
                 'form' => true
@@ -81,7 +81,7 @@ class Suscriptor extends BaseModel
             [
                 'name' => 'Acciones formativas', 
                 'field' => 'acciones_formativas', 
-                'type' => 'text', 
+                'type' => 'string', 
                 'unique' => false, 
                 'table' => true, 
                 'form' => true
@@ -89,7 +89,7 @@ class Suscriptor extends BaseModel
             [
                 'name' => 'DNI', 
                 'field' => 'dni', 
-                'type' => 'text', 
+                'type' => 'string', 
                 'unique' => true, 
                 'table' => true, 
                 'form' => true
@@ -102,8 +102,8 @@ class Suscriptor extends BaseModel
                 'table' => true, 
                 'form' => true,
                 'options' => [
-                    ['value' => 'Hombre', 'text' => 'Hombre'],
-                    ['value' => 'Mujer', 'text' => 'Mujer'],
+                    ['value' => 'Hombre', 'string' => 'Hombre'],
+                    ['value' => 'Mujer', 'string' => 'Mujer'],
                 ]
             ],
         ];

@@ -35,9 +35,11 @@ abstract class BaseModel extends Model
 
     public function formFields()
     {
-        return array_filter($this->fields, function ($field) {
+        $filteredFields = array_filter($this->fields, function ($field) {
             return $field['form'];
         });
+
+        return array_values($filteredFields);
     }
 
     public function tableHeaders()
@@ -69,5 +71,17 @@ abstract class BaseModel extends Model
         ];
 
         return $headers;
+    }
+
+    //Return has json
+    public function getModel() {
+        return [
+            'endPoint' => $this->endPoint,
+            'formFields' => $this->formFields(),
+            'tableHeaders' => $this->tableHeaders(),
+            'externalRelations' => $this->externalRelations,
+            'includes' => $this->includes,
+            'fillable' => $this->fillable,
+        ];
     }
 }

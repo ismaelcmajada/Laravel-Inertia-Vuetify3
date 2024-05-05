@@ -12,7 +12,6 @@ import "vue-toastification/dist/index.css"
 import "vuetify/styles"
 import { createVuetify } from "vuetify"
 import { es } from "vuetify/locale"
-import { VDataTableServer } from "vuetify/labs/VDataTable"
 
 import link from "@/Plugins/link"
 
@@ -48,9 +47,6 @@ const vuetify = createVuetify({
         },
       },
     },
-  },
-  components: {
-    VDataTableServer,
   },
   locale: {
     locale: "es",

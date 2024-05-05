@@ -19,7 +19,8 @@ export function ruleRequired(v, label = null) {
  */
 export function ruleMinLength(v, length, label = null) {
   return (
-    String(v).length >= length || `El ${label ?? "campo"} debe tener mínimo ${length} caracteres`
+    String(v).length >= length ||
+    `El ${label ?? "campo"} debe tener mínimo ${length} caracteres`
   )
 }
 /**
@@ -31,7 +32,8 @@ export function ruleMinLength(v, length, label = null) {
  */
 export function ruleMaxLength(v, length, label = null) {
   return (
-    String(v).length <= length || `El ${label ?? "campo"} debe tener máximo ${length} caracteres`
+    String(v).length <= length ||
+    `El ${label ?? "campo"} debe tener máximo ${length} caracteres`
   )
 }
 /**
@@ -55,7 +57,9 @@ export function ruleEmail(v, label = null) {
  */
 export function ruleDNI(v, label = null) {
   return (
-    !v || /^[0-9]{8}[A-Za-z]$/.test(String(v)) || `El ${label ?? "campo"} debe ser un DNI válido`
+    !v ||
+    /^[0-9]{8}[A-Za-z]$/.test(String(v)) ||
+    `El ${label ?? "campo"} debe ser un DNI válido`
   )
 }
 /**
@@ -110,5 +114,22 @@ export function ruleGreaterThan(v, targetValue, label = null) {
  * @returns validate
  */
 export function ruleNumber(v, label = null) {
-  return Number.isInteger(Number(v)) || `El ${label ?? "campo"} debe ser un número`
+  return (
+    Number.isInteger(Number(v)) || `El ${label ?? "campo"} debe ser un número`
+  )
+}
+
+/**
+ * Rule validate float number
+ * @param {any} v the given value to validate
+ * @param {string} label
+ * @returns validate
+ */
+export function ruleFloat(v, label = null) {
+  const floatRegex = /^-?\d*(\.\d+)?$/
+  return (
+    !v ||
+    floatRegex.test(v) ||
+    `${label ?? "El campo"} debe ser un número decimal`
+  )
 }
