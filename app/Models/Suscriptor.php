@@ -63,30 +63,6 @@ class Suscriptor extends BaseModel
                 'form' => true
             ],
             [
-                'name' => 'Nivel formativo', 
-                'field' => 'nivel_formativo', 
-                'type' => 'string', 
-                'unique' => false, 
-                'table' => true, 
-                'form' => true
-            ],
-            [
-                'name' => 'Situación', 
-                'field' => 'situacion', 
-                'type' => 'string', 
-                'unique' => false, 
-                'table' => true, 
-                'form' => true
-            ],
-            [
-                'name' => 'Acciones formativas', 
-                'field' => 'acciones_formativas', 
-                'type' => 'string', 
-                'unique' => false, 
-                'table' => true, 
-                'form' => true
-            ],
-            [
                 'name' => 'DNI', 
                 'field' => 'dni', 
                 'type' => 'string', 
@@ -101,10 +77,7 @@ class Suscriptor extends BaseModel
                 'unique' => false, 
                 'table' => true, 
                 'form' => true,
-                'options' => [
-                    ['value' => 'Hombre', 'string' => 'Hombre'],
-                    ['value' => 'Mujer', 'string' => 'Mujer'],
-                ]
+                'options' => ['Masculino', 'Femenino'],
             ],
         ];
     }
