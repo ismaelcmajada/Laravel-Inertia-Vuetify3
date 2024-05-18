@@ -1,7 +1,6 @@
 <script setup>
 import { usePage } from "@inertiajs/vue3"
 import { ref, onBeforeMount } from "vue"
-import { checkRoute } from "@/Utils/url"
 import { routes } from "@/Utils/routes"
 
 const rail = ref(false)
@@ -42,13 +41,7 @@ const openDrawer = () => {
     </v-list>
     <template v-for="pageRoute in routes">
       <v-divider></v-divider>
-      <v-list
-        v-if="
-          !pageRoute.hasOwnProperty('route') &&
-          !pageRoute.hasOwnProperty('path')
-        "
-        nav
-      >
+      <v-list v-if="!pageRoute.hasOwnProperty('path')" nav>
         <v-list-item
           :title="pageRoute.value"
           :prepend-icon="pageRoute.icon"
@@ -74,8 +67,8 @@ const openDrawer = () => {
               v-for="child in pageRoute.childs"
               :prepend-icon="child.icon"
               :title="child.value"
-              :active="checkRoute(child.route)"
-              :to="route(child.route)"
+              :active="$page.url.includes(child.path)"
+              :to="child.path"
             ></v-list-item>
           </v-list-group>
         </v-list>
@@ -83,8 +76,8 @@ const openDrawer = () => {
           <v-list-item
             :title="pageRoute.value"
             :prepend-icon="pageRoute.icon"
-            :active="checkRoute(pageRoute.route)"
-            :to="route(pageRoute.route)"
+            :active="$page.url.includes(pageRoute.path)"
+            :to="pageRoute.path"
           ></v-list-item>
         </v-list>
       </template>

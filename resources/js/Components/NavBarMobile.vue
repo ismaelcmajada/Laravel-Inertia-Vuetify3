@@ -1,7 +1,6 @@
 <script setup>
 import { usePage } from "@inertiajs/vue3"
 import { ref, onBeforeMount } from "vue"
-import { checkRoute } from "@/Utils/url"
 import { routes } from "@/Utils/routes"
 
 const drawer = ref(false)
@@ -55,8 +54,8 @@ onBeforeMount(() => {
               v-for="child in pageRoute.childs"
               :prepend-icon="child.icon"
               :title="child.value"
-              :active="checkRoute(child.route)"
-              :to="route(child.route)"
+              :active="$page.url.includes(child.path)"
+              :to="child.path"
             ></v-list-item>
           </v-list-group>
         </v-list>
@@ -64,8 +63,8 @@ onBeforeMount(() => {
           <v-list-item
             :title="pageRoute.value"
             :prepend-icon="pageRoute.icon"
-            :active="checkRoute(pageRoute.route)"
-            :to="route(pageRoute.route)"
+            :active="$page.url.includes(pageRoute.path)"
+            :to="pageRoute.path"
           ></v-list-item>
         </v-list>
       </template>

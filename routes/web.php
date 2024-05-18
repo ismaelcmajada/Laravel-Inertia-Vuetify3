@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
-use App\Http\Controllers\SuscriptorController;
+use App\Http\Controllers\AutoCrudController;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,16 +27,15 @@ Route::middleware('auth')->prefix('dashboard')->group(function () {
     // restore: /item/{id}/restore
     // exportExcel: /item/export-excel
 
-
-    //Suscriptor
-    Route::get('/suscriptores', [SuscriptorController::class, 'index'])->name('dashboard.suscriptores');
-    Route::post('/suscriptores/load-items', [SuscriptorController::class, 'loadItems'])->name('dashboard.suscriptores.load-items');
-    Route::post('/suscriptores', [SuscriptorController::class, 'store'])->name('dashboard.suscriptores.store');
-    Route::put('/suscriptores/{subscriber}', [SuscriptorController::class, 'update'])->name('dashboard.suscriptores.update');
-    Route::delete('/suscriptores/{subscriber}', [SuscriptorController::class, 'destroy'])->name('dashboard.suscriptores.destroy');
-    Route::delete('/suscriptores/{subscriber}/permanent', [SuscriptorController::class, 'destroyPermanent'])->name('dashboard.suscriptores.destroyPermanent');
-    Route::post('/suscriptores/{id}/restore', [SuscriptorController::class, 'restore'])->name('dashboard.suscriptores.restore');
-    Route::get('/suscriptores/export-excel', [SuscriptorController::class, 'exportExcel'])->name('dashboard.suscriptores.exportExcel');
+        Route::get('/{model}', [AutoCrudController::class, 'index'])->name('dashboard.model.index');
+        Route::post('/{model}/load-items', [AutoCrudController::class, 'loadItems'])->name('dashboard.model.load-items');
+        Route::post('/{model}', [AutoCrudController::class, 'store'])->name('dashboard.model.store');
+        Route::put('/{model}/{id}', [AutoCrudController::class, 'update'])->name('dashboard.model.update');
+        Route::delete('/{model}/{id}', [AutoCrudController::class, 'destroy'])->name('dashboard.model.destroy');
+        Route::delete('/{model}/{id}/permanent', [AutoCrudController::class, 'destroyPermanent'])->name('dashboard.model.destroyPermanent');
+        Route::post('/{model}/{id}/restore', [AutoCrudController::class, 'restore'])->name('dashboard.model.restore');
+        Route::get('/{model}/export-excel', [AutoCrudController::class, 'exportExcel'])->name('dashboard.model.exportExcel');
+    
 });
 
 require __DIR__ . '/auth.php';

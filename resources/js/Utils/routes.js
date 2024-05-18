@@ -12,13 +12,13 @@ export const routesArray = [
   },
   {
     value: "Suscriptores",
-    route: "dashboard.suscriptores",
+    path: "/dashboard/suscriptor",
     icon: "mdi-account-group",
   },
   {
     value: "Cerrar sesión",
     icon: "mdi-logout-variant",
-    route: "logout",
+    path: "/logout",
   },
   // Route with childs example:
   /*
@@ -29,12 +29,12 @@ export const routesArray = [
     childs: [
       {
         value: "title",
-        route: "route name",
+        path: "relative-path",
         icon: "icon",
       },
       {
         value: "title",
-        route: "route name",
+        path: "relative-path",
         icon: "icon",
       },
     ],

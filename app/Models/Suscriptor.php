@@ -16,7 +16,7 @@ class Suscriptor extends BaseModel
 
     protected function setEndPoint()
     {
-        return '/dashboard/suscriptores';
+        return '/dashboard/suscriptor';
     }
 
     protected function setFields()
