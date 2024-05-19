@@ -27,14 +27,19 @@ Route::middleware('auth')->prefix('dashboard')->group(function () {
     // restore: /item/{id}/restore
     // exportExcel: /item/export-excel
 
-        Route::get('/{model}', [AutoCrudController::class, 'index'])->name('dashboard.model.index');
-        Route::post('/{model}/load-items', [AutoCrudController::class, 'loadItems'])->name('dashboard.model.load-items');
-        Route::post('/{model}', [AutoCrudController::class, 'store'])->name('dashboard.model.store');
-        Route::put('/{model}/{id}', [AutoCrudController::class, 'update'])->name('dashboard.model.update');
-        Route::delete('/{model}/{id}', [AutoCrudController::class, 'destroy'])->name('dashboard.model.destroy');
-        Route::delete('/{model}/{id}/permanent', [AutoCrudController::class, 'destroyPermanent'])->name('dashboard.model.destroyPermanent');
-        Route::post('/{model}/{id}/restore', [AutoCrudController::class, 'restore'])->name('dashboard.model.restore');
-        Route::get('/{model}/export-excel', [AutoCrudController::class, 'exportExcel'])->name('dashboard.model.exportExcel');
+    // Rutas específicas con parámetros múltiples primero
+    Route::put('/{model}/{id}', [AutoCrudController::class, 'update'])->name('dashboard.model.update');
+    Route::delete('/{model}/{id}', [AutoCrudController::class, 'destroy'])->name('dashboard.model.destroy');
+    Route::delete('/{model}/{id}/permanent', [AutoCrudController::class, 'destroyPermanent'])->name('dashboard.model.destroyPermanent');
+    Route::post('/{model}/{id}/restore', [AutoCrudController::class, 'restore'])->name('dashboard.model.restore');
+
+    // Luego rutas de acciones específicas que incluyen el parámetro de modelo
+    Route::post('/{model}/load-items', [AutoCrudController::class, 'loadItems'])->name('dashboard.model.load-items');
+    Route::get('/{model}/export-excel', [AutoCrudController::class, 'exportExcel'])->name('dashboard.model.exportExcel');
+
+    // Rutas para operaciones básicas de CRUD al final
+    Route::get('/{model}', [AutoCrudController::class, 'index'])->name('dashboard.model.index');
+    Route::post('/{model}', [AutoCrudController::class, 'store'])->name('dashboard.model.store');
     
 });
 

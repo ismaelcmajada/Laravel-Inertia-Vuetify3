@@ -1,29 +1,25 @@
 <?php
 namespace App\Http\Controllers;
 
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Request;
 use Inertia\Inertia;
 
 class AutoCrudController extends Controller
 {
-    private $model;
-    private $modelName;
 
-    private function getValidationRules()
+    private function getValidationRules($model, $id = null)
     {
+        $modelInstance = $this->getModel($model);
         $rules = [];
-        foreach ($this->model->formFields() as $field) {
+        foreach ($this->getModel($model)->formFields() as $field) {
             $fieldRules = [];
-            if ($field['required']) {
-                $fieldRules[] = 'required';
-            } else {
-                $fieldRules[] = 'nullable';
-            }
             if ($field['type'] === 'string') {
                 $fieldRules[] = 'max:191';
             } elseif ($field['type'] === 'email') {
-                $fieldRules[] = 'email|max:191';
+                $fieldRules[] = 'email';
+                $fieldRules[] = 'max:191';
             } elseif ($field['type'] === 'number') {
                 $fieldRules[] = 'integer';
             } elseif ($field['type'] === 'select') {
@@ -31,7 +27,11 @@ class AutoCrudController extends Controller
             }
 
             if ($field['unique']) {
-                $fieldRules[] = 'unique:' . $this->model->getTable() . ',' . $field['field'];
+                $uniqueRule = Rule::unique($modelInstance->getTable(), $field['field']);
+                if ($id !== null) {
+                    $uniqueRule = $uniqueRule->ignore($id);
+                }
+                $fieldRules[] = $uniqueRule;
             }
 
             $rules[$field['field']] = $fieldRules;
@@ -39,36 +39,34 @@ class AutoCrudController extends Controller
         return $rules;
     }
 
-    public function __construct()
+    private function getModel($model)
     {
-        $this->modelName = request()->route('model');
-
-        $modelClass = 'App\\Models\\' . ucfirst($this->modelName);
+        $modelClass = 'App\\Models\\' . ucfirst($model);
 
         if (class_exists($modelClass)) {
-            $this->model = new $modelClass;
+            return new $modelClass;
         } else {
             abort(404, 'Model not found');
         }
     }
 
-    public function index()
+    public function index($model)
     {
-        return Inertia::render('Dashboard/'.ucfirst($this->modelName), [
-           'model' => $this->model->getModel(),
+        return Inertia::render('Dashboard/'.ucfirst($model), [
+           'model' => $this->getModel($model)->getModel(),
         ]);
     }
 
-    public function loadItems()
+    public function loadItems($model)
     {
         $itemsPerPage = Request::get('itemsPerPage', 10);
         $sortBy = json_decode(Request::get('sortBy', '[]'), true);
         $search = json_decode(Request::get('search', '[]'), true);
         $deleted = filter_var(Request::get('deleted', 'false'), FILTER_VALIDATE_BOOLEAN);
 
-        $query = $this->model::query();  // Usando el modelo dinámico
+        $query = $this->getModel($model)::query();  // Usando el modelo dinámico
 
-        if ($deleted && in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($this->model))) {
+        if ($deleted && in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($this->getModel($model)))) {
             $query->onlyTrashed();
         }
 
@@ -109,54 +107,54 @@ class AutoCrudController extends Controller
         ];
     }
 
-    public function store()
+    public function store($model)
     {
-        $rules = $this->getValidationRules();
+        $rules = $this->getValidationRules($model);
         $validatedData = Request::validate($rules);
 
-        $this->model::create($validatedData);
+        $this->getModel($model)::create($validatedData);
 
-        return Redirect::back()->with('success', $this->modelName . ' creado.');
+        return Redirect::back()->with('success', $model . ' creado.');
     }
 
-    public function update($id)
+    public function update($model, $id)
     {
-        $instance = $this->model::findOrFail($id);
-        $rules = $this->getValidationRules();
+        $instance = $this->getModel($model)::findOrFail($id);
+        $rules = $this->getValidationRules($model, $id);
         $validatedData = Request::validate($rules);
 
         $instance->update($validatedData);
 
-        return Redirect::back()->with('success', $this->modelName . ' editado.');
+        return Redirect::back()->with('success', $model . ' editado.');
     }
 
-    public function destroy($id)
+    public function destroy($model, $id)
     {
-        $instance = $this->model::findOrFail($id);
+        $instance = $this->getModel($model)::findOrFail($id);
         $instance->delete();
 
-        return Redirect::back()->with('success', $this->modelName . ' movido a la papelera.');
+        return Redirect::back()->with('success', $model . ' movido a la papelera.');
     }
 
-    public function destroyPermanent($id)
+    public function destroyPermanent($model, $id)
     {
-        $instance = $this->model::onlyTrashed()->findOrFail($id);
+        $instance = $this->getModel($model)::onlyTrashed()->findOrFail($id);
         $instance->forceDelete();
 
-        return Redirect::back()->with('success', $this->modelName . ' eliminado de forma permanente.');
+        return Redirect::back()->with('success', $model . ' eliminado de forma permanente.');
     }
 
-    public function restore($id)
+    public function restore($model, $id)
     {
-        $instance = $this->model::onlyTrashed()->findOrFail($id);
+        $instance = $this->getModel($model)::onlyTrashed()->findOrFail($id);
         $instance->restore();
 
-        return Redirect::back()->with('success', $this->modelName . ' restaurado.');
+        return Redirect::back()->with('success', $model . ' restaurado.');
     }
 
-    public function exportExcel()
+    public function exportExcel($model)
     {
-        $items = $this->model::all();
+        $items = $this->getModel($model)::all();
 
         return  [ 'itemsExcel' => $items ];
     }
