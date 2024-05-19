@@ -28,61 +28,67 @@ class Suscriptor extends BaseModel
     {
         return [
             [
-                'name' => 'ID', 
-                'field' => 'id', 
-                'type' => 'number', 
-                'unique' => true, 
-                'table' => true, 
-                'form' => false
-            ],
-            [
                 'name' => 'Nombre', 
                 'field' => 'nombre', 
                 'type' => 'string', 
-                'unique' => false, 
                 'table' => true, 
-                'form' => true
+                'form' => true,
+                'rules' => [
+                    'required' => true
+                ]
             ],
             [
                 'name' => 'Apellidos', 
                 'field' => 'apellidos', 
                 'type' => 'string', 
-                'unique' => false, 
                 'table' => true, 
-                'form' => true
+                'form' => true,
+                'rules' => [
+                    'required' => true
+                ]
             ],
             [
                 'name' => 'Email', 
                 'field' => 'email', 
                 'type' => 'email', 
-                'unique' => true, 
                 'table' => true, 
-                'form' => true
+                'form' => true,
+                'rules' => [
+                    'required' => true,
+                    'unique' => true
+                ]
             ],
             [
                 'name' => 'Teléfono', 
                 'field' => 'telefono', 
-                'type' => 'number', 
-                'unique' => false, 
+                'type' => 'telephone', 
                 'table' => true, 
-                'form' => true
+                'form' => true,
+                'rules' => [
+                    'required' => true
+                ]
             ],
             [
                 'name' => 'DNI', 
                 'field' => 'dni', 
-                'type' => 'string', 
-                'unique' => true, 
+                'type' => 'dni', 
                 'table' => true, 
-                'form' => true
+                'form' => true,
+                'rules' => [
+                    'required' => true,
+                    'unique' => true
+                ]
             ],
             [
                 'name' => 'Sexo', 
                 'field' => 'sexo', 
                 'type' => 'select', 
-                'unique' => false, 
                 'table' => true, 
                 'form' => true,
                 'options' => ['Masculino', 'Femenino'],
+                'rules' => [
+                    'required' => true
+                ]
             ],
             [
                 'name' => 'País',
@@ -96,6 +102,9 @@ class Suscriptor extends BaseModel
                     'relation' => 'paises',
                     'tableKey' => 'pais',
                     'formKey' => 'pais'
+                ],
+                'rules' => [
+                    'required' => true
                 ]
             ],
         ];

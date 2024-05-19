@@ -13,32 +13,49 @@ class AutoCrudController extends Controller
     {
         $modelInstance = $this->getModel($model);
         $rules = [];
-        foreach ($this->getModel($model)->formFields() as $field) {
+    
+        foreach ($modelInstance->formFields() as $field) {
             $fieldRules = [];
-            if ($field['type'] === 'string') {
-                $fieldRules[] = 'max:191';
-            } elseif ($field['type'] === 'email') {
-                $fieldRules[] = 'email';
-                $fieldRules[] = 'max:191';
-            } elseif ($field['type'] === 'number') {
-                $fieldRules[] = 'integer';
-            } elseif ($field['type'] === 'select') {
-                $fieldRules[] = 'in:' . implode(',', $field['options']);
+    
+            if (isset($field['rules']['required']) && $field['rules']['required']) {
+                $fieldRules[] = 'required';
             }
-
-            if (isset($field['unique']) && $field['unique']) {
+    
+            switch ($field['type']) {
+                case 'string':
+                    $fieldRules[] = 'max:191';
+                    break;
+                case 'email':
+                    $fieldRules[] = 'email';
+                    $fieldRules[] = 'max:191';
+                    break;
+                case 'number':
+                    $fieldRules[] = 'integer';
+                    break;
+                case 'select':
+                    if (isset($field['options'])) {
+                        $fieldRules[] = 'in:' . implode(',', $field['options']);
+                    }
+                    break;
+                case 'telephone':
+                    $fieldRules[] = 'digits_between:8,15';
+                    break;
+            }
+    
+            if (isset($field['rules']['unique']) && $field['rules']['unique']) {
                 $uniqueRule = Rule::unique($modelInstance->getTable(), $field['field']);
                 if ($id !== null) {
                     $uniqueRule = $uniqueRule->ignore($id);
                 }
                 $fieldRules[] = $uniqueRule;
             }
-
+    
             $rules[$field['field']] = $fieldRules;
         }
+    
         return $rules;
     }
-
+    
     private function getModel($model)
     {
         $modelClass = 'App\\Models\\' . ucfirst($model);
@@ -73,15 +90,12 @@ class AutoCrudController extends Controller
 
         $query = $model::query(); 
 
-        // Preparar la inclusión de relaciones para la carga anticipada
         $query->with($model->getModel()['includes']);
 
-        // Manejo de registros borrados (soft delete)
         if ($deleted && in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($model))) {
             $query->onlyTrashed();
         }
 
-        // Aplicar filtros de búsqueda
         if (!empty($search)) {
             foreach ($search as $key => $value) {
                 if (!empty($value)) {
@@ -123,8 +137,6 @@ class AutoCrudController extends Controller
             $query->orderBy("id", "desc");
         }
     
-
-        // Paginar resultados
         if ($itemsPerPage == -1) {
             $itemsPerPage = $query->count();
         }    

@@ -28,20 +28,16 @@ class Pais extends BaseModel
     {
         return [
             [
-                'name' => 'ID', 
-                'field' => 'id', 
-                'type' => 'number', 
-                'unique' => true, 
-                'table' => true, 
-                'form' => false
-            ],
-            [
                 'name' => 'País', 
                 'field' => 'pais', 
                 'type' => 'string', 
-                'unique' => true, 
                 'table' => true, 
-                'form' => true
+                'form' => true,
+                'rules' => [
+                    'required' => true,
+                    'unique' => true
+                ]
+
             ],
         ];
     }
