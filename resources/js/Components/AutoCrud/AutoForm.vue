@@ -1,5 +1,6 @@
 <script setup>
 import { useForm } from "@inertiajs/vue3"
+import axios from "axios"
 import { ref, onBeforeMount } from "vue"
 import {
   ruleRequired,
@@ -26,7 +27,7 @@ const getRelations = () => {
   )
 
   relationsFromFormFields.forEach((field) => {
-    $fetch(`/api/dashboard/${field.relation.endPoint}`).then((response) => {
+    axios.get(`${field.relation.endPoint}/all`).then((response) => {
       relations.value[field.field] = response.data
     })
   })

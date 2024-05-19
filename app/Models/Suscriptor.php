@@ -14,6 +14,11 @@ class Suscriptor extends BaseModel
      */
     protected $table = 'suscriptores';
 
+    protected function setIncludes()
+    {
+        return [];
+    }
+
     protected function setEndPoint()
     {
         return '/dashboard/suscriptor';
@@ -78,6 +83,20 @@ class Suscriptor extends BaseModel
                 'table' => true, 
                 'form' => true,
                 'options' => ['Masculino', 'Femenino'],
+            ],
+            [
+                'name' => 'País',
+                'field' => 'pais_id',
+                'type' => 'number',
+                'form' => true,
+                'table' => true,
+                'relation' => [
+                    'type' => 'belongsTo',
+                    'model' => 'Pais',
+                    'relation' => 'paises',
+                    'tableKey' => 'pais',
+                    'formKey' => 'pais'
+                ]
             ],
         ];
     }

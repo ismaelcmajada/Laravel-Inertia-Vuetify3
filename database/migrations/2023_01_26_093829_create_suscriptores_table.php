@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('email', 191);
             $table->integer('telefono')->nullable();
             $table->string('sexo', 191);
+            $table->integer('pais_id');
             $table->timestamps();
             $table->softDeletes();
         });

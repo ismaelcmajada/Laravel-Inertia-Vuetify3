@@ -39,6 +39,7 @@ Route::middleware('auth')->prefix('dashboard')->group(function () {
 
     // Rutas para operaciones básicas de CRUD al final
     Route::get('/{model}', [AutoCrudController::class, 'index'])->name('dashboard.model.index');
+    Route::get('/{model}/all', [AutoCrudController::class, 'getAll'])->name('dashboard.model.all');
     Route::post('/{model}', [AutoCrudController::class, 'store'])->name('dashboard.model.store');
     
 });

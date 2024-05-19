@@ -26,7 +26,7 @@ class AutoCrudController extends Controller
                 $fieldRules[] = 'in:' . implode(',', $field['options']);
             }
 
-            if ($field['unique']) {
+            if (isset($field['unique']) && $field['unique']) {
                 $uniqueRule = Rule::unique($modelInstance->getTable(), $field['field']);
                 if ($id !== null) {
                     $uniqueRule = $uniqueRule->ignore($id);
@@ -57,6 +57,11 @@ class AutoCrudController extends Controller
         ]);
     }
 
+    public function getAll($model)
+    {
+        return $this->getModel($model)::all();
+    }
+
     public function loadItems($model)
     {
         $itemsPerPage = Request::get('itemsPerPage', 10);
@@ -64,30 +69,62 @@ class AutoCrudController extends Controller
         $search = json_decode(Request::get('search', '[]'), true);
         $deleted = filter_var(Request::get('deleted', 'false'), FILTER_VALIDATE_BOOLEAN);
 
-        $query = $this->getModel($model)::query();  // Usando el modelo dinámico
+        $model = $this->getModel($model);
 
-        if ($deleted && in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($this->getModel($model)))) {
+        $query = $model::query(); 
+
+        // Preparar la inclusión de relaciones para la carga anticipada
+        $query->with($model->getModel()['includes']);
+
+        // Manejo de registros borrados (soft delete)
+        if ($deleted && in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($model))) {
             $query->onlyTrashed();
         }
 
+        // Aplicar filtros de búsqueda
         if (!empty($search)) {
             foreach ($search as $key => $value) {
                 if (!empty($value)) {
-                    $query->where($key, 'LIKE', '%' . $value . '%');
+                    $parts = explode('.', $key);
+                    if (count($parts) == 2) {
+                        $query->whereHas($parts[0], function ($q) use ($parts, $value) {
+                            $q->where($parts[1], 'LIKE', '%' . $value . '%');
+                        });
+                    } else {
+                        $query->where($key, 'LIKE', '%' . $value . '%');
+                    }
                 }
             }
         }
-
+    
         if (!empty($sortBy)) {
             foreach ($sortBy as $sort) {
                 if (isset($sort['key']) && isset($sort['order'])) {
-                    $query->orderBy($sort['key'], $sort['order']);
+                    $parts = explode('.', $sort['key']);
+                    if (count($parts) == 2) {
+                        
+                        $relatedMethod = $parts[0];
+                        $relatedField = $parts[1];
+
+                        $relation = $model->$relatedMethod();
+                        
+                        $foreignKey = $relation->getForeignKeyName();
+                        $relatedTable = $relation->getRelated()->getTable();
+    
+                        $query->join($relatedTable, $model->getTable() . '.' . $foreignKey, '=', $relatedTable . '.id')
+                            ->orderBy($relatedTable . '.' . $relatedField, $sort['order']);
+                        
+                    } else {
+                        $query->orderBy($sort['key'], $sort['order']);
+                    }
                 }
             }
         } else {
             $query->orderBy("id", "desc");
         }
+    
 
+        // Paginar resultados
         if ($itemsPerPage == -1) {
             $itemsPerPage = $query->count();
         }    

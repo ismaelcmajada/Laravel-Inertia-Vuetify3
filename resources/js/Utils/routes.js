@@ -16,6 +16,11 @@ export const routesArray = [
     icon: "mdi-account-group",
   },
   {
+    value: "Países",
+    path: "/dashboard/pais",
+    icon: "mdi-earth",
+  },
+  {
     value: "Cerrar sesión",
     icon: "mdi-logout-variant",
     path: "/logout",
