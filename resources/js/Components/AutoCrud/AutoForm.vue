@@ -2,6 +2,7 @@
 import { useForm } from "@inertiajs/vue3"
 import axios from "axios"
 import { ref, onBeforeMount } from "vue"
+import AutoExternalRelation from "./AutoExternalRelation.vue"
 import {
   ruleRequired,
   ruleMaxLength,
@@ -63,14 +64,15 @@ onBeforeMount(() => {
 const submit = () => {
   if (props.type === "edit") {
     formData.put(`${props.model.endPoint}/${item.value.id}`, {
-      onSuccess: (val) => {
-        item.value = val.item
+      onSuccess: (page) => {
+        item.value = page.props.flash.data
         emit("updated")
       },
     })
   } else if (props.type === "create") {
     formData.post(props.model.endPoint, {
-      onSuccess: (val) => {
+      onSuccess: (page) => {
+        item.value = page.props.flash.data
         emit("created")
       },
     })
@@ -266,18 +268,18 @@ const getFieldRules = (v, field) => {
       </v-btn>
     </div>
   </v-form>
-  <!--<div
+  <div
     v-if="props.type === 'edit' && props.model.externalRelations.length > 0"
     v-for="relation in props.model.externalRelations"
   >
     <v-divider :thickness="3" class="mt-2"></v-divider>
-    <multiple-autocomplete
+    <auto-external-relation
       v-if="type === 'edit'"
       :endPoint="props.model.endPoint"
       :item="item"
       :externalRelation="relation"
       @bound="emit('updated')"
       @unbound="emit('updated')"
-    ></multiple-autocomplete>
-  </div>-->
+    ></auto-external-relation>
+  </div>
 </template>

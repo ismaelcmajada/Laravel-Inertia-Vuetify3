@@ -2,8 +2,6 @@
 import AutoTable from "@/Components/AutoCrud/AutoTable.vue"
 
 const props = defineProps(["model"])
-
-console.log(props.model)
 </script>
 
 <template>

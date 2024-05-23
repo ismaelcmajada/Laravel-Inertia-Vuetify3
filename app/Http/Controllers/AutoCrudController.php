@@ -85,17 +85,19 @@ class AutoCrudController extends Controller
         $sortBy = json_decode(Request::get('sortBy', '[]'), true);
         $search = json_decode(Request::get('search', '[]'), true);
         $deleted = filter_var(Request::get('deleted', 'false'), FILTER_VALIDATE_BOOLEAN);
-
-        $model = $this->getModel($model);
-
-        $query = $model::query(); 
-
-        $query->with($model->getModel()['includes']);
-
-        if ($deleted && in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($model))) {
+    
+        $modelInstance = $this->getModel($model);
+        $modelTable = $modelInstance->getTable();
+        $query = $modelInstance::query();
+    
+        $query->select($modelTable . '.*');
+    
+        $query->with($modelInstance->getModel()['includes']);
+    
+        if ($deleted && in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($modelInstance))) {
             $query->onlyTrashed();
         }
-
+    
         if (!empty($search)) {
             foreach ($search as $key => $value) {
                 if (!empty($value)) {
@@ -105,7 +107,7 @@ class AutoCrudController extends Controller
                             $q->where($parts[1], 'LIKE', '%' . $value . '%');
                         });
                     } else {
-                        $query->where($key, 'LIKE', '%' . $value . '%');
+                        $query->where($modelTable . '.' . $key, 'LIKE', '%' . $value . '%');
                     }
                 }
             }
@@ -116,33 +118,32 @@ class AutoCrudController extends Controller
                 if (isset($sort['key']) && isset($sort['order'])) {
                     $parts = explode('.', $sort['key']);
                     if (count($parts) == 2) {
-                        
                         $relatedMethod = $parts[0];
                         $relatedField = $parts[1];
-
-                        $relation = $model->$relatedMethod();
-                        
+    
+                        $relation = $modelInstance->$relatedMethod();
                         $foreignKey = $relation->getForeignKeyName();
                         $relatedTable = $relation->getRelated()->getTable();
+                        $relatedModelKey = $relation->getRelated()->getKeyName();
     
-                        $query->join($relatedTable, $model->getTable() . '.' . $foreignKey, '=', $relatedTable . '.id')
-                            ->orderBy($relatedTable . '.' . $relatedField, $sort['order']);
-                        
+                        $query->addSelect("$relatedTable.$relatedField as $relatedMethod" . "_" . "$relatedField");
+                        $query->leftJoin($relatedTable, "$modelTable.$foreignKey", '=', "$relatedTable.$relatedModelKey")
+                              ->orderBy("$relatedMethod" . "_" . "$relatedField", $sort['order']);
                     } else {
-                        $query->orderBy($sort['key'], $sort['order']);
+                        $query->orderBy($modelTable . '.' . $sort['key'], $sort['order']);
                     }
                 }
             }
         } else {
-            $query->orderBy("id", "desc");
+            $query->orderBy($modelTable . ".id", "desc");
         }
     
         if ($itemsPerPage == -1) {
             $itemsPerPage = $query->count();
         }    
-
+    
         $items = $query->paginate($itemsPerPage);
-
+    
         return [
             'tableData' => [
                 'items' => $items->items(),
@@ -161,9 +162,11 @@ class AutoCrudController extends Controller
         $rules = $this->getValidationRules($model);
         $validatedData = Request::validate($rules);
 
-        $this->getModel($model)::create($validatedData);
+        $instance = $this->getModel($model)::create($validatedData);
 
-        return Redirect::back()->with('success', $model . ' creado.');
+        $instance->load($instance->getModel()['includes']);
+
+        return Redirect::back()->with(['success' => 'Elemento creado.', 'data' => $instance]);
     }
 
     public function update($model, $id)
@@ -174,7 +177,9 @@ class AutoCrudController extends Controller
 
         $instance->update($validatedData);
 
-        return Redirect::back()->with('success', $model . ' editado.');
+        $instance->load($instance->getModel()['includes']);
+
+        return Redirect::back()->with(['success' => 'Elemento editado.', 'data' => $instance]);
     }
 
     public function destroy($model, $id)
@@ -182,7 +187,7 @@ class AutoCrudController extends Controller
         $instance = $this->getModel($model)::findOrFail($id);
         $instance->delete();
 
-        return Redirect::back()->with('success', $model . ' movido a la papelera.');
+        return Redirect::back()->with('success', 'Elemento movido a la papelera.');
     }
 
     public function destroyPermanent($model, $id)
@@ -190,7 +195,7 @@ class AutoCrudController extends Controller
         $instance = $this->getModel($model)::onlyTrashed()->findOrFail($id);
         $instance->forceDelete();
 
-        return Redirect::back()->with('success', $model . ' eliminado de forma permanente.');
+        return Redirect::back()->with('success', 'Elemento eliminado de forma permanente.');
     }
 
     public function restore($model, $id)
@@ -198,7 +203,7 @@ class AutoCrudController extends Controller
         $instance = $this->getModel($model)::onlyTrashed()->findOrFail($id);
         $instance->restore();
 
-        return Redirect::back()->with('success', $model . ' restaurado.');
+        return Redirect::back()->with('success', 'Elemento restaurado.');
     }
 
     public function exportExcel($model)
@@ -206,5 +211,27 @@ class AutoCrudController extends Controller
         $items = $this->getModel($model)::all();
 
         return  [ 'itemsExcel' => $items ];
+    }
+
+    //Métodos para vincular y desvincular relaciones N:M
+    public function bind($model, $id, $externalRelation, $item)
+    {
+        $instance = $this->getModel($model)::findOrFail($id);
+        $instance->{$externalRelation}()->attach($item);
+
+        $instance->load($instance->getModel()['includes']);
+
+        return Redirect::back()->with(['success' => 'Elemento vinculado', 'data' => $instance]);
+
+    }
+
+    public function unbind($model, $id, $externalRelation, $item)
+    {
+        $instance = $this->getModel($model)::findOrFail($id);
+        $instance->{$externalRelation}()->detach($item);
+
+        $instance->load($instance->getModel()['includes']);
+
+        return Redirect::back()->with(['success' => 'Elemento desvinculado', 'data' => $instance]);
     }
 }

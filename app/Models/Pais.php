@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Suscriptor;
 
 class Pais extends BaseModel
 {
@@ -14,14 +15,11 @@ class Pais extends BaseModel
      */
     protected $table = 'paises';
 
+    protected static $endPoint = '/dashboard/pais';
+
     protected function setIncludes()
     {
         return [];
-    }
-
-    protected function setEndPoint()
-    {
-        return '/dashboard/pais';
     }
 
     protected function setFields()
@@ -38,6 +36,21 @@ class Pais extends BaseModel
                     'unique' => true
                 ]
 
+            ],
+        ];
+    }
+
+    protected function setExternalRelations()
+    {
+        return [
+            [
+                'name' => 'Suscriptores',
+                'relation' => 'suscriptores',
+                'formKey' => 'email',
+                'pivotTable' => 'suscriptores_paises',
+                'foreignKey' => 'pais_id',
+                'relatedKey' => 'suscriptor_id',
+                'model' => Suscriptor::class
             ],
         ];
     }
