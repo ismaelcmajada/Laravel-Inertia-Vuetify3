@@ -22,6 +22,7 @@ return new class extends Migration
             $table->integer('telefono')->nullable();
             $table->string('sexo', 191);
             $table->integer('pais_id');
+            $table->string('foto')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

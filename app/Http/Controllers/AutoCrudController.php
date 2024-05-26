@@ -5,6 +5,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Storage;
 
 class AutoCrudController extends Controller
 {
@@ -18,7 +19,9 @@ class AutoCrudController extends Controller
             $fieldRules = [];
     
             if (isset($field['rules']['required']) && $field['rules']['required']) {
-                $fieldRules[] = 'required';
+                if ($field['type'] !== 'image') {
+                    $fieldRules[] = 'required';
+                }
             }
     
             switch ($field['type']) {
@@ -161,22 +164,45 @@ class AutoCrudController extends Controller
     {
         $rules = $this->getValidationRules($model);
         $validatedData = Request::validate($rules);
+        $modelInstance = $this->getModel($model);
+        $instance = $modelInstance::create($validatedData);
 
-        $instance = $this->getModel($model)::create($validatedData);
+        foreach ($modelInstance->formFields() as $field) {
+            if ($field['type'] === 'image' && Request::hasFile($field['field']) && $instance) {
+                $storagePath = $field['public'] ? 'public/images/'.$model : 'private/images/'.$model;
+                $imagePath = Request::file($field['field'])->storeAs($storagePath,  $field['field'].'/'.$instance['id']);
+                $instance->{$field['field']} = Storage::url($imagePath);
+            }
+        }
+
+        $instance->save();
 
         $instance->load($instance->getModel()['includes']);
-
+    
         return Redirect::back()->with(['success' => 'Elemento creado.', 'data' => $instance]);
     }
-
+    
     public function update($model, $id)
     {
         $instance = $this->getModel($model)::findOrFail($id);
         $rules = $this->getValidationRules($model, $id);
         $validatedData = Request::validate($rules);
 
-        $instance->update($validatedData);
+        foreach ($instance->formFields() as $field) {
+            if ($field['type'] === 'image') {
+                if(Request::input($field['field'].'_edited')) {
+                    Storage::delete($field['public'] ? 'public/images/'.$model.'/'.$field['field'].'/'.$id : 'private/images/'.$model.'/'.$field['field'].'/'.$id );
+                    $validatedData[$field['field']] = null;
+                }
+                if (Request::hasFile($field['field'])) {
+                    $storagePath = $field['public'] ? 'public/images/'.$model : 'private/images/'.$model;
+                    $imagePath = Request::file($field['field'])->storeAs($storagePath, $field['field'].'/'.$id);
+                    $validatedData[$field['field']] = Storage::url($imagePath);
+                }    
+            }
+        }
 
+        $instance->update($validatedData);
         $instance->load($instance->getModel()['includes']);
 
         return Redirect::back()->with(['success' => 'Elemento editado.', 'data' => $instance]);
@@ -192,7 +218,14 @@ class AutoCrudController extends Controller
 
     public function destroyPermanent($model, $id)
     {
+
+
         $instance = $this->getModel($model)::onlyTrashed()->findOrFail($id);
+        foreach ($instance->formFields() as $field) {
+            if ($field['type'] === 'image') {
+                Storage::delete($field['public'] ? 'public/images/'.$model.'/'.$field['field'].'/'.$id : 'private/images/'.$model.'/'.$field['field'].'/'.$id );
+            }
+        }
         $instance->forceDelete();
 
         return Redirect::back()->with('success', 'Elemento eliminado de forma permanente.');

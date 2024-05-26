@@ -104,6 +104,19 @@ class Suscriptor extends BaseModel
                     'required' => true
                 ]
             ],
+            [
+                'name' => 'Foto',
+                'field' => 'foto',
+                'type' => 'image',
+                'table' => false,
+                'form' => true,
+                'public' => true,
+                'rules' => [
+                    'required' => false,
+                    'mimes' => 'jpeg,png,jpg,gif,svg',
+                    'max' => 2048
+                ]
+            ],
         ];
     }
 
