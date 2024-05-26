@@ -7,6 +7,9 @@ import DestroyPermanentDialog from "../DestroyPermanentDialog.vue"
 import LoadingOverlay from "../LoadingOverlay.vue"
 import useTableServer from "../../Composables/useTableServer"
 import useDialogs from "../../Composables/useDialogs"
+import { usePage } from "@inertiajs/vue3"
+
+const page = usePage()
 
 const props = defineProps([
   "title",
@@ -17,6 +20,7 @@ const props = defineProps([
 ])
 
 const model = props.model
+const forbiddenActions = page.props.auth.forbiddenActions
 
 const {
   endPoint,
@@ -166,13 +170,21 @@ endPoint.value = model.endPoint
                 <v-tooltip activator="parent">Recargar tabla</v-tooltip>
               </v-btn>
 
-              <v-btn icon @click="openDialog('create')">
+              <v-btn
+                icon
+                v-if="forbiddenActions.indexOf('store') === -1"
+                @click="openDialog('create')"
+              >
                 <v-icon>mdi-file-plus-outline</v-icon>
-                <v-tooltip activator="parent">Crear tipo de articulo</v-tooltip>
+                <v-tooltip activator="parent">Crear elemento</v-tooltip>
               </v-btn>
             </template>
 
             <v-btn
+              v-if="
+                forbiddenActions.indexOf('restore') === -1 ||
+                forbiddenActions.indexOf('destroyPermanent') === -1
+              "
               :active="tableData.deleted"
               icon
               @click="tableData.deleted = !tableData.deleted"
@@ -226,6 +238,7 @@ endPoint.value = model.endPoint
         >
           <div v-if="!tableData.deleted">
             <v-btn
+              v-if="forbiddenActions.indexOf('update') === -1"
               density="compact"
               variant="text"
               icon
@@ -235,6 +248,7 @@ endPoint.value = model.endPoint
               <v-tooltip activator="parent">Editar</v-tooltip>
             </v-btn>
             <v-btn
+              v-if="forbiddenActions.indexOf('destroy') === -1"
               density="compact"
               variant="text"
               icon
@@ -246,6 +260,7 @@ endPoint.value = model.endPoint
           </div>
           <div v-else>
             <v-btn
+              v-if="forbiddenActions.indexOf('restore') === -1"
               density="compact"
               variant="text"
               icon
@@ -255,6 +270,7 @@ endPoint.value = model.endPoint
               <v-tooltip activator="parent">Restaurar</v-tooltip>
             </v-btn>
             <v-btn
+              v-if="forbiddenActions.indexOf('destroyPermanent') === -1"
               density="compact"
               variant="text"
               icon

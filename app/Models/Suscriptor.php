@@ -135,4 +135,10 @@ class Suscriptor extends BaseModel
            ],
        ];
     }
+
+    protected function setForbiddenActions()
+    {
+        return [
+        ];
+    }
 }

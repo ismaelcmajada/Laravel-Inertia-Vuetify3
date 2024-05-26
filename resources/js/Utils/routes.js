@@ -16,6 +16,23 @@ export const routesArray = [
     icon: "mdi-account-group",
   },
   {
+    value: "hola",
+    path: "/dashboard/hola",
+    icon: "mdi-account-group",
+    childs: [
+      {
+        value: "hola",
+        path: "/dashboard/hola/perro",
+        icon: "mdi-account-group",
+      },
+      {
+        value: "Países",
+        path: "/dashboard/pais",
+        icon: "mdi-earth",
+      },
+    ],
+  },
+  {
     value: "Países",
     path: "/dashboard/pais",
     icon: "mdi-earth",

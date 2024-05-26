@@ -3,8 +3,10 @@ import { useToast } from "vue-toastification"
 import { watch } from "vue"
 import { usePage } from "@inertiajs/vue3"
 
+const page = usePage()
+
 watch(
-  () => usePage().props.flash,
+  () => page.props.flash,
   (flash) => {
     if (flash.success) {
       useToast().success(flash.success)
@@ -14,7 +16,7 @@ watch(
 )
 
 watch(
-  () => usePage().props.errors,
+  () => page.props.errors,
   (errors) => {
     Object.values(errors).forEach((error) => {
       useToast().error(error)

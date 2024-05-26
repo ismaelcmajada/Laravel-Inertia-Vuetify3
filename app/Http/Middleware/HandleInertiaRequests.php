@@ -33,6 +33,7 @@ class HandleInertiaRequests extends Middleware
         return array_merge(parent::share($request), [
             'auth' => [
                 'user' => $request->user(),
+                'forbiddenActions' => $this->getForbiddenActions($request),
             ],
             'ziggy' => function () use ($request) {
                 return array_merge((new Ziggy)->toArray(), [
@@ -41,8 +42,33 @@ class HandleInertiaRequests extends Middleware
             },
             'flash' => [
                 'success' => session('success'),
-                'data' => session('data')
+                'data' => session('data'),
              ]
         ]);
+    }
+
+    private function getModelFromRoute(Request $request)
+    {
+        $model = $request->route('model');
+        $modelClass = "App\\Models\\" . ucfirst($model);
+
+        if (class_exists($modelClass)) {
+            return new $modelClass;
+        } else {
+            return null;
+        }
+    }
+
+    private function getForbiddenActions(Request $request)
+    {
+        $user = $request->user();
+        $model = $this->getModelFromRoute($request);
+
+        if ($model) {
+            $forbiddenActions = $model->getForbiddenActions() ?? [];
+            return $forbiddenActions[$user->role] ?? [];
+        } else {
+            return [];
+        }
     }
 }

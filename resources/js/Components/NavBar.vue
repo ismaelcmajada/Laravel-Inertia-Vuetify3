@@ -1,20 +1,54 @@
 <script setup>
 import { usePage } from "@inertiajs/vue3"
-import { ref, onBeforeMount } from "vue"
+import { ref } from "vue"
 import { routes } from "@/Utils/routes"
+import axios from "axios"
+
+const page = usePage()
+
+const user = page.props.auth.user
+
+const forbiddenActions = ref(null)
+const filteredRoutes = ref([])
 
 const rail = ref(false)
 const open = ref([])
 const lastOpen = ref([])
 
-onBeforeMount(() => {
-  routes.value.forEach((e) => {
-    if (e.hasOwnProperty("childs") && usePage().url.includes(e.path)) {
-      open.value.push(e.value)
+const getRoutes = async () => {
+  const response = await axios.get("/dashboard/get-forbidden-accesses")
+  forbiddenActions.value = response.data
+
+  routes.value = { newValue: page.props?.auth.user.name }
+
+  filteredRoutes.value = routes.value.filter((route) => {
+    let model = route.path?.split("/").pop()
+
+    return (
+      forbiddenActions.value[model] === undefined ||
+      forbiddenActions.value[model][user.role].indexOf("index") === -1
+    )
+  })
+
+  filteredRoutes.value.forEach((route) => {
+    if (route.hasOwnProperty("childs")) {
+      route.childs = route.childs.filter((child) => {
+        let model = child.path?.split("/").pop()
+
+        if (page.url.includes(child.path)) {
+          open.value.push(route.value)
+        }
+
+        return (
+          forbiddenActions.value[model] === undefined ||
+          forbiddenActions.value[model][user.role].indexOf("index") === -1
+        )
+      })
     }
   })
-  routes.value = { newValue: usePage().props?.auth.user.name }
-})
+}
+
+getRoutes()
 
 const closeAll = () => {
   if (!rail.value) {
@@ -39,7 +73,7 @@ const openDrawer = () => {
     <v-list>
       <v-list-item title="Sucriptores"> </v-list-item>
     </v-list>
-    <template v-for="pageRoute in routes">
+    <template v-for="pageRoute in filteredRoutes">
       <v-divider></v-divider>
       <v-list v-if="!pageRoute.hasOwnProperty('path')" nav>
         <v-list-item

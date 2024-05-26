@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('email')->unique();
             $table->string('password');
+            $table->string('role')->default('user');
             $table->rememberToken();
             $table->timestamps();
         });
@@ -24,6 +25,7 @@ return new class extends Migration
             'name' => env('DEFAULT_USER_NAME', 'Default'),
             'email' => env('DEFAULT_USER_EMAIL', 'default@default.com'),
             'password' => bcrypt(env('DEFAULT_USER_PASSWORD', '1234')),
+            'role' => 'super-admin',
         ]);
     }
 
