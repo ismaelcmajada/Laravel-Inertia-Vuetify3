@@ -111,10 +111,11 @@ class Suscriptor extends BaseModel
                 'table' => false,
                 'form' => true,
                 'public' => true,
+                'onlyUpdate' => true,
                 'rules' => [
                     'required' => false,
                     'mimes' => 'jpeg,png,jpg,gif,svg',
-                    'max' => 2048
+                    'max' => 2048,
                 ]
             ],
         ];

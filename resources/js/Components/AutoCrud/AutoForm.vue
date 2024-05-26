@@ -1,7 +1,7 @@
 <script setup>
 import { useForm } from "@inertiajs/vue3"
 import axios from "axios"
-import { ref, onBeforeMount } from "vue"
+import { ref, onBeforeMount, computed } from "vue"
 import AutoExternalRelation from "./AutoExternalRelation.vue"
 import {
   ruleRequired,
@@ -19,12 +19,18 @@ import {
 const props = defineProps(["item", "type", "model"])
 const emit = defineEmits(["updated", "created"])
 
+const filteredFormFields = computed(() => {
+  return props.type === "create"
+    ? props.model.formFields.filter((field) => !field.onlyUpdate)
+    : props.model.formFields
+})
+
 const relations = ref({})
 const item = ref(props.item)
 const imagePreview = ref({})
 
 const getRelations = () => {
-  const relationsFromFormFields = props.model.formFields.filter(
+  const relationsFromFormFields = filteredFormFields.value.filter(
     (field) => field.relation
   )
 
@@ -38,13 +44,13 @@ const getRelations = () => {
 const form = ref(false)
 
 const formData = useForm(
-  Object.fromEntries(props.model.formFields.map(({ field }) => [field, null]))
+  Object.fromEntries(filteredFormFields.value.map(({ field }) => [field, null]))
 )
 
 onBeforeMount(() => {
   getRelations()
   if (props.type === "edit") {
-    props.model.formFields.forEach((field) => {
+    filteredFormFields.value.forEach((field) => {
       if (field.type === "password") {
         formData[field.field] = ""
       } else {
@@ -55,7 +61,7 @@ onBeforeMount(() => {
       }
     })
   } else if (props.type === "create") {
-    props.model.formFields.forEach((field) => {
+    filteredFormFields.value.forEach((field) => {
       if (field.default) {
         formData[field.field] = field.default
       } else {
@@ -229,10 +235,8 @@ const removeImage = (imageFieldName) => {
     <v-row>
       <v-col
         cols="12"
-        :md="
-          props.model.formFields.length > 1 && field.type !== 'image' ? 6 : 12
-        "
-        v-for="field in props.model.formFields"
+        :md="filteredFormFields.length > 1 && field.type !== 'image' ? 6 : 12"
+        v-for="field in filteredFormFields"
       >
         <v-text-field
           v-if="
