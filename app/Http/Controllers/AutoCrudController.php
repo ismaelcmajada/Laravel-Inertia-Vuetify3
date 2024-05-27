@@ -6,7 +6,6 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\File;
 
 class AutoCrudController extends Controller
 {
@@ -20,7 +19,7 @@ class AutoCrudController extends Controller
             $fieldRules = [];
     
             if (isset($field['rules']['required']) && $field['rules']['required']) {
-                if ($field['type'] !== 'image') {
+                if ($field['type'] !== 'image' && $field['type'] !== 'password') {
                     $fieldRules[] = 'required';
                 }
             }
@@ -247,7 +246,6 @@ class AutoCrudController extends Controller
         return  [ 'itemsExcel' => $items ];
     }
 
-    //Métodos para vincular y desvincular relaciones N:M
     public function bind($model, $id, $externalRelation, $item)
     {
         $instance = $this->getModel($model)::findOrFail($id);

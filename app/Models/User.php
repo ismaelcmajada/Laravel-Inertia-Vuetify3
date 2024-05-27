@@ -1,45 +1,78 @@
 <?php
-
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
+use Illuminate\Auth\Authenticatable;
 
-class User extends Authenticatable
+class User extends BaseModel implements AuthenticatableContract
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use Authenticatable, HasApiTokens, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-        'role'
-    ];
+    protected static $endPoint = '/dashboard/user';
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
+    protected function setFields()
+    {
+        return [
+            [
+                'name' => 'Nombre', 
+                'field' => 'name', 
+                'type' => 'string', 
+                'table' => true, 
+                'form' => true, 
+                'rules' => [
+                    'required' => true
+                ]
+            ],
+            [
+                'name' => 'Email', 
+                'field' => 'email', 
+                'type' => 'email', 
+                'table' => true, 
+                'form' => true, 
+                'rules' => [
+                    'required' => true, 
+                    'unique' => true
+                ]
+            ],
+            [
+                'name' => 'Contraseña', 
+                'field' => 'password', 
+                'type' => 'password', 
+                'table' => false, 
+                'form' => true, 
+                'rules' => [
+                    'required' => true
+                ]
+            ],
+            [
+                'name' => 'Rol', 
+                'field' => 'role', 
+                'type' => 'select', 
+                'table' => true, 
+                'form' => true, 
+                'options' => ['user', 'admin'], 
+                'rules' => [
+                    'required' => true
+                ]
+            ],
+        ];
+    }
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
-    protected $casts = [
-        'password' => 'hashed',
+    protected function setIncludes()
+    {
+        return [];
+    }
+
+    protected function setExternalRelations()
+    {
+        return [];
+    }
+
+   protected static $forbiddenActions = [
+        'admin' => [
+            'destroy',
+        ]
     ];
 }

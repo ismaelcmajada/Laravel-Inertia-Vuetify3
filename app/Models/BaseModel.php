@@ -11,6 +11,7 @@ abstract class BaseModel extends Model
     protected $includes = [];
     protected $fillable = [];
     protected $casts = [];
+    protected $hidden = [];
 
     protected static $endPoint;
     protected static $forbiddenActions;
@@ -28,6 +29,9 @@ abstract class BaseModel extends Model
                 $this->casts[$field['field']] = 'integer';
             } elseif ($field['type'] === 'boolean') {
                 $this->casts[$field['field']] = 'boolean';
+            } elseif ($field['type'] === 'password') {
+                $this->casts[$field['field']] = 'hashed';
+                $this->hidden[] = $field['field'];
             }
             if (isset($field['relation'])) {
                 $this->includes[] = $field['relation']['relation'];

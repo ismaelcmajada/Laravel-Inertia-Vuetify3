@@ -2,11 +2,11 @@
 namespace App\Services;
 
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Auth;
 
 use App\Models\Suscriptor;
 use App\Models\Pais;
+use App\Models\User;
 
 class NavigationService
 {
@@ -24,6 +24,11 @@ class NavigationService
                 'name' => 'Suscriptores',
                 'icon' => 'mdi-account-group',
                 'model' => Suscriptor::class,
+            ],
+            [
+                'name' => 'Usuarios',
+                'icon' => 'mdi-account-group',
+                'model' => User::class,
             ],
             [
                 'name' => 'hola',
