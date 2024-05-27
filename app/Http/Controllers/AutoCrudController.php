@@ -175,11 +175,12 @@ class AutoCrudController extends Controller
             }
         }
 
-        $instance->save();
-
+        $created = $instance->save();
         $instance->load($instance->getModel()['includes']);
-    
-        return Redirect::back()->with(['success' => 'Elemento creado.', 'data' => $instance]);
+
+        if ($created) {
+            return Redirect::back()->with(['success' => 'Elemento creado.', 'data' => $instance]);
+        }
     }
     
     public function update($model, $id)
@@ -200,43 +201,53 @@ class AutoCrudController extends Controller
                     $validatedData[$field['field']] = Storage::url($imagePath);
                 }    
             }
+
+            if($field['type'] === 'password') {
+                if(!Request::input($field['field'])) {
+                    $validatedData[$field['field']] = $instance->{$field['field']};
+                }
+            }
         }
 
-        $instance->update($validatedData);
+
+        $updated = $instance->update($validatedData);
         $instance->load($instance->getModel()['includes']);
 
-        return Redirect::back()->with(['success' => 'Elemento editado.', 'data' => $instance]);
+        if ($updated) {
+            return Redirect::back()->with(['success' => 'Elemento editado.', 'data' => $instance]);
+        }
     }
 
     public function destroy($model, $id)
     {
         $instance = $this->getModel($model)::findOrFail($id);
-        $instance->delete();
 
-        return Redirect::back()->with('success', 'Elemento movido a la papelera.');
+        if($instance->delete()) {
+            return Redirect::back()->with('success', 'Elemento movido a la papelera.');
+        }
     }
 
     public function destroyPermanent($model, $id)
     {
-
-
         $instance = $this->getModel($model)::onlyTrashed()->findOrFail($id);
         foreach ($instance->formFields() as $field) {
             if ($field['type'] === 'image') {
                 Storage::delete($field['public'] ? 'public/images/'.$model.'/'.$field['field'].'/'.$id : 'private/images/'.$model.'/'.$field['field'].'/'.$id );
             }
         }
-        $instance->forceDelete();
 
-        return Redirect::back()->with('success', 'Elemento eliminado de forma permanente.');
+        if ($instance->forceDelete()) {
+            return Redirect::back()->with('success', 'Elemento eliminado de forma permanente.');
+        }
     }
 
     public function restore($model, $id)
     {
         $instance = $this->getModel($model)::onlyTrashed()->findOrFail($id);
-        $instance->restore();
 
-        return Redirect::back()->with('success', 'Elemento restaurado.');
+        if($instance->restore()) {
+            return Redirect::back()->with('success', 'Elemento restaurado.');
+        }
     }
 
     public function exportExcel($model)

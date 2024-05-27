@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('role')->default('user');
             $table->rememberToken();
             $table->timestamps();
+            $table->softDeletes();
         });
 
         DB::table('users')->insert([
