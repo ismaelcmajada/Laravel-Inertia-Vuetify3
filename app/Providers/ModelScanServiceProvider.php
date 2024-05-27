@@ -15,7 +15,7 @@ class ModelScanServiceProvider extends ServiceProvider
             return new class {
                 public function scanModels()
                 {
-                    return Cache::remember('scanned_models', 1440, function () {
+                    return Cache::rememberForever('scanned_models',function () {
                         $modelsPath = app_path('Models');
                         $modelFiles = File::allFiles($modelsPath);
 

@@ -16,7 +16,7 @@ class NavigationServiceProvider extends ServiceProvider
     public function register()
     {
         $this->app->singleton('navigation', function ($app) {
-            return Cache::remember('navigation_routes', 1440, function () {
+            return Cache::rememberForever('navigation_routes', function () {
                 return $this->generateNavigation();
             });
         });
