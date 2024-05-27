@@ -8,8 +8,11 @@ import LoadingOverlay from "../LoadingOverlay.vue"
 import useTableServer from "../../Composables/useTableServer"
 import useDialogs from "../../Composables/useDialogs"
 import { usePage } from "@inertiajs/vue3"
+import { useDisplay } from "vuetify"
 
 const page = usePage()
+
+const { mobile } = useDisplay()
 
 const props = defineProps([
   "title",
@@ -198,7 +201,7 @@ endPoint.value = model.endPoint
         </v-toolbar>
       </template>
 
-      <template v-slot:thead>
+      <template v-if="!mobile" v-slot:thead>
         <tr>
           <td
             v-for="header in model.tableHeaders.filter(
