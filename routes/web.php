@@ -28,7 +28,6 @@ Route::middleware(['auth', 'checkForbiddenActions'])->prefix('dashboard')->group
     // exportExcel: /item/export-excel
 
     // Rutas específicas con parámetros múltiples primero
-    Route::get('/get-forbidden-accesses', [AutoCrudController::class, 'getAllforbiddenAccesses'])->name('dashboard.get-forbidden-accesses');
     Route::post('/{model}/load-items', [AutoCrudController::class, 'loadItems'])->name('dashboard.model.load-items');
     Route::post('/{model}/{id}', [AutoCrudController::class, 'update'])->name('dashboard.model.update');
     Route::delete('/{model}/{id}', [AutoCrudController::class, 'destroy'])->name('dashboard.model.destroy');

@@ -1,54 +1,24 @@
 <script setup>
 import { usePage } from "@inertiajs/vue3"
 import { ref } from "vue"
-import { routes } from "@/Utils/routes"
-import axios from "axios"
 
 const page = usePage()
 
-const user = page.props.auth.user
-
-const forbiddenActions = ref(null)
-const filteredRoutes = ref([])
+const navigation = page.props.navigation
 
 const rail = ref(false)
 const open = ref([])
 const lastOpen = ref([])
 
-const getRoutes = async () => {
-  const response = await axios.get("/dashboard/get-forbidden-accesses")
-  forbiddenActions.value = response.data
-
-  routes.value = { newValue: page.props?.auth.user.name }
-
-  filteredRoutes.value = routes.value.filter((route) => {
-    let model = route.path?.split("/").pop()
-
-    return (
-      forbiddenActions.value[model] === undefined ||
-      forbiddenActions.value[model][user.role].indexOf("index") === -1
-    )
-  })
-
-  filteredRoutes.value.forEach((route) => {
-    if (route.hasOwnProperty("childs")) {
-      route.childs = route.childs.filter((child) => {
-        let model = child.path?.split("/").pop()
-
-        if (page.url.includes(child.path)) {
-          open.value.push(route.value)
-        }
-
-        return (
-          forbiddenActions.value[model] === undefined ||
-          forbiddenActions.value[model][user.role].indexOf("index") === -1
-        )
-      })
-    }
-  })
-}
-
-getRoutes()
+Object.values(navigation).forEach((route) => {
+  if (route.hasOwnProperty("childs")) {
+    route.childs.forEach((child) => {
+      if (page.url.includes(child.path)) {
+        open.value.push(route.name)
+      }
+    })
+  }
+})
 
 const closeAll = () => {
   if (!rail.value) {
@@ -73,11 +43,11 @@ const openDrawer = () => {
     <v-list>
       <v-list-item title="Sucriptores"> </v-list-item>
     </v-list>
-    <template v-for="pageRoute in filteredRoutes">
+    <template v-for="pageRoute in navigation">
       <v-divider></v-divider>
       <v-list v-if="!pageRoute.hasOwnProperty('path')" nav>
         <v-list-item
-          :title="pageRoute.value"
+          :title="pageRoute.name"
           :prepend-icon="pageRoute.icon"
         ></v-list-item>
       </v-list>
@@ -87,11 +57,11 @@ const openDrawer = () => {
           v-model:opened="open"
           nav
         >
-          <v-list-group :value="pageRoute.value">
+          <v-list-group :value="pageRoute.name">
             <template v-slot:activator="{ props }">
               <v-list-item
                 v-bind="props"
-                :title="pageRoute.value"
+                :title="pageRoute.name"
                 :prepend-icon="pageRoute.icon"
                 :active="$page.url.includes(pageRoute.path)"
                 @click="openDrawer"
@@ -100,7 +70,7 @@ const openDrawer = () => {
             <v-list-item
               v-for="child in pageRoute.childs"
               :prepend-icon="child.icon"
-              :title="child.value"
+              :title="child.name"
               :active="$page.url.includes(child.path)"
               :to="child.path"
             ></v-list-item>
@@ -108,7 +78,7 @@ const openDrawer = () => {
         </v-list>
         <v-list v-else nav>
           <v-list-item
-            :title="pageRoute.value"
+            :title="pageRoute.name"
             :prepend-icon="pageRoute.icon"
             :active="$page.url.includes(pageRoute.path)"
             :to="pageRoute.path"

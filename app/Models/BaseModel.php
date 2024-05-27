@@ -11,9 +11,9 @@ abstract class BaseModel extends Model
     protected $includes = [];
     protected $fillable = [];
     protected $casts = [];
-    protected $forbiddenActions = [];
 
     protected static $endPoint;
+    protected static $forbiddenActions;
 
     public function __construct($attributes = [])
     {
@@ -22,7 +22,6 @@ abstract class BaseModel extends Model
         $this->includes = $this->setIncludes();
         $this->fillable = array_column($this->formFields(), 'field');
         $this->externalRelations = $this->setExternalRelations();
-        $this->forbiddenActions = $this->setForbiddenActions();
 
         foreach ($this->fields as &$field) {
             if ($field['type'] === 'number') {
@@ -52,6 +51,11 @@ abstract class BaseModel extends Model
         return static::$endPoint;
     }
 
+    public static function getForbiddenActions()
+    {
+        return static::$forbiddenActions;
+    }
+
     public function formFields()
     {
         $formFields = array_filter($this->fields, function ($field) {
@@ -68,11 +72,6 @@ abstract class BaseModel extends Model
         });
 
         return array_values($tableFields);
-    }
-
-    public function getForbiddenActions()
-    {
-        return $this->forbiddenActions;
     }
 
     public function __call($method, $parameters)

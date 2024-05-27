@@ -55,21 +55,19 @@ class Pais extends BaseModel
         ];
     }
 
-    protected function setForbiddenActions()
-    {
-        return [
-            'user' => [
-                'store',
-            ],
+    protected static $forbiddenActions = [
+        'user' => [
+            'store',
+        ],
 
-            'super-admin' => [
-                'destroy',
-                'destroyPermanent',
-                'exportExcel',
-                'restore',
-                'store',
-             
-            ],
-        ];
-    }
+        'super-admin' => [
+            'destroy',
+            'destroyPermanent',
+            'exportExcel',
+            'restore',
+            'store',
+            'index'
+        ],
+    ];
+    
 }

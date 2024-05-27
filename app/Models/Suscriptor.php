@@ -136,9 +136,6 @@ class Suscriptor extends BaseModel
        ];
     }
 
-    protected function setForbiddenActions()
-    {
-        return [
-        ];
-    }
+    protected static $forbiddenActions = [];
+
 }

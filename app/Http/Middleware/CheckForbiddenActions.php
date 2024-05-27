@@ -16,8 +16,7 @@ class CheckForbiddenActions
             $modelClass = "App\\Models\\" . ucfirst($model);
 
             if (class_exists($modelClass)) {
-                $modelInstance = new $modelClass;
-                $forbiddenActions = $modelInstance->getForbiddenActions()[$userRole] ?? [];
+                $forbiddenActions = $modelClass::getForbiddenActions()[$userRole] ?? [];
 
                 $action = explode('@', $request->route()->getActionName())[1];
                 if (in_array('all', $forbiddenActions) || in_array($action, $forbiddenActions)) {

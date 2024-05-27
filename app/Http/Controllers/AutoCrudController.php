@@ -71,34 +71,6 @@ class AutoCrudController extends Controller
         }
     }
 
-    public function getAllforbiddenAccesses() {
-        $modelFiles = File::files(app_path('Models'));
-
-        $models = collect($modelFiles)->map(function ($file) {
-            return str_replace('.php', '', $file->getFilename());
-        });
-
-        $models = $models->filter(function ($model) {
-            return !in_array($model, ['BaseModel', 'User']);
-        });
-
-        $AllForbiddenActions = [];
-
-        foreach ($models as $model) {
-            $modelClass = 'App\\Models\\' . ucfirst($model);
-
-            if (class_exists($modelClass)) {
-                $modelInstance = new $modelClass;
-                $forbiddenActions = $modelInstance->getForbiddenActions();
-                if ($forbiddenActions) {
-                    $AllForbiddenActions[strtolower($model)] = $forbiddenActions;
-                }
-            }
-        };
-
-        return $AllForbiddenActions;
-    }
-
     public function index($model)
     {
         return Inertia::render('Dashboard/'.ucfirst($model), [
