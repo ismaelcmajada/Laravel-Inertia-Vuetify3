@@ -45,7 +45,13 @@ const openDrawer = () => {
     </v-list>
     <template v-for="pageRoute in navigation">
       <v-divider></v-divider>
-      <v-list v-if="!pageRoute.hasOwnProperty('path')" nav>
+      <v-list
+        v-if="
+          !pageRoute.hasOwnProperty('path') &&
+          !pageRoute.hasOwnProperty('childs')
+        "
+        nav
+      >
         <v-list-item
           :title="pageRoute.name"
           :prepend-icon="pageRoute.icon"
@@ -63,7 +69,6 @@ const openDrawer = () => {
                 v-bind="props"
                 :title="pageRoute.name"
                 :prepend-icon="pageRoute.icon"
-                :active="$page.url.includes(pageRoute.path)"
                 @click="openDrawer"
               ></v-list-item>
             </template>

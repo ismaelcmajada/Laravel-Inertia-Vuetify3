@@ -29,8 +29,8 @@ Object.values(navigation).forEach((route) => {
       <v-divider></v-divider>
       <v-list
         v-if="
-          !pageRoute.hasOwnProperty('route') &&
-          !pageRoute.hasOwnProperty('path')
+          !pageRoute.hasOwnProperty('path') &&
+          !pageRoute.hasOwnProperty('childs')
         "
         nav
       >
@@ -51,7 +51,6 @@ Object.values(navigation).forEach((route) => {
                 v-bind="props"
                 :title="pageRoute.name"
                 :prepend-icon="pageRoute.icon"
-                :active="$page.url.includes(pageRoute.path)"
               ></v-list-item>
             </template>
             <v-list-item

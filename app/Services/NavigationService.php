@@ -27,14 +27,8 @@ class NavigationService
             ],
             [
                 'name' => 'hola',
-                'path' => '/dashboard/hola',
                 'icon' => 'mdi-account-group',
                 'childs' => [
-                    [
-                        'name' => 'hola',
-                        'path' => '/dashboard/hola/perro',
-                        'icon' => 'mdi-account-group',
-                    ],
                     [
                         'name' => 'Países',
                         'icon' => 'mdi-earth',
@@ -79,6 +73,10 @@ class NavigationService
             if (isset($route['childs'])) {
                 $childs = &$route['childs'];
                 $route['childs'] = $this->filterNavigation($childs);
+
+                if(count($route['childs']) === 0) {
+                    return false;
+                }
             }
 
             if (class_exists($modelClass)) {

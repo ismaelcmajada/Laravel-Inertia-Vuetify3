@@ -66,7 +66,6 @@ class Pais extends BaseModel
             'exportExcel',
             'restore',
             'store',
-            'index'
         ],
     ];
     
