@@ -1,6 +1,9 @@
 <?php
-namespace App\Services;
 
+namespace App\Providers;
+
+use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 
@@ -8,14 +11,20 @@ use App\Models\Suscriptor;
 use App\Models\Pais;
 use App\Models\User;
 
-class NavigationService
+class NavigationServiceProvider extends ServiceProvider
 {
-
-    private $routes;
-
-    public function __construct()
+    public function register()
     {
-        $this->routes = [
+        $this->app->singleton('navigation', function ($app) {
+            return Cache::remember('navigation_routes', 1440, function () {
+                return $this->generateNavigation();
+            });
+        });
+    }
+
+    private function generateNavigation()
+    {
+        $routes = [
             [
                 'name' => Auth::user()->name ?? null,
                 'icon' => 'mdi-account-circle',
@@ -26,25 +35,14 @@ class NavigationService
                 'model' => Suscriptor::class,
             ],
             [
-                'name' => 'Usuarios',
-                'icon' => 'mdi-account-group',
-                'model' => User::class,
-            ],
-            [
-                'name' => 'hola',
-                'icon' => 'mdi-account-group',
-                'childs' => [
-                    [
-                        'name' => 'Países',
-                        'icon' => 'mdi-earth',
-                        'model' => Pais::class,
-                    ],
-                ],
-            ],
-            [
                 'name' => 'Países',
                 'icon' => 'mdi-earth',
                 'model' => Pais::class,
+            ],
+            [
+                'name' => 'Usuarios',
+                'icon' => 'mdi-account-group',
+                'model' => User::class,
             ],
             [
                 'name' => 'Cerrar sesión',
@@ -52,34 +50,34 @@ class NavigationService
                 'path' => '/logout',
             ],
         ];
+
+        $this->setPaths($routes);
+        return $this->filterNavigation($routes);
     }
 
     private function setPaths(&$routes)
     {
         foreach ($routes as &$route) {
             $modelClass = $route['model'] ?? null;
-  
             if (class_exists($modelClass)) {
-                $model = Str::lower(Str::afterLast($modelClass, '\\'));
-                $route['path'] = '/dashboard/' . Str::lower($model);
+                $route['path'] = $modelClass::getEndpoint();
             }
 
-            if(isset($route['childs'])) {
-                $childs = &$route['childs'];
-                $this->setPaths($childs);
+            if (isset($route['childs'])) {
+                $this->setPaths($route['childs']);
             }
         }
     }
 
-    private function filterNavigation(&$routes) {
+    private function filterNavigation(&$routes)
+    {
         return array_filter($routes, function (&$route) {
             $modelClass = $route['model'] ?? null;
 
             if (isset($route['childs'])) {
-                $childs = &$route['childs'];
-                $route['childs'] = $this->filterNavigation($childs);
+                $route['childs'] = $this->filterNavigation($route['childs']);
 
-                if(count($route['childs']) === 0) {
+                if (count($route['childs']) === 0) {
                     return false;
                 }
             }
@@ -96,10 +94,5 @@ class NavigationService
             return true;
         });
     }
-
-    public function getNavigation()
-    {
-        $this->setPaths($this->routes);
-        return $this->filterNavigation($this->routes);
-    }
 }
+

@@ -1,9 +1,15 @@
 <script setup>
 import AutoTable from "@/Components/AutoCrud/AutoTable.vue"
+import { usePage } from "@inertiajs/vue3"
 
-const props = defineProps(["model"])
+const page = usePage()
+
+const model = page.props.models.user
+
+console.log(page.props.models)
 </script>
 
 <template>
-  <auto-table title="Usuarios" :model="props.model" />
+  <auto-table title="Usuarios" :model="model" />
+  <auto-table title="Paises" :model="page.props.models.pais" />
 </template>

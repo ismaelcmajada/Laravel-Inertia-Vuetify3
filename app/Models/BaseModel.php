@@ -123,7 +123,7 @@ abstract class BaseModel extends Model
             'externalRelations' => $this->externalRelations,
             'includes' => $this->includes,
             'fillable' => $this->fillable,
-            'forbiddenActions' => $this->forbiddenActions,
+            'forbiddenActions' => static::getForbiddenActions(),
         ];
     }
 

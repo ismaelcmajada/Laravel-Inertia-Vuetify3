@@ -23,7 +23,7 @@ const props = defineProps([
 ])
 
 const model = props.model
-const forbiddenActions = page.props.auth.forbiddenActions
+const forbiddenActions = model.forbiddenActions[page.props.auth.user.role] ?? []
 
 const {
   endPoint,

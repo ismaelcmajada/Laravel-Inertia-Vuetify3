@@ -65,6 +65,7 @@ class Pais extends BaseModel
             'destroyPermanent',
             'exportExcel',
             'restore',
+            'store'
         ],
     ];
     

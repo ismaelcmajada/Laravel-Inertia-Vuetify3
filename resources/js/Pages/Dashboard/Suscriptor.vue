@@ -1,9 +1,12 @@
 <script setup>
 import AutoTable from "@/Components/AutoCrud/AutoTable.vue"
+import { usePage } from "@inertiajs/vue3"
 
-const props = defineProps(["model"])
+const page = usePage()
+
+const model = page.props.models.suscriptor
 </script>
 
 <template>
-  <auto-table title="Suscriptores" :model="props.model" />
+  <auto-table title="Suscriptores" :model="model" />
 </template>

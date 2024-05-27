@@ -5,7 +5,6 @@ namespace App\Http\Middleware;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 use Tightenco\Ziggy\Ziggy;
-use App\Services\NavigationService;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -15,13 +14,6 @@ class HandleInertiaRequests extends Middleware
      * @var string
      */
     protected $rootView = 'app';
-
-    protected $navigationService;
-
-    public function __construct(NavigationService $navigationService)
-    {
-        $this->navigationService = $navigationService;
-    }
 
     /**
      * Determine the current asset version.
@@ -41,9 +33,9 @@ class HandleInertiaRequests extends Middleware
         return array_merge(parent::share($request), [
             'auth' => [
                 'user' => $request->user(),
-                'forbiddenActions' => $this->getForbiddenActions($request),
             ],
-            'navigation' => $this->navigationService->getNavigation(),
+            'navigation' => app('navigation'),
+            'models' => app('modelscanner')->scanModels(),
             'ziggy' => function () use ($request) {
                 return array_merge((new Ziggy)->toArray(), [
                     'location' => $request->url(),
@@ -54,19 +46,5 @@ class HandleInertiaRequests extends Middleware
                 'data' => session('data'),
              ]
         ]);
-    }
-
-    private function getForbiddenActions(Request $request)
-    {
-        $user = $request->user();
-        $model = $request->route('model');
-        $modelClass = "App\\Models\\" . ucfirst($model);
-
-        if (class_exists($modelClass)) {
-            $forbiddenActions = $modelClass::getForbiddenActions()[$user->role] ?? [];
-            return $forbiddenActions;
-        } else {
-            return [];
-        }
     }
 }

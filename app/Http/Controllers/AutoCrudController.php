@@ -72,9 +72,7 @@ class AutoCrudController extends Controller
 
     public function index($model)
     {
-        return Inertia::render('Dashboard/'.ucfirst($model), [
-           'model' => $this->getModel($model)->getModel(),
-        ]);
+        return Inertia::render('Dashboard/'.ucfirst($model));
     }
 
     public function getAll($model)
