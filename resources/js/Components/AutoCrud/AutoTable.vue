@@ -9,6 +9,7 @@ import useTableServer from "../../Composables/useTableServer"
 import useDialogs from "../../Composables/useDialogs"
 import { usePage } from "@inertiajs/vue3"
 import { useDisplay } from "vuetify"
+import { computed, watch } from "vue"
 
 const page = usePage()
 
@@ -22,8 +23,12 @@ const props = defineProps([
   "orderBy",
 ])
 
-const model = props.model
-const forbiddenActions = model.forbiddenActions[page.props.auth.user.role] ?? []
+const model = computed(() => {
+  return props.model
+})
+
+const forbiddenActions =
+  model.value.forbiddenActions[page.props.auth.user.role] ?? []
 
 const {
   endPoint,
@@ -35,13 +40,19 @@ const {
   resetTable,
 } = useTableServer()
 
-if (props.search) {
-  tableData.search = props.search
-}
+tableData.search = props.search ?? {}
 
-if (props.orderBy) {
-  tableData.sortBy = props.orderBy
-}
+tableData.orderBy = props.orderBy ?? []
+
+watch(
+  props,
+  () => {
+    tableData.search = props.search ?? {}
+    tableData.orderBy = props.orderBy ?? []
+    loadItems()
+  },
+  { deep: true }
+)
 
 const {
   showFormDialog,
@@ -56,7 +67,18 @@ const {
 const modifiedRows = props.modifiedRows
 
 const title = props.title
-endPoint.value = model.endPoint
+endPoint.value = model.value.endPoint
+
+const changeDialogType = () => {
+  if (
+    formDialogType.value === "create" &&
+    model.value.externalRelations.length > 0
+  ) {
+    formDialogType.value = "edit"
+  } else {
+    showFormDialog.value = false
+  }
+}
 </script>
 
 <template>
@@ -74,6 +96,7 @@ endPoint.value = model.endPoint
       @closeDialog="showFormDialog = false"
       @reloadItems="loadItems"
       v-model:type="formDialogType"
+      @created="changeDialogType"
       :item="item"
       :model="model"
     >
@@ -100,7 +123,7 @@ endPoint.value = model.endPoint
             :model="model"
             :type="type"
             :item="item"
-            @created="closeDialog"
+            @created="changeDialogType"
           />
         </slot>
       </template>
@@ -168,7 +191,7 @@ endPoint.value = model.endPoint
             :loadItems="loadItems"
           >
             <template v-if="!tableData.deleted">
-              <v-btn icon @click="resetTable">
+              <v-btn icon @click="resetTable(props.search, props.orderBy)">
                 <v-icon>mdi-refresh</v-icon>
                 <v-tooltip activator="parent">Recargar tabla</v-tooltip>
               </v-btn>

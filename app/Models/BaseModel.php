@@ -60,6 +60,11 @@ abstract class BaseModel extends Model
         return static::$forbiddenActions;
     }
 
+    public function externalRelations() 
+    {
+        return $this->externalRelations;
+    }
+
     public function formFields()
     {
         $formFields = array_filter($this->fields, function ($field) {

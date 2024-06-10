@@ -3,7 +3,15 @@ import AutoForm from "./AutoForm.vue"
 import { computed, watch } from "vue"
 
 const props = defineProps(["show", "item", "type", "model"])
-const emit = defineEmits(["closeDialog", "reloadItems"])
+const emit = defineEmits(["closeDialog", "reloadItems", "updated", "created"])
+
+const model = computed(() => {
+  return props.model
+})
+
+const type = computed(() => {
+  return props.type
+})
 
 const dialogState = computed({
   get: () => props.show,
@@ -23,7 +31,7 @@ watch(dialogState, (value) => {
   <v-dialog scrollable v-model="dialogState" width="1024">
     <v-card>
       <v-card-title class="mt-2 text-center">
-        <span v-if="props.type == 'create'"> Crear elemento </span>
+        <span v-if="type == 'create'"> Crear elemento </span>
         <span v-else> Editar elemento </span>
       </v-card-title>
 
@@ -33,8 +41,8 @@ watch(dialogState, (value) => {
         <v-container>
           <slot
             name="prepend"
-            :model="props.model"
-            :type="props.type"
+            :model="model"
+            :type="type"
             :item="props.item"
             :reloadItems="() => emit('reloadItems')"
             :closeDialog="() => (dialogState = false)"
@@ -42,23 +50,24 @@ watch(dialogState, (value) => {
           </slot>
           <slot
             name="auto-form"
-            :model="props.model"
-            :type="props.type"
+            :model="model"
+            :type="type"
             :item="props.item"
             :reloadItems="() => emit('reloadItems')"
             :closeDialog="() => (dialogState = false)"
           >
             <auto-form
-              :model="props.model"
-              :type="props.type"
+              :model="model"
+              :type="type"
               :item="props.item"
-              @created="dialogState = false"
+              @created="emit('created')"
+              @updated="emit('updated')"
             />
           </slot>
           <slot
             name="append"
-            :model="props.model"
-            :type="props.type"
+            :model="model"
+            :type="type"
             :item="props.item"
             :reloadItems="() => emit('reloadItems')"
             :closeDialog="() => (dialogState = false)"

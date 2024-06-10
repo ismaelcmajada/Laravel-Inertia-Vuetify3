@@ -14,15 +14,28 @@ import {
   ruleMinLength,
   ruleTelephone,
   ruleFloat,
+  getFieldRules,
 } from "@/Utils/rules"
 
 const props = defineProps(["item", "type", "model"])
 const emit = defineEmits(["updated", "created"])
 
+const model = computed(() => {
+  return props.model
+})
+
+const type = computed(() => {
+  return props.type
+})
+
 const filteredFormFields = computed(() => {
-  return props.type === "create"
-    ? props.model.formFields.filter((field) => !field.onlyUpdate)
-    : props.model.formFields
+  return type.value === "create"
+    ? model.value.formFields.filter((field) => !field.onlyUpdate)
+    : model.value.formFields
+})
+
+const hiddenFormFieldsLength = computed(() => {
+  return filteredFormFields.value.filter((field) => field.hidden).length ?? 0
 })
 
 const relations = ref({})
@@ -49,7 +62,7 @@ const formData = useForm(
 
 onBeforeMount(() => {
   getRelations()
-  if (props.type === "edit") {
+  if (type.value === "edit") {
     filteredFormFields.value.forEach((field) => {
       if (field.type === "password") {
         formData[field.field] = ""
@@ -60,7 +73,7 @@ onBeforeMount(() => {
         }
       }
     })
-  } else if (props.type === "create") {
+  } else if (type.value === "create") {
     filteredFormFields.value.forEach((field) => {
       if (field.default) {
         formData[field.field] = field.default
@@ -72,8 +85,8 @@ onBeforeMount(() => {
 })
 
 const submit = () => {
-  if (props.type === "edit") {
-    formData.post(`${props.model.endPoint}/${item.value.id}`, {
+  if (type.value === "edit") {
+    formData.post(`${model.value.endPoint}/${item.value.id}`, {
       _method: "put",
       forceFormData: true,
       onSuccess: (page) => {
@@ -81,124 +94,14 @@ const submit = () => {
         emit("updated")
       },
     })
-  } else if (props.type === "create") {
-    formData.post(props.model.endPoint, {
+  } else if (type.value === "create") {
+    formData.post(model.value.endPoint, {
       onSuccess: (page) => {
         item.value = page.props.flash.data
         emit("created")
       },
     })
   }
-}
-
-const getFieldRules = (v, field) => {
-  const rules = []
-  switch (field.type) {
-    case "image":
-      if (field.rules?.required) {
-        rules.push(ruleRequired(v))
-      }
-      break
-    case "string":
-      if (field.rules?.required) {
-        rules.push(ruleRequired(v))
-      }
-      if (field.rules?.maxLength) {
-        rules.push(ruleMaxLength(v, field.rules.maxLength))
-      }
-      if (field.rules?.minLength) {
-        rules.push(ruleMinLength(v, field.rules.minLength))
-      }
-      break
-    case "text":
-      if (field.rules?.required) {
-        rules.push(ruleRequired(v))
-      }
-      if (field.rules?.maxLength) {
-        rules.push(ruleMaxLength(v, field.rules.maxLength))
-      }
-      if (field.rules?.minLength) {
-        rules.push(ruleMinLength(v, field.rules.minLength))
-      }
-      break
-    case "number":
-      if (field.rules?.required) {
-        rules.push(ruleRequired(v))
-      }
-      rules.push(ruleNumber(v))
-      if (field.rules?.min) {
-        rules.push(ruleGreaterThan(v, field.rules.min))
-      }
-      if (field.rules?.max) {
-        rules.push(ruleLessThan(v, field.rules.max))
-      }
-      break
-    case "float":
-      if (field.rules?.required) {
-        rules.push(ruleRequired(v))
-      }
-      rules.push(ruleFloat(v))
-      if (field.rules?.min) {
-        rules.push(ruleGreaterThan(v, field.rules.min))
-      }
-      if (field.rules?.max) {
-        rules.push(ruleLessThan(v, field.rules.max))
-      }
-      break
-    case "email":
-      if (field.rules?.required) {
-        rules.push(ruleRequired(v))
-      }
-      rules.push(ruleEmail(v))
-      if (field.rules?.maxLength) {
-        rules.push(ruleMaxLength(v, field.rules.maxLength))
-      }
-      if (field.rules?.minLength) {
-        rules.push(ruleMinLength(v, field.rules.minLength))
-      }
-      break
-    case "boolean":
-      if (field.rules?.required) {
-        rules.push(ruleRequired(v))
-      }
-      break
-    case "date":
-      if (field.rules?.required) {
-        rules.push(ruleRequired(v))
-      }
-      break
-    case "dni":
-      if (field.rules?.required) {
-        rules.push(ruleRequired(v))
-      }
-      rules.push(ruleDNI(v))
-      break
-    case "telephone":
-      if (field.rules?.required) {
-        rules.push(ruleRequired(v))
-      }
-      rules.push(ruleTelephone(v))
-      break
-    case "password":
-      if (field.rules?.required && props.type === "create") {
-        rules.push(ruleRequired(v))
-      }
-      if (field.rules?.maxLength) {
-        rules.push(ruleMaxLength(v, field.rules.maxLength))
-      }
-      if (field.rules?.minLength && props.type === "create") {
-        rules.push(ruleMinLength(v, field.rules.minLength))
-      }
-      break
-    case "select":
-      if (field.rules?.required) {
-        rules.push(ruleRequired(v))
-      }
-      break
-    default:
-      break
-  }
-  return rules
 }
 
 const handleImageUpload = (file, imageFieldName) => {
@@ -235,7 +138,13 @@ const removeImage = (imageFieldName) => {
     <v-row>
       <v-col
         cols="12"
-        :md="filteredFormFields.length > 1 && field.type !== 'image' ? 6 : 12"
+        v-show="!field.hidden"
+        :md="
+          filteredFormFields.length - hiddenFormFieldsLength > 1 &&
+          field.type !== 'image'
+            ? 6
+            : 12
+        "
         v-for="field in filteredFormFields"
       >
         <v-text-field
@@ -355,15 +264,16 @@ const removeImage = (imageFieldName) => {
     </div>
   </v-form>
   <div
-    v-if="props.type === 'edit' && props.model.externalRelations.length > 0"
-    v-for="relation in props.model.externalRelations"
+    v-if="type === 'edit' && model.externalRelations.length > 0"
+    v-for="relation in model.externalRelations"
   >
     <v-divider :thickness="3" class="mt-2"></v-divider>
     <auto-external-relation
       v-if="type === 'edit'"
-      :endPoint="props.model.endPoint"
+      :endPoint="model.endPoint"
       :item="item"
       :externalRelation="relation"
+      :withTitle="true"
       @bound="emit('updated')"
       @unbound="emit('updated')"
     ></auto-external-relation>

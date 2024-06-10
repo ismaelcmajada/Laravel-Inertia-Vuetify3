@@ -26,7 +26,7 @@ class Suscriptor extends BaseModel
     {
         return [
             [
-                'name' => 'Nombre', 
+                'name' => 'Pepe', 
                 'field' => 'nombre', 
                 'type' => 'string', 
                 'table' => true, 

@@ -133,3 +133,102 @@ export function ruleFloat(v, label = null) {
     `${label ?? "El campo"} debe ser un número decimal`
   )
 }
+
+export const getFieldRules = (v, field, ty) => {
+  const rules = []
+  switch (field.type) {
+    case "image":
+      if (field.rules?.required) {
+        rules.push(ruleRequired(v))
+      }
+      break
+    case "string":
+      if (field.rules?.required) {
+        rules.push(ruleRequired(v))
+      }
+      if (field.rules?.maxLength) {
+        rules.push(ruleMaxLength(v, field.rules.maxLength))
+      }
+      if (field.rules?.minLength) {
+        rules.push(ruleMinLength(v, field.rules.minLength))
+      }
+      break
+    case "text":
+      if (field.rules?.required) {
+        rules.push(ruleRequired(v))
+      }
+      if (field.rules?.maxLength) {
+        rules.push(ruleMaxLength(v, field.rules.maxLength))
+      }
+      if (field.rules?.minLength) {
+        rules.push(ruleMinLength(v, field.rules.minLength))
+      }
+      break
+    case "number":
+      if (field.rules?.required) {
+        rules.push(ruleRequired(v))
+      }
+      rules.push(ruleNumber(v))
+      if (field.rules?.min) {
+        rules.push(ruleGreaterThan(v, field.rules.min))
+      }
+      if (field.rules?.max) {
+        rules.push(ruleLessThan(v, field.rules.max))
+      }
+      break
+    case "float":
+      if (field.rules?.required) {
+        rules.push(ruleRequired(v))
+      }
+      rules.push(ruleFloat(v))
+      if (field.rules?.min) {
+        rules.push(ruleGreaterThan(v, field.rules.min))
+      }
+      if (field.rules?.max) {
+        rules.push(ruleLessThan(v, field.rules.max))
+      }
+      break
+    case "email":
+      if (field.rules?.required) {
+        rules.push(ruleRequired(v))
+      }
+      rules.push(ruleEmail(v))
+      if (field.rules?.maxLength) {
+        rules.push(ruleMaxLength(v, field.rules.maxLength))
+      }
+      if (field.rules?.minLength) {
+        rules.push(ruleMinLength(v, field.rules.minLength))
+      }
+      break
+    case "boolean":
+      if (field.rules?.required) {
+        rules.push(ruleRequired(v))
+      }
+      break
+    case "date":
+      if (field.rules?.required) {
+        rules.push(ruleRequired(v))
+      }
+      break
+    case "dni":
+      if (field.rules?.required) {
+        rules.push(ruleRequired(v))
+      }
+      rules.push(ruleDNI(v))
+      break
+    case "telephone":
+      if (field.rules?.required) {
+        rules.push(ruleRequired(v))
+      }
+      rules.push(ruleTelephone(v))
+      break
+    case "select":
+      if (field.rules?.required) {
+        rules.push(ruleRequired(v))
+      }
+      break
+    default:
+      break
+  }
+  return rules
+}

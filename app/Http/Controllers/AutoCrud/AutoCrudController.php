@@ -1,6 +1,8 @@
 <?php
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\AutoCrud;
 
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Request;
@@ -10,52 +12,91 @@ use Illuminate\Support\Facades\Storage;
 class AutoCrudController extends Controller
 {
 
-    private function getValidationRules($model, $id = null)
+    private function buildFieldRules($field, $modelInstance, $id, $relation = null, $itemId=null)
     {
-        $modelInstance = $this->getModel($model);
-        $rules = [];
-    
-        foreach ($modelInstance->formFields() as $field) {
-            $fieldRules = [];
-    
-            if (isset($field['rules']['required']) && $field['rules']['required']) {
-                if ($field['type'] !== 'image' && $field['type'] !== 'password') {
-                    $fieldRules[] = 'required';
+        $fieldRules = [];
+
+        if (isset($field['rules']['required']) && $field['rules']['required']) {
+            if ($field['type'] !== 'image' && $field['type'] !== 'password') {
+                $fieldRules[] = 'required';
+            }
+        }
+
+        switch ($field['type']) {
+            case 'string':
+                $fieldRules[] = 'max:191';
+                break;
+            case 'email':
+                $fieldRules[] = 'email';
+                $fieldRules[] = 'max:191';
+                break;
+            case 'number':
+                $fieldRules[] = 'integer';
+                break;
+            case 'select':
+                if (isset($field['options'])) {
+                    $fieldRules[] = 'in:' . implode(',', $field['options']);
                 }
-            }
-    
-            switch ($field['type']) {
-                case 'string':
-                    $fieldRules[] = 'max:191';
-                    break;
-                case 'email':
-                    $fieldRules[] = 'email';
-                    $fieldRules[] = 'max:191';
-                    break;
-                case 'number':
-                    $fieldRules[] = 'integer';
-                    break;
-                case 'select':
-                    if (isset($field['options'])) {
-                        $fieldRules[] = 'in:' . implode(',', $field['options']);
+                break;
+            case 'telephone':
+                $fieldRules[] = 'digits_between:8,15';
+                break;
+        }
+
+        if (isset($field['rules']['unique']) && $field['rules']['unique']) {
+            if($relation) {
+                $uniqueRule = Rule::unique($relation['pivotTable'], $field['field'])->where(function ($query) use ($field, $relation, $id, $itemId) {
+                    if ($field['type'] === 'boolean') {
+                        $query->where($field['field'], '=', true)
+                        ->where($relation['foreignKey'], '=', $id)
+                        ->where($relation['relatedKey'], '!=', $itemId);
                     }
-                    break;
-                case 'telephone':
-                    $fieldRules[] = 'digits_between:8,15';
-                    break;
-            }
-    
-            if (isset($field['rules']['unique']) && $field['rules']['unique']) {
-                $uniqueRule = Rule::unique($modelInstance->getTable(), $field['field']);
+                });
+
+            } else {
+                $uniqueRule = Rule::unique($modelInstance->getTable(), $field['field'])->where(function ($query) use ($field) {
+                    if ($field['type'] === 'boolean') {
+                        $query->where($field['field'], '=', true);
+                    }
+                });
+
                 if ($id !== null) {
                     $uniqueRule = $uniqueRule->ignore($id);
                 }
-                $fieldRules[] = $uniqueRule;
             }
-    
-            $rules[$field['field']] = $fieldRules;
+
+            
+
+            
+            $fieldRules[] = $uniqueRule;
         }
-    
+
+        return $fieldRules;
+    }
+
+    public function getValidationRules($model, $id = null, $itemId = null)
+    {
+        $modelInstance = $this->getModel($model);
+        $rules = [];
+
+        if (!$itemId) {
+            foreach ($modelInstance->formFields() as $field) {
+                $fieldRules = $this->buildFieldRules($field, $modelInstance, $id);
+                $rules[$field['field']] = $fieldRules;
+            }
+
+            return $rules;
+        }
+
+        foreach ($modelInstance->externalRelations() as $relation) {
+            if (isset($relation['pivotFields'])) {
+                foreach ($relation['pivotFields'] as $pivotField) {
+                    $fieldRules = $this->buildFieldRules($pivotField, $modelInstance, $id, $relation, $itemId);
+                    $rules[$pivotField['field']] = $fieldRules;
+                }
+            }
+        }
+
         return $rules;
     }
     
@@ -107,6 +148,8 @@ class AutoCrudController extends Controller
                         $query->whereHas($parts[0], function ($q) use ($parts, $value) {
                             $q->where($parts[1], 'LIKE', '%' . $value . '%');
                         });
+                    } else if ($key === 'created_at' || $key === 'updated_at' || $key === 'deleted_at') {
+                        $query->where(DB::raw("DATE_FORMAT(" . $modelTable . "." . $key . ", '%d-%m-%Y%')"), 'LIKE', '%' . $value . '%');
                     } else {
                         $query->where($modelTable . '.' . $key, 'LIKE', '%' . $value . '%');
                     }
@@ -169,7 +212,7 @@ class AutoCrudController extends Controller
             if ($field['type'] === 'image' && Request::hasFile($field['field']) && $instance) {
                 $storagePath = $field['public'] ? 'public/images/'.$model : 'private/images/'.$model;
                 $imagePath = Request::file($field['field'])->storeAs($storagePath,  $field['field'].'/'.$instance['id']);
-                $instance->{$field['field']} = Storage::url($imagePath);
+                $instance->{$field['field']} = $imagePath;
             }
         }
 
@@ -196,7 +239,7 @@ class AutoCrudController extends Controller
                 if (Request::hasFile($field['field'])) {
                     $storagePath = $field['public'] ? 'public/images/'.$model : 'private/images/'.$model;
                     $imagePath = Request::file($field['field'])->storeAs($storagePath, $field['field'].'/'.$id);
-                    $validatedData[$field['field']] = Storage::url($imagePath);
+                    $validatedData[$field['field']] = $imagePath;
                 }    
             }
 
@@ -258,11 +301,32 @@ class AutoCrudController extends Controller
     public function bind($model, $id, $externalRelation, $item)
     {
         $instance = $this->getModel($model)::findOrFail($id);
-        $instance->{$externalRelation}()->attach($item);
+
+        $rules = $this->getValidationRules($model, $id, $item);
+
+        $validatedData = Request::validate($rules);
+        
+        $instance->{$externalRelation}()->attach($item, $validatedData);
 
         $instance->load($instance->getModel()['includes']);
 
         return Redirect::back()->with(['success' => 'Elemento vinculado', 'data' => $instance]);
+
+    }
+
+    public function updatePivot($model, $id, $externalRelation, $item)
+    {
+        $instance = $this->getModel($model)::findOrFail($id);
+
+        $rules = $this->getValidationRules($model, $id, $item);
+
+        $validatedData = Request::validate($rules);
+        
+        $instance->{$externalRelation}()->updateExistingPivot($item, $validatedData);
+
+        $instance->load($instance->getModel()['includes']);
+
+        return Redirect::back()->with(['success' => 'Elemento actualizado', 'data' => $instance]);
 
     }
 
