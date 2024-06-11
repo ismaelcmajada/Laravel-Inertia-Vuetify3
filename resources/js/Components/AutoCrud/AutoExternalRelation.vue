@@ -148,6 +148,7 @@ getItems()
           :item-props="props.customItemProps?.[props.externalRelation.relation]"
           :item-title="props.externalRelation.formKey"
           item-value="id"
+          hide-details
           @update:modelValue="addItem"
         >
         </v-autocomplete>
