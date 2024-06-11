@@ -2,7 +2,15 @@
 import AutoForm from "./AutoForm.vue"
 import { computed, watch } from "vue"
 
-const props = defineProps(["show", "item", "type", "model"])
+const props = defineProps([
+  "show",
+  "item",
+  "type",
+  "model",
+  "customFilters",
+  "filteredItems",
+  "customItemProps",
+])
 const emit = defineEmits(["closeDialog", "reloadItems", "updated", "created"])
 
 const model = computed(() => {
@@ -60,6 +68,9 @@ watch(dialogState, (value) => {
               :model="model"
               :type="type"
               :item="props.item"
+              :customFilters="props.customFilters"
+              :filteredItems="props.filteredItems"
+              :customItemProps="props.customItemProps"
               @created="emit('created')"
               @updated="emit('updated')"
             />

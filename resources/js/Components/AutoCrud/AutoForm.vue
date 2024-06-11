@@ -1,23 +1,18 @@
 <script setup>
 import { useForm } from "@inertiajs/vue3"
 import axios from "axios"
-import { ref, onBeforeMount, computed } from "vue"
+import { ref, computed } from "vue"
 import AutoExternalRelation from "./AutoExternalRelation.vue"
-import {
-  ruleRequired,
-  ruleMaxLength,
-  ruleNumber,
-  ruleLessThan,
-  ruleDNI,
-  ruleEmail,
-  ruleGreaterThan,
-  ruleMinLength,
-  ruleTelephone,
-  ruleFloat,
-  getFieldRules,
-} from "@/Utils/rules"
+import { getFieldRules } from "@/Utils/rules"
 
-const props = defineProps(["item", "type", "model"])
+const props = defineProps([
+  "item",
+  "type",
+  "model",
+  "customFilters",
+  "filteredItems",
+  "customItemProps",
+])
 const emit = defineEmits(["updated", "created"])
 
 const model = computed(() => {
@@ -60,8 +55,7 @@ const formData = useForm(
   Object.fromEntries(filteredFormFields.value.map(({ field }) => [field, null]))
 )
 
-onBeforeMount(() => {
-  getRelations()
+const initFields = () => {
   if (type.value === "edit") {
     filteredFormFields.value.forEach((field) => {
       if (field.type === "password") {
@@ -82,7 +76,7 @@ onBeforeMount(() => {
       }
     })
   }
-})
+}
 
 const submit = () => {
   if (type.value === "edit") {
@@ -131,6 +125,9 @@ const removeImage = (imageFieldName) => {
   imagePreview.value[imageFieldName] = null
   formData[imageFieldName] = null
 }
+
+initFields()
+getRelations()
 </script>
 
 <template>
@@ -243,9 +240,17 @@ const removeImage = (imageFieldName) => {
 
         <v-autocomplete
           v-else-if="field.relation"
-          :items="relations[field.field]"
+          :items="
+            props.filteredItems?.[field.relation.relation]
+              ? props.filteredItems[field.relation.relation](
+                  relations[field.field]
+                )
+              : relations[field.field]
+          "
           :label="field.rules?.required ? field.name + ' *' : field.name"
+          :item-props="props.customItemProps?.[field.relation.relation]"
           :item-title="field.relation.formKey"
+          :custom-filter="props.customFilters?.[field.relation.relation]"
           item-value="id"
           v-model="formData[field.field]"
           :rules="getFieldRules(formData[field.field], field)"
@@ -273,7 +278,10 @@ const removeImage = (imageFieldName) => {
       :endPoint="model.endPoint"
       :item="item"
       :externalRelation="relation"
-      :withTitle="true"
+      :filteredItems="props.filteredItems"
+      :customFilters="props.customFilters"
+      :customItemProps="props.customItemProps"
+      :withTitle="false"
       @bound="emit('updated')"
       @unbound="emit('updated')"
     ></auto-external-relation>

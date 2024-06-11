@@ -23,10 +23,15 @@ Object.values(navigation).forEach((route) => {
 <template>
   <v-navigation-drawer theme="customDark" v-model="drawer" temporary>
     <v-list>
-      <v-list-item title="Suscriptores"></v-list-item>
+      <v-list-item title="Suscriptores"> </v-list-item>
     </v-list>
     <template v-for="pageRoute in navigation">
-      <v-divider></v-divider>
+      <v-divider
+        v-if="
+          !pageRoute.hasOwnProperty('path') &&
+          !pageRoute.hasOwnProperty('childs')
+        "
+      ></v-divider>
       <v-list
         v-if="
           !pageRoute.hasOwnProperty('path') &&
@@ -39,6 +44,12 @@ Object.values(navigation).forEach((route) => {
           :prepend-icon="pageRoute.icon"
         ></v-list-item>
       </v-list>
+      <v-divider
+        v-if="
+          !pageRoute.hasOwnProperty('path') &&
+          !pageRoute.hasOwnProperty('childs')
+        "
+      ></v-divider>
       <template v-else>
         <v-list
           v-if="pageRoute.hasOwnProperty('childs')"
@@ -75,6 +86,8 @@ Object.values(navigation).forEach((route) => {
   </v-navigation-drawer>
   <v-app-bar elevation="1">
     <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
-    <v-toolbar-title>Inventario</v-toolbar-title>
+    <slot name="top">
+      <v-toolbar-title>Suscriptores</v-toolbar-title>
+    </slot>
   </v-app-bar>
 </template>

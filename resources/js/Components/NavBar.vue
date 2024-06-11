@@ -41,10 +41,15 @@ const openDrawer = () => {
 <template>
   <v-navigation-drawer theme="customDark" elevation="6" :rail="rail" permanent>
     <v-list>
-      <v-list-item title="Sucriptores"> </v-list-item>
+      <v-list-item title="Suscriptores"></v-list-item>
     </v-list>
     <template v-for="pageRoute in navigation">
-      <v-divider></v-divider>
+      <v-divider
+        v-if="
+          !pageRoute.hasOwnProperty('path') &&
+          !pageRoute.hasOwnProperty('childs')
+        "
+      ></v-divider>
       <v-list
         v-if="
           !pageRoute.hasOwnProperty('path') &&
@@ -57,6 +62,12 @@ const openDrawer = () => {
           :prepend-icon="pageRoute.icon"
         ></v-list-item>
       </v-list>
+      <v-divider
+        v-if="
+          !pageRoute.hasOwnProperty('path') &&
+          !pageRoute.hasOwnProperty('childs')
+        "
+      ></v-divider>
       <template v-else>
         <v-list
           v-if="pageRoute.hasOwnProperty('childs')"
@@ -94,6 +105,8 @@ const openDrawer = () => {
   </v-navigation-drawer>
   <v-app-bar elevation="1">
     <v-app-bar-nav-icon @click="closeAll"></v-app-bar-nav-icon>
-    <v-toolbar-title>Suscriptores</v-toolbar-title>
+    <slot name="top">
+      <v-toolbar-title>Suscriptores</v-toolbar-title>
+    </slot>
   </v-app-bar>
 </template>

@@ -19,8 +19,11 @@ const props = defineProps([
   "title",
   "model",
   "modifiedRows",
+  "customFilters",
+  "filteredItems",
   "search",
   "orderBy",
+  "customItemProps",
 ])
 
 const model = computed(() => {
@@ -96,6 +99,9 @@ const changeDialogType = () => {
       @closeDialog="showFormDialog = false"
       @reloadItems="loadItems"
       v-model:type="formDialogType"
+      :filteredItems="props.filteredItems"
+      :customFilters="props.customFilters"
+      :customItemProps="props.customItemProps"
       @created="changeDialogType"
       :item="item"
       :model="model"
@@ -122,6 +128,9 @@ const changeDialogType = () => {
           <auto-form
             :model="model"
             :type="type"
+            :customFilters="props.customFilters"
+            :filteredItems="props.filteredItems"
+            :customItemProps="props.customItemProps"
             :item="item"
             @created="changeDialogType"
           />

@@ -22,12 +22,16 @@ const submit = () => {
       },
     })
   } else if (props.item.id) {
-    router.delete(`${props.endPoint}/${props.item.id}/permanent`, {
-      onSuccess: () => {
-        emit("reloadItems")
-        dialogState.value = false
-      },
-    })
+    router.post(
+      `${props.endPoint}/${props.item.id}/permanent`,
+      {},
+      {
+        onSuccess: () => {
+          emit("reloadItems")
+          dialogState.value = false
+        },
+      }
+    )
   } else {
     dialogState.value = false
   }

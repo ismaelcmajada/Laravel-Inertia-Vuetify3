@@ -1,22 +1,18 @@
 <script setup>
-import { ref, onBeforeMount } from "vue"
+import { ref } from "vue"
 import { router } from "@inertiajs/vue3"
 import axios from "axios"
-import {
-  ruleRequired,
-  ruleMaxLength,
-  ruleNumber,
-  ruleLessThan,
-  ruleDNI,
-  ruleEmail,
-  ruleGreaterThan,
-  ruleMinLength,
-  ruleTelephone,
-  ruleFloat,
-  getFieldRules,
-} from "@/Utils/rules"
+import { ruleRequired, getFieldRules } from "@/Utils/rules"
 
-const props = defineProps(["item", "endPoint", "externalRelation", "withTitle"])
+const props = defineProps([
+  "item",
+  "endPoint",
+  "externalRelation",
+  "withTitle",
+  "customFilters",
+  "filteredItems",
+  "customItemProps",
+])
 
 const emit = defineEmits(["bound", "unbound"])
 
@@ -88,7 +84,7 @@ const editItem = (id) => {
 
   props.externalRelation.pivotFields.forEach((field) => {
     if (field.type === "boolean") {
-      const booleanValue = Boolean(pivotEditData.value[field.field])
+      const booleanValue = Boolean(Number(pivotEditData.value[field.field]))
       pivotEditData.value = {
         ...pivotEditData.value,
         [field.field]: booleanValue,
@@ -114,9 +110,7 @@ const removeItem = (value) => {
   )
 }
 
-onBeforeMount(() => {
-  getItems()
-})
+getItems()
 </script>
 
 <template>
@@ -141,13 +135,19 @@ onBeforeMount(() => {
       >
         <v-autocomplete
           v-if="!props.externalRelation.pivotFields"
-          class="ma-3"
           :label="props.externalRelation.name"
           v-model="selectedItem"
-          :items="items"
+          :items="
+            props.filteredItems?.[props.externalRelation.relation]
+              ? props.filteredItems[props.externalRelation.relation](items)
+              : items
+          "
+          :custom-filter="
+            props.customFilters?.[props.externalRelation.relation]
+          "
+          :item-props="props.customItemProps?.[props.externalRelation.relation]"
           :item-title="props.externalRelation.formKey"
           item-value="id"
-          hide-details
           @update:modelValue="addItem"
         >
         </v-autocomplete>
@@ -156,8 +156,16 @@ onBeforeMount(() => {
           v-else
           :label="props.externalRelation.name"
           v-model="selectedItem"
-          :items="items"
+          :items="
+            props.filteredItems?.[props.externalRelation.relation]
+              ? props.filteredItems[props.externalRelation.relation](items)
+              : items
+          "
           :item-title="props.externalRelation.formKey"
+          :item-props="props.customItemProps?.[props.externalRelation.relation]"
+          :custom-filter="
+            props.customFilters?.[props.externalRelation.relation]
+          "
           item-value="id"
           :rules="[ruleRequired]"
           density="compact"
@@ -185,6 +193,7 @@ onBeforeMount(() => {
 
         <v-checkbox
           v-else-if="field.type === 'boolean'"
+          density="compact"
           :label="field.rules?.required ? field.name + ' *' : field.name"
           v-model="pivotData[field.field]"
           :rules="getFieldRules(pivotData[field.field], field)"
@@ -262,9 +271,10 @@ onBeforeMount(() => {
         <v-chip>
           {{ field.name }}:
           <v-checkbox
+            density="compact"
             class="mt-5"
             v-if="field.type === 'boolean'"
-            :model-value="!!relationItem.pivot[field.field]"
+            :model-value="Boolean(Number(relationItem.pivot[field.field]))"
             disabled
           ></v-checkbox>
           <span v-else>{{ relationItem.pivot[field.field] }}</span>
@@ -342,6 +352,7 @@ onBeforeMount(() => {
 
           <v-checkbox
             v-else-if="field.type === 'boolean'"
+            density="compact"
             :label="field.rules?.required ? field.name + ' *' : field.name"
             v-model="pivotEditData[field.field]"
             :rules="getFieldRules(pivotEditData[field.field], field)"
