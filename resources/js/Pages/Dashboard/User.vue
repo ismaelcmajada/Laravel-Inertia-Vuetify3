@@ -5,11 +5,10 @@ import { usePage } from "@inertiajs/vue3"
 const page = usePage()
 
 const model = page.props.models.user
-
-console.log(page.props.models)
 </script>
 
 <template>
   <auto-table title="Usuarios" :model="model" />
+
   <auto-table title="Paises" :model="page.props.models.pais" />
 </template>

@@ -117,7 +117,17 @@ abstract class BaseModel extends Model
             throw new \Exception("Modelo relacionado {$relatedModelClass} no existe");
         }
 
-        return $this->belongsToMany($relatedModelClass, $relation['pivotTable'], $relation['foreignKey'], $relation['relatedKey']);
+        $relationMethod = $this->belongsToMany($relatedModelClass, $relation['pivotTable'], $relation['foreignKey'], $relation['relatedKey']);
+
+        if (isset($relation['pivotFields'])) {
+            $pivotFields = array_map(function ($pivotField) {
+                return $pivotField['field'];
+            }, $relation['pivotFields']);
+
+            $relationMethod->withPivot($pivotFields);
+        }
+    
+        return $relationMethod;
     }
 
     public function getModel() {

@@ -131,11 +131,25 @@ class Suscriptor extends BaseModel
                'pivotTable' => 'suscriptores_paises',
                'foreignKey' => 'suscriptor_id',
                'relatedKey' => 'pais_id',
-               'model' => Pais::class
-           ],
+               'model' => Pais::class,
+               'pivotFields' => [
+                    [
+                        'name' => 'Habitantes',
+                        'field' => 'people',
+                        'type' => 'number',
+                        'rules' => [
+                            'required' => true
+                        ]
+                    ]
+                ]
+           ]
        ];
     }
 
-    protected static $forbiddenActions = [];
+    protected static $forbiddenActions = [
+        'super-admin' => [
+            'index',
+        ]
+    ];
 
 }
