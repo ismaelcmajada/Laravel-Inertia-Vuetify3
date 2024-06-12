@@ -72,15 +72,8 @@ const modifiedRows = props.modifiedRows
 const title = props.title
 endPoint.value = model.value.endPoint
 
-const changeDialogType = () => {
-  if (
-    formDialogType.value === "create" &&
-    model.value.externalRelations.length > 0
-  ) {
-    formDialogType.value = "edit"
-  } else {
-    showFormDialog.value = false
-  }
+const changeType = () => {
+  formDialogType.value = "edit"
 }
 </script>
 
@@ -93,16 +86,17 @@ const changeDialogType = () => {
     :model="model"
     :reloadItems="loadItems"
     :closeDialog="() => (showFormDialog = false)"
+    :changeType="changeType"
   >
     <auto-form-dialog
       :show="showFormDialog"
       @closeDialog="showFormDialog = false"
       @reloadItems="loadItems"
+      @changeType="changeType"
       v-model:type="formDialogType"
       :filteredItems="props.filteredItems"
       :customFilters="props.customFilters"
       :customItemProps="props.customItemProps"
-      @created="changeDialogType"
       :item="item"
       :model="model"
     >
@@ -116,7 +110,9 @@ const changeDialogType = () => {
           :reloadItems="reloadItems"
         ></slot>
       </template>
-      <template #auto-form="{ model, type, item, closeDialog, reloadItems }">
+      <template
+        #auto-form="{ model, type, item, closeDialog, reloadItems, changeType }"
+      >
         <slot
           name="auto-form-dialog.auto-form"
           :model="model"
@@ -124,6 +120,7 @@ const changeDialogType = () => {
           :item="item"
           :closeDialog="closeDialog"
           :reloadItems="reloadItems"
+          :changeType="changeType"
         >
           <auto-form
             :model="model"
@@ -132,7 +129,7 @@ const changeDialogType = () => {
             :filteredItems="props.filteredItems"
             :customItemProps="props.customItemProps"
             :item="item"
-            @created="changeDialogType"
+            @changeType="changeType"
           />
         </slot>
       </template>

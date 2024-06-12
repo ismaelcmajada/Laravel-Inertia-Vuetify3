@@ -147,9 +147,6 @@ class Suscriptor extends BaseModel
     }
 
     protected static $forbiddenActions = [
-        'super-admin' => [
-            'index',
-        ]
     ];
 
 }

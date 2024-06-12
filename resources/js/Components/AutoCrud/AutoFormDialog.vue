@@ -1,6 +1,6 @@
 <script setup>
 import AutoForm from "./AutoForm.vue"
-import { computed, watch } from "vue"
+import { computed, watch, ref } from "vue"
 
 const props = defineProps([
   "show",
@@ -11,7 +11,7 @@ const props = defineProps([
   "filteredItems",
   "customItemProps",
 ])
-const emit = defineEmits(["closeDialog", "reloadItems", "updated", "created"])
+const emit = defineEmits(["closeDialog", "reloadItems"])
 
 const model = computed(() => {
   return props.model
@@ -27,6 +27,10 @@ const dialogState = computed({
     emit("closeDialog")
   },
 })
+
+const changeType = () => {
+  emit("changeType")
+}
 
 watch(dialogState, (value) => {
   if (!value) {
@@ -51,7 +55,7 @@ watch(dialogState, (value) => {
             name="prepend"
             :model="model"
             :type="type"
-            :item="props.item"
+            :item="item"
             :reloadItems="() => emit('reloadItems')"
             :closeDialog="() => (dialogState = false)"
           >
@@ -60,26 +64,26 @@ watch(dialogState, (value) => {
             name="auto-form"
             :model="model"
             :type="type"
-            :item="props.item"
+            :item="item"
             :reloadItems="() => emit('reloadItems')"
             :closeDialog="() => (dialogState = false)"
+            :changeType="changeType"
           >
             <auto-form
               :model="model"
               :type="type"
-              :item="props.item"
+              :item="item"
               :customFilters="props.customFilters"
               :filteredItems="props.filteredItems"
               :customItemProps="props.customItemProps"
-              @created="emit('created')"
-              @updated="emit('updated')"
+              @changeType="changeType"
             />
           </slot>
           <slot
             name="append"
             :model="model"
             :type="type"
-            :item="props.item"
+            :item="item"
             :reloadItems="() => emit('reloadItems')"
             :closeDialog="() => (dialogState = false)"
           >

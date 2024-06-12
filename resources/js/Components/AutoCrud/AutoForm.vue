@@ -3,6 +3,7 @@ import { useForm } from "@inertiajs/vue3"
 import axios from "axios"
 import { ref, computed } from "vue"
 import AutoExternalRelation from "./AutoExternalRelation.vue"
+import { formatDate } from "@/Utils/dates"
 import { getFieldRules } from "@/Utils/rules"
 
 const props = defineProps([
@@ -13,15 +14,13 @@ const props = defineProps([
   "filteredItems",
   "customItemProps",
 ])
-const emit = defineEmits(["updated", "created"])
+const emit = defineEmits(["changeType"])
 
 const model = computed(() => {
   return props.model
 })
 
-const type = computed(() => {
-  return props.type
-})
+const type = ref(props.type)
 
 const filteredFormFields = computed(() => {
   return type.value === "create"
@@ -34,7 +33,7 @@ const hiddenFormFieldsLength = computed(() => {
 })
 
 const relations = ref({})
-const item = ref(props.item)
+const item = ref({ ...props.item })
 const imagePreview = ref({})
 
 const getRelations = () => {
@@ -60,6 +59,8 @@ const initFields = () => {
     filteredFormFields.value.forEach((field) => {
       if (field.type === "password") {
         formData[field.field] = ""
+      } else if (field.type === "date") {
+        formData[field.field] = formatDate(item.value[field.field])
       } else {
         formData[field.field] = item.value[field.field]
         if (field.type === "image") {
@@ -85,14 +86,18 @@ const submit = () => {
       forceFormData: true,
       onSuccess: (page) => {
         item.value = page.props.flash.data
-        emit("updated")
+        initFields()
       },
     })
   } else if (type.value === "create") {
     formData.post(model.value.endPoint, {
       onSuccess: (page) => {
         item.value = page.props.flash.data
-        emit("created")
+        if (model.value.externalRelations.length > 0) {
+          type.value = "edit"
+          emit("changeType")
+          initFields()
+        }
       },
     })
   }
@@ -282,8 +287,6 @@ getRelations()
       :customFilters="props.customFilters"
       :customItemProps="props.customItemProps"
       :withTitle="false"
-      @bound="emit('updated')"
-      @unbound="emit('updated')"
     ></auto-external-relation>
   </div>
 </template>

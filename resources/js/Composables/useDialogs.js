@@ -2,7 +2,7 @@ import { ref } from "vue"
 
 export default function useDialogs() {
   const showFormDialog = ref(false)
-  const formDialogType = ref("")
+  const formDialogType = ref("create")
 
   const showDestroyDialog = ref(false)
   const showRestoreDialog = ref(false)
