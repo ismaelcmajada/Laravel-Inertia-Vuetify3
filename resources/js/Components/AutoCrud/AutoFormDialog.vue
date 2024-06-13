@@ -1,6 +1,6 @@
 <script setup>
 import AutoForm from "./AutoForm.vue"
-import { computed, watch, ref } from "vue"
+import { computed } from "vue"
 
 const props = defineProps([
   "show",
@@ -11,36 +11,37 @@ const props = defineProps([
   "filteredItems",
   "customItemProps",
 ])
-const emit = defineEmits(["closeDialog", "reloadItems"])
+
+const emit = defineEmits(["update:show", "update:type", "update:item"])
 
 const model = computed(() => {
   return props.model
 })
 
-const type = computed(() => {
-  return props.type
-})
-
-const dialogState = computed({
+const show = computed({
   get: () => props.show,
-  set: () => {
-    emit("closeDialog")
+  set: (value) => {
+    emit("update:show", value)
   },
 })
 
-const changeType = () => {
-  emit("changeType")
-}
+const type = computed({
+  get: () => props.type,
+  set: (value) => {
+    emit("update:type", value)
+  },
+})
 
-watch(dialogState, (value) => {
-  if (!value) {
-    emit("reloadItems")
-  }
+const item = computed({
+  get: () => props.item,
+  set: (value) => {
+    emit("update:item", value)
+  },
 })
 </script>
 
 <template>
-  <v-dialog scrollable v-model="dialogState" width="1024">
+  <v-dialog scrollable v-model="show" width="1024">
     <v-card>
       <v-card-title class="mt-2 text-center">
         <span v-if="type == 'create'"> Crear elemento </span>
@@ -51,50 +52,25 @@ watch(dialogState, (value) => {
 
       <v-card-text>
         <v-container>
-          <slot
-            name="prepend"
-            :model="model"
-            :type="type"
-            :item="item"
-            :reloadItems="() => emit('reloadItems')"
-            :closeDialog="() => (dialogState = false)"
-          >
-          </slot>
-          <slot
-            name="auto-form"
-            :model="model"
-            :type="type"
-            :item="item"
-            :reloadItems="() => emit('reloadItems')"
-            :closeDialog="() => (dialogState = false)"
-            :changeType="changeType"
-          >
+          <slot name="prepend" :model="model" :type="type" :item="item"> </slot>
+          <slot name="auto-form" :model="model" :type="type" :item="item">
             <auto-form
               :model="model"
-              :type="type"
-              :item="item"
+              v-model:type="type"
+              v-model:item="item"
               :customFilters="props.customFilters"
               :filteredItems="props.filteredItems"
               :customItemProps="props.customItemProps"
-              @changeType="changeType"
             />
           </slot>
-          <slot
-            name="append"
-            :model="model"
-            :type="type"
-            :item="item"
-            :reloadItems="() => emit('reloadItems')"
-            :closeDialog="() => (dialogState = false)"
-          >
-          </slot>
+          <slot name="append" :model="model" :type="type" :item="item"> </slot>
         </v-container>
       </v-card-text>
 
       <v-divider></v-divider>
 
       <v-card-actions class="d-flex justify-center">
-        <v-btn color="red-darken-1" variant="text" @click="dialogState = false">
+        <v-btn color="red-darken-1" variant="text" @click="show = false">
           Cerrar
         </v-btn>
       </v-card-actions>

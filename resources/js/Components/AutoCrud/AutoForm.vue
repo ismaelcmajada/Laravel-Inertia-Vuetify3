@@ -1,7 +1,7 @@
 <script setup>
 import { useForm } from "@inertiajs/vue3"
 import axios from "axios"
-import { ref, computed } from "vue"
+import { ref, computed, watch } from "vue"
 import AutoExternalRelation from "./AutoExternalRelation.vue"
 import { formatDate } from "@/Utils/dates"
 import { getFieldRules } from "@/Utils/rules"
@@ -14,13 +14,22 @@ const props = defineProps([
   "filteredItems",
   "customItemProps",
 ])
-const emit = defineEmits(["changeType"])
+
+const emit = defineEmits(["update:item", "update:type"])
 
 const model = computed(() => {
   return props.model
 })
 
-const type = ref(props.type)
+const type = computed({
+  get: () => props.type,
+  set: (value) => emit("update:type", value),
+})
+
+const item = computed({
+  get: () => props.item,
+  set: (value) => emit("update:item", value),
+})
 
 const filteredFormFields = computed(() => {
   return type.value === "create"
@@ -33,7 +42,6 @@ const hiddenFormFieldsLength = computed(() => {
 })
 
 const relations = ref({})
-const item = ref({ ...props.item })
 const imagePreview = ref({})
 
 const getRelations = () => {
@@ -86,7 +94,6 @@ const submit = () => {
       forceFormData: true,
       onSuccess: (page) => {
         item.value = page.props.flash.data
-        initFields()
       },
     })
   } else if (type.value === "create") {
@@ -95,8 +102,6 @@ const submit = () => {
         item.value = page.props.flash.data
         if (model.value.externalRelations.length > 0) {
           type.value = "edit"
-          emit("changeType")
-          initFields()
         }
       },
     })
@@ -131,7 +136,14 @@ const removeImage = (imageFieldName) => {
   formData[imageFieldName] = null
 }
 
-initFields()
+watch(
+  item,
+  () => {
+    initFields()
+  },
+  { immediate: true }
+)
+
 getRelations()
 </script>
 

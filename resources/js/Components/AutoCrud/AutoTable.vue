@@ -72,9 +72,11 @@ const modifiedRows = props.modifiedRows
 const title = props.title
 endPoint.value = model.value.endPoint
 
-const changeType = () => {
-  formDialogType.value = "edit"
-}
+watch(showFormDialog, (value) => {
+  if (!value) {
+    loadItems()
+  }
+})
 </script>
 
 <template>
@@ -83,64 +85,51 @@ const changeType = () => {
     :show="showFormDialog"
     :type="formDialogType"
     :item="item"
+    :filteredItems="props.filteredItems"
+    :customFilters="props.customFilters"
+    :customItemProps="props.customItemProps"
     :model="model"
-    :reloadItems="loadItems"
-    :closeDialog="() => (showFormDialog = false)"
-    :changeType="changeType"
   >
     <auto-form-dialog
-      :show="showFormDialog"
-      @closeDialog="showFormDialog = false"
-      @reloadItems="loadItems"
-      @changeType="changeType"
+      v-model:show="showFormDialog"
       v-model:type="formDialogType"
+      v-model:item="item"
       :filteredItems="props.filteredItems"
       :customFilters="props.customFilters"
       :customItemProps="props.customItemProps"
-      :item="item"
       :model="model"
     >
-      <template #prepend="{ model, type, item, closeDialog, reloadItems }">
+      <template #prepend>
         <slot
           name="auto-form-dialog.prepend"
           :model="model"
-          :type="type"
+          :type="formDialogType"
           :item="item"
-          :closeDialog="closeDialog"
-          :reloadItems="reloadItems"
         ></slot>
       </template>
-      <template
-        #auto-form="{ model, type, item, closeDialog, reloadItems, changeType }"
-      >
+      <template #auto-form>
         <slot
           name="auto-form-dialog.auto-form"
           :model="model"
-          :type="type"
+          :type="formDialogType"
           :item="item"
-          :closeDialog="closeDialog"
-          :reloadItems="reloadItems"
-          :changeType="changeType"
         >
           <auto-form
             :model="model"
-            :type="type"
+            v-model:type="formDialogType"
+            v-model:item="item"
             :customFilters="props.customFilters"
             :filteredItems="props.filteredItems"
             :customItemProps="props.customItemProps"
-            :item="item"
-            @changeType="changeType"
           />
         </slot>
       </template>
-      <template #append="{ model, type, item, closeDialog, reloadItems }">
+      <template #append>
         <slot
           name="auto-form-dialog.append"
           :model="model"
-          :type="type"
+          :type="formDialogType"
           :item="item"
-          :closeDialog="closeDialog"
-          :reloadItems="reloadItems"
         ></slot>
       </template>
     </auto-form-dialog>
