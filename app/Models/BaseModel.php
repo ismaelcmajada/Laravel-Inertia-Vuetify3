@@ -32,6 +32,8 @@ abstract class BaseModel extends Model
             } elseif ($field['type'] === 'password') {
                 $this->casts[$field['field']] = 'hashed';
                 $this->hidden[] = $field['field'];
+            } elseif ($field['type'] === 'date') {
+                $this->casts[$field['field']] = 'date:d-m-Y';
             }
             if (isset($field['relation'])) {
                 $this->includes[] = $field['relation']['relation'];
@@ -107,7 +109,7 @@ abstract class BaseModel extends Model
             throw new \Exception("Modelo relacionado {$relatedModelClass} no existe");
         }
 
-        return $this->belongsTo($relatedModelClass, $field['field']);
+        return $this->belongsTo($relatedModelClass, $field['field'])->withTrashed();
     }
 
     protected function handleExternalRelation($relation)
@@ -117,7 +119,7 @@ abstract class BaseModel extends Model
             throw new \Exception("Modelo relacionado {$relatedModelClass} no existe");
         }
 
-        $relationMethod = $this->belongsToMany($relatedModelClass, $relation['pivotTable'], $relation['foreignKey'], $relation['relatedKey']);
+        $relationMethod = $this->belongsToMany($relatedModelClass, $relation['pivotTable'], $relation['foreignKey'], $relation['relatedKey'])->withTrashed();
 
         if (isset($relation['pivotFields'])) {
             $pivotFields = array_map(function ($pivotField) {
@@ -161,7 +163,6 @@ abstract class BaseModel extends Model
                 ];
         }, $this->tableFields());
 
-
         $headers[] = [
             'title' => 'Acciones',
             'key' => 'actions',
@@ -172,3 +173,4 @@ abstract class BaseModel extends Model
         return $headers;
     }
 }
+

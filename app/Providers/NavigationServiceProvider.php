@@ -33,6 +33,7 @@ class NavigationServiceProvider extends ServiceProvider
             [
                 'name' => Auth::user()->name ?? null,
                 'icon' => 'mdi-account-circle',
+				'dividers' => true,
             ],
             [
                 'name' => 'Suscriptores',

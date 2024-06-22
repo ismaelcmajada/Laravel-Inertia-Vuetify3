@@ -32,13 +32,15 @@ const item = computed({
 })
 
 const filteredFormFields = computed(() => {
-  return type.value === "create"
-    ? model.value.formFields.filter((field) => !field.onlyUpdate)
-    : model.value.formFields
+  return model.value.formFields
 })
 
 const hiddenFormFieldsLength = computed(() => {
-  return filteredFormFields.value.filter((field) => field.hidden).length ?? 0
+  return (
+    filteredFormFields.value.filter(
+      (field) => field.hidden || (type.value === "create" && field.onlyUpdate)
+    ).length ?? 0
+  )
 })
 
 const relations = ref({})
@@ -78,7 +80,7 @@ const initFields = () => {
     })
   } else if (type.value === "create") {
     filteredFormFields.value.forEach((field) => {
-      if (field.default) {
+      if (field.hasOwnProperty("default") && field.default !== null) {
         formData[field.field] = field.default
       } else {
         formData[field.field] = null
@@ -144,15 +146,27 @@ watch(
   { immediate: true }
 )
 
+const updateRelatedFields = (foreignKey, value) => {
+  const relatedFields = filteredFormFields.value.filter(
+    (field) => field.foreignKey && field.foreignKey === foreignKey
+  )
+
+  relatedFields.forEach((field) => {
+    formData[field.field] = relations.value[foreignKey].find(
+      (relation) => relation.id === value
+    )[field.field]
+  })
+}
 getRelations()
 </script>
 
 <template>
   <v-form v-model="form" @submit.prevent="submit">
     <v-row>
+      <!--Se muestra la columna si type.hidden es falso y además solo en el caso de que el type sea create, se muestra si field.onlyUpdate es falso. -->
       <v-col
         cols="12"
-        v-show="!field.hidden"
+        v-show="!field.hidden && (type !== 'create' || !field.onlyUpdate)"
         :md="
           filteredFormFields.length - hiddenFormFieldsLength > 1 &&
           field.type !== 'image'
@@ -271,6 +285,7 @@ getRelations()
           item-value="id"
           v-model="formData[field.field]"
           :rules="getFieldRules(formData[field.field], field)"
+          @update:model-value="updateRelatedFields(field.field, $event)"
         ></v-autocomplete>
       </v-col>
     </v-row>

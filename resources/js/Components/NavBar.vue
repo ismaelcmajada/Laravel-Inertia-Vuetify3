@@ -44,30 +44,21 @@ const openDrawer = () => {
       <v-list-item title="Suscriptores"></v-list-item>
     </v-list>
     <template v-for="pageRoute in navigation">
-      <v-divider
+      <template
         v-if="
           !pageRoute.hasOwnProperty('path') &&
           !pageRoute.hasOwnProperty('childs')
         "
-      ></v-divider>
-      <v-list
-        v-if="
-          !pageRoute.hasOwnProperty('path') &&
-          !pageRoute.hasOwnProperty('childs')
-        "
-        nav
       >
-        <v-list-item
-          :title="pageRoute.name"
-          :prepend-icon="pageRoute.icon"
-        ></v-list-item>
-      </v-list>
-      <v-divider
-        v-if="
-          !pageRoute.hasOwnProperty('path') &&
-          !pageRoute.hasOwnProperty('childs')
-        "
-      ></v-divider>
+        <v-divider></v-divider>
+        <v-list nav>
+          <v-list-item
+            :title="pageRoute.name"
+            :prepend-icon="pageRoute.icon"
+          ></v-list-item>
+        </v-list>
+        <v-divider></v-divider>
+      </template>
       <template v-else>
         <v-list
           v-if="pageRoute.hasOwnProperty('childs')"
@@ -92,14 +83,22 @@ const openDrawer = () => {
             ></v-list-item>
           </v-list-group>
         </v-list>
-        <v-list v-else nav>
-          <v-list-item
-            :title="pageRoute.name"
-            :prepend-icon="pageRoute.icon"
-            :active="$page.url.includes(pageRoute.path)"
-            :to="pageRoute.path"
-          ></v-list-item>
-        </v-list>
+        <template v-else>
+          <v-divider
+            v-if="pageRoute.hasOwnProperty('dividers') && pageRoute.dividers"
+          ></v-divider>
+          <v-list nav>
+            <v-list-item
+              :title="pageRoute.name"
+              :prepend-icon="pageRoute.icon"
+              :active="$page.url.includes(pageRoute.path)"
+              :to="pageRoute.path"
+            ></v-list-item>
+          </v-list>
+          <v-divider
+            v-if="pageRoute.hasOwnProperty('dividers') && pageRoute.dividers"
+          ></v-divider>
+        </template>
       </template>
     </template>
   </v-navigation-drawer>

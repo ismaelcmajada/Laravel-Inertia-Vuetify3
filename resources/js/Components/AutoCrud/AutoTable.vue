@@ -26,6 +26,8 @@ const props = defineProps([
   "customItemProps",
 ])
 
+const emit = defineEmits(["closeDialog", "openDialog"])
+
 const model = computed(() => {
   return props.model
 })
@@ -75,6 +77,9 @@ endPoint.value = model.value.endPoint
 watch(showFormDialog, (value) => {
   if (!value) {
     loadItems()
+    emit("closeDialog")
+  } else {
+    emit("openDialog")
   }
 })
 </script>
@@ -244,7 +249,7 @@ watch(showFormDialog, (value) => {
         v-slot:[`item.${key}`]="slotProps"
       >
         <template v-if="slotProps && 'item' in slotProps && slotProps.item">
-          {{ modifier(slotProps.item[key]) }}
+          <span v-html="modifier(slotProps.item)"></span>
         </template>
       </template>
 
@@ -256,6 +261,7 @@ watch(showFormDialog, (value) => {
           :resetTable="resetTable"
           :tableData="tableData"
           :loadItems="loadItems"
+          :forbiddenActions="forbiddenActions"
         >
           <div v-if="!tableData.deleted">
             <v-btn
