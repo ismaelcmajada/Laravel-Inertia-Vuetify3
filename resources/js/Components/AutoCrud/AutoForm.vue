@@ -15,7 +15,7 @@ const props = defineProps([
   "customItemProps",
 ])
 
-const emit = defineEmits(["update:item", "update:type"])
+const emit = defineEmits(["update:item", "update:type", "formChange"])
 
 const model = computed(() => {
   return props.model
@@ -45,6 +45,7 @@ const hiddenFormFieldsLength = computed(() => {
 
 const relations = ref({})
 const imagePreview = ref({})
+const filePreview = ref({})
 
 const getRelations = () => {
   const relationsFromFormFields = filteredFormFields.value.filter(
@@ -76,15 +77,14 @@ const initFields = () => {
         if (field.type === "image") {
           imagePreview.value[field.field] = item.value[field.field]
         }
+        if (field.type === "file") {
+          filePreview.value[field.field] = item.value[field.field]
+        }
       }
     })
   } else if (type.value === "create") {
     filteredFormFields.value.forEach((field) => {
-      if (field.hasOwnProperty("default") && field.default !== null) {
-        formData[field.field] = field.default
-      } else {
-        formData[field.field] = null
-      }
+      formData[field.field] = field.default ?? null
     })
   }
 }
@@ -128,6 +128,20 @@ const handleImageUpload = (file, imageFieldName) => {
   }
 }
 
+const handleFileUpload = (file, fileFieldName) => {
+  formData.transform((data) => ({
+    ...data,
+    [fileFieldName + "_edited"]: true,
+  }))
+  if (file) {
+    const reader = new FileReader()
+    reader.readAsDataURL(file.target.files[0])
+    formData[fileFieldName] = file.target.files[0]
+  } else {
+    formData[fileFieldName] = null
+  }
+}
+
 const removeImage = (imageFieldName) => {
   formData.transform((data) => ({
     ...data,
@@ -137,6 +151,31 @@ const removeImage = (imageFieldName) => {
   imagePreview.value[imageFieldName] = null
   formData[imageFieldName] = null
 }
+
+const removeFile = (fileFieldName) => {
+  formData.transform((data) => ({
+    ...data,
+    [fileFieldName + "_edited"]: true,
+  }))
+  formData[fileFieldName + "_edited"] = true
+  filePreview.value[fileFieldName] = null
+  formData[fileFieldName] = null
+}
+
+const downloadFile = (fileFieldName) => {
+  const link = document.createElement("a")
+  link.href = filePreview.value[fileFieldName]
+  link.download = fileFieldName
+  link.click()
+}
+
+watch(
+  formData,
+  (newValue) => {
+    emit("formChange", newValue)
+  },
+  { deep: true }
+)
 
 watch(
   item,
@@ -157,19 +196,40 @@ const updateRelatedFields = (foreignKey, value) => {
     )[field.field]
   })
 }
+
+const updateComboField = (field, value) => {
+  if (typeof value === "object") {
+    formData[field.field] = value.id
+    formData[field.comboField] = value[field.relation.formKey]
+  } else {
+    if (
+      relations.value[field.field].find(
+        (relation) => relation[field.relation.formKey] === value
+      )
+    ) {
+      formData[field.field] = relations.value[field.field].find(
+        (relation) => relation[field.relation.formKey] === value
+      ).id
+    } else {
+      formData[field.field] = null
+    }
+    formData[field.comboField] = value
+  }
+}
+
 getRelations()
 </script>
 
 <template>
   <v-form v-model="form" @submit.prevent="submit">
     <v-row>
-      <!--Se muestra la columna si type.hidden es falso y además solo en el caso de que el type sea create, se muestra si field.onlyUpdate es falso. -->
       <v-col
         cols="12"
         v-show="!field.hidden && (type !== 'create' || !field.onlyUpdate)"
         :md="
           filteredFormFields.length - hiddenFormFieldsLength > 1 &&
-          field.type !== 'image'
+          field.type !== 'image' &&
+          field.type !== 'file'
             ? 6
             : 12
         "
@@ -178,12 +238,14 @@ getRelations()
         <v-text-field
           v-if="
             !field.relation &&
+            !field.comboField &&
             field.type !== 'boolean' &&
             field.type !== 'date' &&
             field.type !== 'password' &&
             field.type !== 'select' &&
             field.type !== 'text' &&
-            field.type !== 'image'
+            field.type !== 'image' &&
+            field.type !== 'file'
           "
           :label="field.rules?.required ? field.name + ' *' : field.name"
           v-model="formData[field.field]"
@@ -230,6 +292,43 @@ getRelations()
           </v-row>
         </div>
 
+        <div v-if="field.type === 'file'">
+          <v-file-input
+            v-if="!filePreview[field.field]"
+            :label="field.rules?.required ? field.name + ' *' : field.name"
+            v-model="formData[field.field]"
+            :rules="getFieldRules(formData[field.field], field)"
+            @change="(file) => handleFileUpload(file, field.field)"
+            :accept="field.rules?.accept"
+            prepend-icon="mdi-file"
+          ></v-file-input>
+
+          <v-row
+            v-else
+            class="align-center justify-center my-3 mx-1 elevation-6 rounded pa-2"
+          >
+            <v-col cols="12" md="10" class="text-center">
+              {{ field.name }}
+            </v-col>
+
+            <v-col cols="12" md="2" class="text-center">
+              <v-btn
+                icon
+                @click="downloadFile(field.field)"
+                color="blue"
+                class="mr-2"
+              >
+                <v-icon>mdi-download</v-icon>
+
+                <v-tooltip activator="parent">Descargar</v-tooltip>
+              </v-btn>
+              <v-btn icon @click="removeFile(field.field)" color="red" class="">
+                <v-icon>mdi-delete</v-icon>
+              </v-btn>
+            </v-col>
+          </v-row>
+        </div>
+
         <v-checkbox
           v-else-if="field.type === 'boolean'"
           :label="field.rules?.required ? field.name + ' *' : field.name"
@@ -270,7 +369,7 @@ getRelations()
         ></v-textarea>
 
         <v-autocomplete
-          v-else-if="field.relation"
+          v-else-if="field.relation && !field.comboField"
           :items="
             props.filteredItems?.[field.relation.relation]
               ? props.filteredItems[field.relation.relation](
@@ -287,6 +386,24 @@ getRelations()
           :rules="getFieldRules(formData[field.field], field)"
           @update:model-value="updateRelatedFields(field.field, $event)"
         ></v-autocomplete>
+
+        <v-combobox
+          v-else-if="field.relation && field.comboField"
+          :label="field.rules?.required ? field.name + ' *' : field.name"
+          v-model="formData[field.comboField]"
+          :rules="getFieldRules(formData[field.field], field)"
+          :items="
+            props.filteredItems?.[field.relation.relation]
+              ? props.filteredItems[field.relation.relation](
+                  relations[field.field]
+                )
+              : relations[field.field]
+          "
+          :item-title="field.relation.formKey"
+          :item-props="props.customItemProps?.[field.relation.relation]"
+          :custom-filter="props.customFilters?.[field.relation.relation]"
+          @update:model-value="updateComboField(field, $event)"
+        ></v-combobox>
       </v-col>
     </v-row>
     <div class="d-flex justify-center">

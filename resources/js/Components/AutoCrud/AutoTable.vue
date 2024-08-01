@@ -26,7 +26,7 @@ const props = defineProps([
   "customItemProps",
 ])
 
-const emit = defineEmits(["closeDialog", "openDialog"])
+const emit = defineEmits(["closeDialog", "openDialog", "formChange"])
 
 const model = computed(() => {
   return props.model
@@ -103,6 +103,7 @@ watch(showFormDialog, (value) => {
       :customFilters="props.customFilters"
       :customItemProps="props.customItemProps"
       :model="model"
+      @formChange="emit('formChange', $event)"
     >
       <template #prepend>
         <slot
@@ -126,6 +127,7 @@ watch(showFormDialog, (value) => {
             :customFilters="props.customFilters"
             :filteredItems="props.filteredItems"
             :customItemProps="props.customItemProps"
+            @formChange="emit('formChange', $event)"
           />
         </slot>
       </template>

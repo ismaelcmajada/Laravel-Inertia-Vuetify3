@@ -12,7 +12,12 @@ const props = defineProps([
   "customItemProps",
 ])
 
-const emit = defineEmits(["update:show", "update:type", "update:item"])
+const emit = defineEmits([
+  "update:show",
+  "update:type",
+  "update:item",
+  "formChange",
+])
 
 const model = computed(() => {
   return props.model
@@ -61,6 +66,7 @@ const item = computed({
               :customFilters="props.customFilters"
               :filteredItems="props.filteredItems"
               :customItemProps="props.customItemProps"
+              @formChange="emit('formChange', $event)"
             />
           </slot>
           <slot name="append" :model="model" :type="type" :item="item"> </slot>

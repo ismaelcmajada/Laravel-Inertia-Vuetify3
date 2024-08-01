@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Crypt;
 
 class AutoCrudController extends Controller
 {
@@ -214,6 +215,23 @@ class AutoCrudController extends Controller
                 $imagePath = Request::file($field['field'])->storeAs($storagePath,  $field['field'].'/'.$instance['id']);
                 $instance->{$field['field']} = $imagePath;
             }
+
+            if ($field['type'] === 'file' && Request::hasFile($field['field']) && $instance) {
+                $storagePath = $field['public'] ? 'public/files/'.$model : 'private/files/'.$model;
+                $filePath = Request::file($field['field'])->storeAs($storagePath,  $field['field'].'/'.$instance['id']);
+
+                if(!$field['public']) {
+                    $fileContent = Storage::get($filePath);
+            
+                    // Encriptar el contenido del archivo
+                    $encryptedContent = Crypt::encryptString($fileContent);
+            
+                    // Guardar el contenido encriptado de nuevo en el archivo
+                    Storage::put($filePath, $encryptedContent);
+                }
+
+                $instance->{$field['field']} = $filePath;
+            }
         }
 
         $created = $instance->save();
@@ -241,6 +259,28 @@ class AutoCrudController extends Controller
                     $imagePath = Request::file($field['field'])->storeAs($storagePath, $field['field'].'/'.$id);
                     $validatedData[$field['field']] = $imagePath;
                 }    
+            }
+
+            if ($field['type'] === 'file') {
+                if(Request::input($field['field'].'_edited')) {
+                    Storage::delete($field['public'] ? 'public/files/'.$model.'/'.$field['field'].'/'.$id : 'private/files/'.$model.'/'.$field['field'].'/'.$id );
+                    $validatedData[$field['field']] = null;
+                }
+                if (Request::hasFile($field['field'])) {
+                    $storagePath = $field['public'] ? 'public/files/'.$model : 'private/files/'.$model;
+                    $filePath = Request::file($field['field'])->storeAs($storagePath, $field['field'].'/'.$id);
+                    $validatedData[$field['field']] = $filePath;
+
+                    if(!$field['public']) {
+                        $fileContent = Storage::get($filePath);
+                
+                        // Encriptar el contenido del archivo
+                        $encryptedContent = Crypt::encryptString($fileContent);
+                
+                        // Guardar el contenido encriptado de nuevo en el archivo
+                        Storage::put($filePath, $encryptedContent);
+                    }
+                } 
             }
 
             if($field['type'] === 'password') {
@@ -274,6 +314,10 @@ class AutoCrudController extends Controller
         foreach ($instance->formFields() as $field) {
             if ($field['type'] === 'image') {
                 Storage::delete($field['public'] ? 'public/images/'.$model.'/'.$field['field'].'/'.$id : 'private/images/'.$model.'/'.$field['field'].'/'.$id );
+            }
+
+            if ($field['type'] === 'file') {
+                Storage::delete($field['public'] ? 'public/files/'.$model.'/'.$field['field'].'/'.$id : 'private/files/'.$model.'/'.$field['field'].'/'.$id );
             }
         }
 

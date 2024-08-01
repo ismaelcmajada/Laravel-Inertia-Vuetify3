@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema; 
 
 abstract class BaseModel extends Model
 {
@@ -73,6 +74,21 @@ abstract class BaseModel extends Model
             return $field['form'];
         });
 
+        foreach ($this->fields as $field) {
+            if (isset($field['comboField'])) {
+                $formFields[$field['comboField']] = [
+                    'field' => $field['comboField'],
+                    'type' => 'string',
+                    'table' => false,
+                    'form' => true,
+                    'hidden' => true,
+                    'rules' => [
+                        'required' => true
+                    ]
+                ];
+            }
+        }
+
         return array_values($formFields);
     }
 
@@ -119,14 +135,17 @@ abstract class BaseModel extends Model
             throw new \Exception("Modelo relacionado {$relatedModelClass} no existe");
         }
 
-        $relationMethod = $this->belongsToMany($relatedModelClass, $relation['pivotTable'], $relation['foreignKey'], $relation['relatedKey'])->withTrashed();
+        $relatedPivotModelClass = $relation['pivotModel'] ?? null;
+        if (class_exists($relatedPivotModelClass)) {
+            $relationMethod = $this->belongsToMany($relatedModelClass, $relation['pivotTable'], $relation['foreignKey'], $relation['relatedKey'])->using($relatedPivotModelClass)->withTrashed();
+        } else {
+            $relationMethod = $this->belongsToMany($relatedModelClass, $relation['pivotTable'], $relation['foreignKey'], $relation['relatedKey'])->withTrashed();
+        }
 
         if (isset($relation['pivotFields'])) {
-            $pivotFields = array_map(function ($pivotField) {
-                return $pivotField['field'];
-            }, $relation['pivotFields']);
+            $tableFields = Schema::getColumnListing($relation['pivotTable']);
 
-            $relationMethod->withPivot($pivotFields);
+            $relationMethod->withPivot($tableFields);
         }
     
         return $relationMethod;
@@ -148,12 +167,21 @@ abstract class BaseModel extends Model
     {
         $headers = array_map(function ($field) {
                 if (isset($field['relation'])) {
-                    return [
-                        'title' => $field['name'],
-                        'sortable' => true,
-                        'key' => $field['relation']['relation'].'.'.$field['relation']['tableKey'],
-                        'align' => 'center',
-                    ];
+                    if (isset($field['comboField'])) {
+                        return [
+                            'title' => $field['name'],
+                            'sortable' => true,
+                            'key' => $field['comboField'],
+                            'align' => 'center',
+                        ];
+                    } else {
+                        return [
+                            'title' => $field['name'],
+                            'sortable' => true,
+                            'key' => $field['relation']['relation'].'.'.$field['relation']['tableKey'],
+                            'align' => 'center',
+                        ];
+                    }
                 }
                 return [
                     'title' => $field['name'],
@@ -171,6 +199,54 @@ abstract class BaseModel extends Model
         ];
 
         return $headers;
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            $model->handleEvent('creating');
+        });
+
+        static::created(function ($model) {
+            $model->handleEvent('created');
+        });
+
+        static::updating(function ($model) {
+            $model->handleEvent('updating');
+        });
+
+        static::updated(function ($model) {
+            $model->handleEvent('updated');
+        });
+
+        static::deleting(function ($model) {
+            $model->handleEvent('deleting');
+        });
+
+        static::deleted(function ($model) {
+            $model->handleEvent('deleted');
+        });
+
+        static::saving(function ($model) {
+            $model->handleEvent('saving');
+        });
+
+        static::saved(function ($model) {
+            $model->handleEvent('saved');
+        });
+
+        static::restored(function ($model) {
+            $model->handleEvent('restored');
+        });
+    }
+
+    protected function handleEvent($event)
+    {
+        if (method_exists($this, $event . 'Event')) {
+            call_user_func([$this, $event . 'Event']);
+        }
     }
 }
 

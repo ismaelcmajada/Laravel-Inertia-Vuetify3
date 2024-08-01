@@ -110,6 +110,10 @@ const removeItem = (value) => {
   )
 }
 
+function getNestedProperty(obj, keyString) {
+  return keyString.split(".").reduce((o, k) => (o || {})[k], obj)
+}
+
 getItems()
 </script>
 
@@ -263,7 +267,7 @@ getItems()
       class="align-center justify-center my-2 mx-1 elevation-6 rounded pa-2"
     >
       <v-col class="my-3">
-        {{ relationItem[props.externalRelation.formKey] }}
+        {{ getNestedProperty(relationItem, props.externalRelation.formKey) }}
       </v-col>
       <v-col
         class="d-flex align-center justify-center"

@@ -20,9 +20,7 @@ export function exportToExcel(endPoint, headers, modifications = {}) {
           if (modifications.hasOwnProperty(header.key)) {
             const modifier = modifications[header.key]
             const modifiedValue =
-              typeof modifier === "function"
-                ? modifier(row[header.key])
-                : modifier
+              typeof modifier === "function" ? modifier(row) : modifier
             return { t: "s", v: modifiedValue.toString() }
           } else {
             return { t: "s", v: (row[header.key] ?? "").toString() }

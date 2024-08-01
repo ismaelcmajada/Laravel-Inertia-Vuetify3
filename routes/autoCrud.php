@@ -5,12 +5,16 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AutoCrud\AutoCrudController;
 use App\Http\Controllers\AutoCrud\SessionController;
 use App\Http\Controllers\AutoCrud\ImageController;
+use App\Http\Controllers\AutoCrud\FileController;
 
 Route::get('/dashboard/public/images/{model}/{field}/{id}', [ImageController::class, 'publicImage']);
+Route::get('/dashboard/public/files/{model}/{field}/{id}', [FileController::class, 'publicFile']);
+
 
 Route::middleware(['auth', 'checkForbiddenActions'])->prefix('dashboard')->group(function () {
 	
 	Route::get('/private/images/{model}/{field}/{id}', [ImageController::class, 'privateImage']);
+    Route::get('/private/files/{model}/{field}/{id}', [FileController::class, 'privateFile']);
 
     Route::post('/session/setSession', [SessionController::class, 'setSession'])->name('dashboard.session.setSession');
 
@@ -31,3 +35,4 @@ Route::middleware(['auth', 'checkForbiddenActions'])->prefix('dashboard')->group
     Route::post('/{model}/{id}/unbind/{externalRelation}/{item}', [AutoCrudController::class, 'unbind'])->name('dashboard.model.unbind');
     
 });
+
