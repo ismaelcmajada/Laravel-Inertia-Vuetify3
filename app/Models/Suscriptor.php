@@ -98,7 +98,8 @@ class Suscriptor extends BaseModel
                     'model' => Pais::class,
                     'relation' => 'pais',
                     'tableKey' => 'pais',
-                    'formKey' => 'pais'
+                    'formKey' => 'pais',
+                    'storeShortcut' => true
                 ],
                 'rules' => [
                     'required' => true

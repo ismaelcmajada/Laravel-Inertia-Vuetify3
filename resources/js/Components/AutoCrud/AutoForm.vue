@@ -5,6 +5,8 @@ import { ref, computed, watch } from "vue"
 import AutoExternalRelation from "./AutoExternalRelation.vue"
 import { formatDate } from "@/Utils/dates"
 import { getFieldRules } from "@/Utils/rules"
+import AutoFormDialog from "./AutoFormDialog.vue"
+import { usePage} from "@inertiajs/vue3"
 
 const props = defineProps([
   "item",
@@ -16,6 +18,8 @@ const props = defineProps([
 ])
 
 const emit = defineEmits(["update:item", "update:type", "formChange"])
+
+const page = usePage()
 
 const model = computed(() => {
   return props.model
@@ -44,7 +48,9 @@ const hiddenFormFieldsLength = computed(() => {
 })
 
 const relations = ref({})
-const imagePreview = ref({})
+
+const storeShortcutModels = ref({})
+
 const filePreview = ref({})
 
 const getRelations = () => {
@@ -385,7 +391,19 @@ getRelations()
           v-model="formData[field.field]"
           :rules="getFieldRules(formData[field.field], field)"
           @update:model-value="updateRelatedFields(field.field, $event)"
-        ></v-autocomplete>
+        >
+          <template v-if="field.relation.storeShortcut" v-slot:prepend>
+            <v-btn
+            icon="mdi-plus-circle"
+
+            </v-btn>
+            <auto-form-dialog
+              v-model:show="showStoreShortcutDialog"
+              type="store"
+              :model="field.relation[field]"
+            />
+          </template>
+        </v-autocomplete>
 
         <v-combobox
           v-else-if="field.relation && field.comboField"
