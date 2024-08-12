@@ -135,7 +135,7 @@ class AutoCrudController extends Controller
     
         $query->select($modelTable . '.*');
     
-        $query->with($modelInstance->getModel()['includes']);
+        $query->with($modelInstance::getIncludes());
     
         if ($deleted && in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($modelInstance))) {
             $query->onlyTrashed();
@@ -235,7 +235,7 @@ class AutoCrudController extends Controller
         }
 
         $created = $instance->save();
-        $instance->load($instance->getModel()['includes']);
+        $instance->load($instance::getIncludes());
 
         if ($created) {
             return Redirect::back()->with(['success' => 'Elemento creado.', 'data' => $instance]);
@@ -292,7 +292,7 @@ class AutoCrudController extends Controller
 
 
         $updated = $instance->update($validatedData);
-        $instance->load($instance->getModel()['includes']);
+        $instance->load($instance::getIncludes());
 
         if ($updated) {
             return Redirect::back()->with(['success' => 'Elemento editado.', 'data' => $instance]);
@@ -352,7 +352,7 @@ class AutoCrudController extends Controller
         
         $instance->{$externalRelation}()->attach($item, $validatedData);
 
-        $instance->load($instance->getModel()['includes']);
+        $instance->load($instance::getIncludes());
 
         return Redirect::back()->with(['success' => 'Elemento vinculado', 'data' => $instance]);
 
@@ -368,7 +368,7 @@ class AutoCrudController extends Controller
         
         $instance->{$externalRelation}()->updateExistingPivot($item, $validatedData);
 
-        $instance->load($instance->getModel()['includes']);
+        $instance->load($instance::getIncludes());
 
         return Redirect::back()->with(['success' => 'Elemento actualizado', 'data' => $instance]);
 
@@ -379,7 +379,7 @@ class AutoCrudController extends Controller
         $instance = $this->getModel($model)::findOrFail($id);
         $instance->{$externalRelation}()->detach($item);
 
-        $instance->load($instance->getModel()['includes']);
+        $instance->load($instance::getIncludes());
 
         return Redirect::back()->with(['success' => 'Elemento desvinculado', 'data' => $instance]);
     }

@@ -7,25 +7,26 @@ use Illuminate\Support\Facades\Schema;
 
 abstract class BaseModel extends Model
 {
-    protected $fields = [];
-    protected $externalRelations = [];
-    protected $includes = [];
+    
+  
     protected $fillable = [];
     protected $casts = [];
     protected $hidden = [];
 
+    protected static $includes;
+    protected static $fields;
+    protected static $externalRelations;
     protected static $endPoint;
     protected static $forbiddenActions;
 
+    
     public function __construct($attributes = [])
     {
         parent::__construct($attributes);
-        $this->fields = $this->setFields();
-        $this->includes = $this->setIncludes();
-        $this->fillable = array_column($this->formFields(), 'field');
-        $this->externalRelations = $this->setExternalRelations();
 
-        foreach ($this->fields as &$field) {
+        $this->fillable = array_column(static::getFormFields(), 'field');
+
+        foreach (static::$fields as &$field) {
             if ($field['type'] === 'number') {
                 $this->casts[$field['field']] = 'integer';
             } elseif ($field['type'] === 'boolean') {
@@ -37,21 +38,17 @@ abstract class BaseModel extends Model
                 $this->casts[$field['field']] = 'date:d-m-Y';
             }
             if (isset($field['relation'])) {
-                $this->includes[] = $field['relation']['relation'];
+                static::$includes[] = $field['relation']['relation'];
 
                 $field['relation']['endPoint'] = $field['relation']['model']::getEndpoint();
             }
         }
 
-        foreach ($this->externalRelations as &$relation) {
-            $this->includes[] = $relation['relation'];
+        foreach (static::$externalRelations as &$relation) {
+            static::$includes[] = $relation['relation'];
             $relation['endPoint'] = $relation['model']::getEndpoint();
         }
     }
-
-    abstract protected function setFields();
-    abstract protected function setIncludes();
-    abstract protected function setExternalRelations();
 
     public static function getEndpoint()
     {
@@ -63,18 +60,18 @@ abstract class BaseModel extends Model
         return static::$forbiddenActions;
     }
 
-    public function externalRelations() 
+    public static function getExternalRelations() 
     {
-        return $this->externalRelations;
+        return static::$externalRelations;
     }
 
-    public function formFields()
+    public static function getFormFields()
     {
-        $formFields = array_filter($this->fields, function ($field) {
+        $formFields = array_filter(static::$fields, function ($field) {
             return $field['form'];
         });
 
-        foreach ($this->fields as $key => $field) {
+        foreach (static::$fields as $key => $field) {
             if (isset($field['comboField'])) {
                 $formFields[$field['comboField']] = [
                     'field' => $field['comboField'],
@@ -97,9 +94,9 @@ abstract class BaseModel extends Model
         return array_values($formFields);
     }
 
-    public function tableFields()
+    public static function getTableFields()
     {
-        $tableFields = array_filter($this->fields, function ($field) {
+        $tableFields = array_filter(static::$fields, function ($field) {
             return isset($field['table']) && $field['table'];
         });
 
@@ -108,13 +105,13 @@ abstract class BaseModel extends Model
 
     public function __call($method, $parameters)
     {
-        foreach ($this->fields as $field) {
+        foreach (static::$fields as $field) {
             if (isset($field['relation']) && $field['relation']['relation'] === $method) {
                 return $this->handleRelation($field);
             }
         }
 
-        foreach ($this->externalRelations as $relation) {
+        foreach (static::$externalRelations as $relation) {
             if (isset($relation['relation']) && $relation['relation'] === $method) {
                 return $this->handleExternalRelation($relation);
             }
@@ -156,19 +153,17 @@ abstract class BaseModel extends Model
         return $relationMethod;
     }
 
-    public function getModel() {
+    public static function getModel() {
         return [
             'endPoint' => static::getEndpoint(),
-            'formFields' => $this->formFields(),
-            'tableHeaders' => $this->tableHeaders(),
-            'externalRelations' => $this->externalRelations,
-            'includes' => $this->includes,
-            'fillable' => $this->fillable,
+            'formFields' => static::getFormFields(),
+            'tableHeaders' => static::getTableHeaders(),
+            'externalRelations' => static::getExternalRelations(),
             'forbiddenActions' => static::getForbiddenActions(),
         ];
     }
 
-    protected function tableHeaders()
+    protected static function getTableHeaders()
     {
         $headers = array_map(function ($field) {
                 if (isset($field['relation'])) {
@@ -194,7 +189,7 @@ abstract class BaseModel extends Model
                     'key' => $field['field'],
                     'align' => 'center',
                 ];
-        }, $this->tableFields());
+        }, static::getTableFields());
 
         $headers[] = [
             'title' => 'Acciones',

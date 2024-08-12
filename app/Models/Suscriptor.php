@@ -17,14 +17,9 @@ class Suscriptor extends BaseModel
 
     protected static $endPoint = '/dashboard/suscriptor';
 
-    protected function setIncludes()
-    {
-        return [];
-    }
+    protected static $includes = [];
 
-    protected function setFields()
-    {
-        return [
+    protected static $fields = [
             [
                 'name' => 'Pepe', 
                 'field' => 'nombre', 
@@ -120,11 +115,8 @@ class Suscriptor extends BaseModel
                 ]
             ],
         ];
-    }
 
-    protected function setExternalRelations()
-    {
-       return [
+    protected static $externalRelations = [
            [
                'name' => 'País',
                'relation' => 'paises',
@@ -145,7 +137,6 @@ class Suscriptor extends BaseModel
                 ]
            ]
        ];
-    }
 
     protected static $forbiddenActions = [
     ];
