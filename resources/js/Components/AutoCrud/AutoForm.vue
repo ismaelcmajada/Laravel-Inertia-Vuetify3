@@ -51,12 +51,15 @@ const relations = ref({})
 
 const storeShortcutModels = ref({})
 
+const imagePreview = ref({})
 const filePreview = ref({})
 
 const getRelations = () => {
   const relationsFromFormFields = filteredFormFields.value.filter(
     (field) => field.relation
   )
+
+  console.log(relationsFromFormFields[0].relation.model)
 
   relationsFromFormFields.forEach((field) => {
     axios.get(`${field.relation.endPoint}/all`).then((response) => {
@@ -400,7 +403,7 @@ getRelations()
             <auto-form-dialog
               v-model:show="showStoreShortcutDialog"
               type="store"
-              :model="field.relation[field]"
+              :model="field.relation.model"
             />
           </template>
         </v-autocomplete>

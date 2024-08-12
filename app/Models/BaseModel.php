@@ -74,7 +74,7 @@ abstract class BaseModel extends Model
             return $field['form'];
         });
 
-        foreach ($this->fields as $field) {
+        foreach ($this->fields as $key => $field) {
             if (isset($field['comboField'])) {
                 $formFields[$field['comboField']] = [
                     'field' => $field['comboField'],
@@ -86,6 +86,11 @@ abstract class BaseModel extends Model
                         'required' => true
                     ]
                 ];
+            }
+
+            if (isset($field['relation']) && isset($field['relation']['model'])) {
+                $instancedModel = new $field['relation']['model'];
+                $formFields[$key]['relation']['model'] = $instancedModel->getModel();
             }
         }
 
