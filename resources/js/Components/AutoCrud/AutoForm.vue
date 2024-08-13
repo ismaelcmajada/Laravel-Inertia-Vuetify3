@@ -6,7 +6,7 @@ import AutoExternalRelation from "./AutoExternalRelation.vue"
 import { formatDate } from "@/Utils/dates"
 import { getFieldRules } from "@/Utils/rules"
 import AutoFormDialog from "./AutoFormDialog.vue"
-import { usePage} from "@inertiajs/vue3"
+import { usePage } from "@inertiajs/vue3"
 
 const props = defineProps([
   "item",
@@ -48,8 +48,8 @@ const hiddenFormFieldsLength = computed(() => {
 })
 
 const relations = ref({})
-
-const storeShortcutModels = ref({})
+const storeShortcutShows = ref({})
+const storeExternalShortcutShows = ref({})
 
 const imagePreview = ref({})
 const filePreview = ref({})
@@ -58,8 +58,6 @@ const getRelations = () => {
   const relationsFromFormFields = filteredFormFields.value.filter(
     (field) => field.relation
   )
-
-  console.log(relationsFromFormFields[0].relation.model)
 
   relationsFromFormFields.forEach((field) => {
     axios.get(`${field.relation.endPoint}/all`).then((response) => {
@@ -90,12 +88,26 @@ const initFields = () => {
           filePreview.value[field.field] = item.value[field.field]
         }
       }
+
+      if (field.relation?.storeShortcut && field.relation?.modelData) {
+        storeShortcutShows.value[field.field] = false
+      }
     })
   } else if (type.value === "create") {
     filteredFormFields.value.forEach((field) => {
       formData[field.field] = field.default ?? null
+
+      if (field.relation?.storeShortcut && field.relation?.modelData) {
+        storeShortcutShows.value[field.field] = false
+      }
     })
   }
+
+  model.value.externalRelations.forEach((relation) => {
+    if (relation.storeShortcut && relation.modelData) {
+      storeExternalShortcutShows.value[relation.relation] = false
+    }
+  })
 }
 
 const submit = () => {
@@ -395,15 +407,22 @@ getRelations()
           :rules="getFieldRules(formData[field.field], field)"
           @update:model-value="updateRelatedFields(field.field, $event)"
         >
-          <template v-if="field.relation.storeShortcut" v-slot:prepend>
+          <template
+            v-if="field.relation.storeShortcut && field.relation.modelData"
+            v-slot:prepend
+          >
             <v-btn
-            icon="mdi-plus-circle"
-
+              icon="mdi-plus-circle"
+              @click="storeShortcutShows[field.field] = true"
+            >
             </v-btn>
             <auto-form-dialog
-              v-model:show="showStoreShortcutDialog"
-              type="store"
-              :model="field.relation.model"
+              v-model:show="storeShortcutShows[field.field]"
+              type="create"
+              :filteredItems="props.filteredItems"
+              :customFilters="props.customFilters"
+              :customItemProps="props.customItemProps"
+              :model="field.relation.modelData"
             />
           </template>
         </v-autocomplete>
@@ -452,6 +471,7 @@ getRelations()
       :customFilters="props.customFilters"
       :customItemProps="props.customItemProps"
       :withTitle="false"
-    ></auto-external-relation>
+    >
+    </auto-external-relation>
   </div>
 </template>

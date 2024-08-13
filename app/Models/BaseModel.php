@@ -3,12 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Schema; 
+use Illuminate\Support\Facades\Schema;
 
 abstract class BaseModel extends Model
 {
-    
-  
+
+
     protected $fillable = [];
     protected $casts = [];
     protected $hidden = [];
@@ -19,14 +19,14 @@ abstract class BaseModel extends Model
     protected static $endPoint;
     protected static $forbiddenActions;
 
-    
+
     public function __construct($attributes = [])
     {
         parent::__construct($attributes);
 
         $this->fillable = array_column(static::getFormFields(), 'field');
 
-        foreach (static::$fields as &$field) {
+        foreach (static::$fields as $field) {
             if ($field['type'] === 'number') {
                 $this->casts[$field['field']] = 'integer';
             } elseif ($field['type'] === 'boolean') {
@@ -37,17 +37,22 @@ abstract class BaseModel extends Model
             } elseif ($field['type'] === 'date') {
                 $this->casts[$field['field']] = 'date:d-m-Y';
             }
+        }
+    }
+
+    public static function getIncludes()
+    {
+        foreach (static::$fields as $field) {
             if (isset($field['relation'])) {
                 static::$includes[] = $field['relation']['relation'];
-
-                $field['relation']['endPoint'] = $field['relation']['model']::getEndpoint();
             }
         }
 
-        foreach (static::$externalRelations as &$relation) {
+        foreach (static::$externalRelations as $relation) {
             static::$includes[] = $relation['relation'];
-            $relation['endPoint'] = $relation['model']::getEndpoint();
         }
+
+        return static::$includes;
     }
 
     public static function getEndpoint()
@@ -60,16 +65,39 @@ abstract class BaseModel extends Model
         return static::$forbiddenActions;
     }
 
-    public static function getExternalRelations() 
+    public static function getExternalRelations($processedModels = [])
     {
+
+
+
+        foreach (static::$externalRelations as &$relation) {
+
+
+
+            $relation['endPoint'] = $relation['model']::getEndpoint();
+
+            if (isset($relation['storeShortcut']) && $relation['storeShortcut']) {
+                if (in_array($relation['model'], $processedModels)) {
+                    $relation['storeShortcut'] = false;
+                    $relation['modelData'] = null;
+                } else {
+                    $processedModels[] = static::class;
+                    $relation['modelData'] = $relation['model']::getModel($processedModels);
+                }
+            }
+        }
+
         return static::$externalRelations;
     }
 
-    public static function getFormFields()
+    public static function getFormFields($processedModels = [])
     {
+
+
         $formFields = array_filter(static::$fields, function ($field) {
             return $field['form'];
         });
+
 
         foreach (static::$fields as $key => $field) {
             if (isset($field['comboField'])) {
@@ -85,9 +113,18 @@ abstract class BaseModel extends Model
                 ];
             }
 
-            if (isset($field['relation']) && isset($field['relation']['model'])) {
-                $instancedModel = new $field['relation']['model'];
-                $formFields[$key]['relation']['model'] = $instancedModel->getModel();
+            if (isset($field['relation'])) {
+                $formFields[$key]['relation']['endPoint'] = $field['relation']['model']::getEndpoint();
+            }
+
+            if (isset($field['relation']['storeShortcut']) && $field['relation']['storeShortcut']) {
+                if (in_array($field['relation']['model'], $processedModels)) {
+                    $formFields[$key]['relation']['storeShortcut'] = false;
+                    $formFields[$key]['relation']['modelData'] = null;
+                } else {
+                    $processedModels[] = static::class;
+                    $formFields[$key]['relation']['modelData'] = $field['relation']['model']::getModel($processedModels);
+                }
             }
         }
 
@@ -111,7 +148,7 @@ abstract class BaseModel extends Model
             }
         }
 
-        foreach (static::$externalRelations as $relation) {
+        foreach (static::getExternalRelations() as $relation) {
             if (isset($relation['relation']) && $relation['relation'] === $method) {
                 return $this->handleExternalRelation($relation);
             }
@@ -149,16 +186,17 @@ abstract class BaseModel extends Model
 
             $relationMethod->withPivot($tableFields);
         }
-    
+
         return $relationMethod;
     }
 
-    public static function getModel() {
+    public static function getModel($processedModels = [])
+    {
         return [
             'endPoint' => static::getEndpoint(),
-            'formFields' => static::getFormFields(),
+            'formFields' => static::getFormFields($processedModels),
             'tableHeaders' => static::getTableHeaders(),
-            'externalRelations' => static::getExternalRelations(),
+            'externalRelations' => static::getExternalRelations($processedModels),
             'forbiddenActions' => static::getForbiddenActions(),
         ];
     }
@@ -166,29 +204,29 @@ abstract class BaseModel extends Model
     protected static function getTableHeaders()
     {
         $headers = array_map(function ($field) {
-                if (isset($field['relation'])) {
-                    if (isset($field['comboField'])) {
-                        return [
-                            'title' => $field['name'],
-                            'sortable' => true,
-                            'key' => $field['comboField'],
-                            'align' => 'center',
-                        ];
-                    } else {
-                        return [
-                            'title' => $field['name'],
-                            'sortable' => true,
-                            'key' => $field['relation']['relation'].'.'.$field['relation']['tableKey'],
-                            'align' => 'center',
-                        ];
-                    }
+            if (isset($field['relation'])) {
+                if (isset($field['comboField'])) {
+                    return [
+                        'title' => $field['name'],
+                        'sortable' => true,
+                        'key' => $field['comboField'],
+                        'align' => 'center',
+                    ];
+                } else {
+                    return [
+                        'title' => $field['name'],
+                        'sortable' => true,
+                        'key' => $field['relation']['relation'] . '.' . $field['relation']['tableKey'],
+                        'align' => 'center',
+                    ];
                 }
-                return [
-                    'title' => $field['name'],
-                    'sortable' => true,
-                    'key' => $field['field'],
-                    'align' => 'center',
-                ];
+            }
+            return [
+                'title' => $field['name'],
+                'sortable' => true,
+                'key' => $field['field'],
+                'align' => 'center',
+            ];
         }, static::getTableFields());
 
         $headers[] = [
@@ -249,4 +287,3 @@ abstract class BaseModel extends Model
         }
     }
 }
-

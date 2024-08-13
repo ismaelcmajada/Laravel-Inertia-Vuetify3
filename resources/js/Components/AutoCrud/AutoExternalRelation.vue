@@ -3,6 +3,7 @@ import { ref } from "vue"
 import { router } from "@inertiajs/vue3"
 import axios from "axios"
 import { ruleRequired, getFieldRules } from "@/Utils/rules"
+import AutoFormDialog from "./AutoFormDialog.vue"
 
 const props = defineProps([
   "item",
@@ -22,6 +23,8 @@ const pivotData = ref({})
 
 const addForm = ref(false)
 const updateForm = ref(false)
+
+const storeExternalShortcutShow = ref(false)
 
 const pivotEditData = ref({})
 const pivotEditing = ref(null)
@@ -155,6 +158,26 @@ getItems()
           hide-details
           @update:modelValue="addItem"
         >
+          <template
+            v-if="
+              props.externalRelation.storeShortcut &&
+              props.externalRelation.modelData
+            "
+            v-slot:prepend
+          >
+            <v-btn
+              icon="mdi-plus-circle"
+              @click="storeExternalShortcutShow = true"
+            ></v-btn>
+            <auto-form-dialog
+              v-model:show="storeExternalShortcutShow"
+              type="create"
+              :filteredItems="props.filteredItems"
+              :customFilters="props.customFilters"
+              :customItemProps="props.customItemProps"
+              :model="props.externalRelation.modelData"
+            />
+          </template>
         </v-autocomplete>
 
         <v-autocomplete
@@ -174,7 +197,29 @@ getItems()
           item-value="id"
           :rules="[ruleRequired]"
           density="compact"
-        ></v-autocomplete>
+        >
+          <template
+            v-if="
+              props.externalRelation.storeShortcut &&
+              props.externalRelation.modelData
+            "
+            v-slot:prepend
+          >
+            <v-btn
+              icon="mdi-plus-circle"
+              density="compact"
+              @click="storeExternalShortcutShow = true"
+            ></v-btn>
+            <auto-form-dialog
+              v-model:show="storeExternalShortcutShow"
+              type="create"
+              :filteredItems="props.filteredItems"
+              :customFilters="props.customFilters"
+              :customItemProps="props.customItemProps"
+              :model="props.externalRelation.modelData"
+            />
+          </template>
+        </v-autocomplete>
       </v-col>
       <v-col
         cols="12"

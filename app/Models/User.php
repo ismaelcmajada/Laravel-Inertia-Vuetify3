@@ -14,9 +14,7 @@ class User extends BaseModel implements AuthenticatableContract
 
     protected static $endPoint = '/dashboard/user';
 
-    protected function setFields()
-    {
-        return [
+    protected static $fields = [
             [
                 'name' => 'Nombre', 
                 'field' => 'name', 
@@ -60,17 +58,10 @@ class User extends BaseModel implements AuthenticatableContract
                 ]
             ],
         ];
-    }
 
-    protected function setIncludes()
-    {
-        return [];
-    }
+    protected static $includes = [];
 
-    protected function setExternalRelations()
-    {
-        return [];
-    }
+    protected static $externalRelations = [];
 
    protected static $forbiddenActions = [
         'admin' => [

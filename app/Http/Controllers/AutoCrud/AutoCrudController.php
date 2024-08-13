@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\AutoCrud;
 
 use App\Http\Controllers\Controller;
@@ -13,7 +14,7 @@ use Illuminate\Support\Facades\Crypt;
 class AutoCrudController extends Controller
 {
 
-    private function buildFieldRules($field, $modelInstance, $id, $relation = null, $itemId=null)
+    private function buildFieldRules($field, $modelInstance, $id, $relation = null, $itemId = null)
     {
         $fieldRules = [];
 
@@ -45,15 +46,14 @@ class AutoCrudController extends Controller
         }
 
         if (isset($field['rules']['unique']) && $field['rules']['unique']) {
-            if($relation) {
+            if ($relation) {
                 $uniqueRule = Rule::unique($relation['pivotTable'], $field['field'])->where(function ($query) use ($field, $relation, $id, $itemId) {
                     if ($field['type'] === 'boolean') {
                         $query->where($field['field'], '=', true)
-                        ->where($relation['foreignKey'], '=', $id)
-                        ->where($relation['relatedKey'], '!=', $itemId);
+                            ->where($relation['foreignKey'], '=', $id)
+                            ->where($relation['relatedKey'], '!=', $itemId);
                     }
                 });
-
             } else {
                 $uniqueRule = Rule::unique($modelInstance->getTable(), $field['field'])->where(function ($query) use ($field) {
                     if ($field['type'] === 'boolean') {
@@ -66,9 +66,9 @@ class AutoCrudController extends Controller
                 }
             }
 
-            
 
-            
+
+
             $fieldRules[] = $uniqueRule;
         }
 
@@ -81,7 +81,7 @@ class AutoCrudController extends Controller
         $rules = [];
 
         if (!$itemId) {
-            foreach ($modelInstance->formFields() as $field) {
+            foreach ($modelInstance::getFormFields() as $field) {
                 $fieldRules = $this->buildFieldRules($field, $modelInstance, $id);
                 $rules[$field['field']] = $fieldRules;
             }
@@ -89,7 +89,7 @@ class AutoCrudController extends Controller
             return $rules;
         }
 
-        foreach ($modelInstance->externalRelations() as $relation) {
+        foreach ($modelInstance::getExternalRelations() as $relation) {
             if (isset($relation['pivotFields'])) {
                 foreach ($relation['pivotFields'] as $pivotField) {
                     $fieldRules = $this->buildFieldRules($pivotField, $modelInstance, $id, $relation, $itemId);
@@ -100,7 +100,7 @@ class AutoCrudController extends Controller
 
         return $rules;
     }
-    
+
     private function getModel($model)
     {
         $modelClass = 'App\\Models\\' . ucfirst($model);
@@ -114,7 +114,7 @@ class AutoCrudController extends Controller
 
     public function index($model)
     {
-        return Inertia::render('Dashboard/'.ucfirst($model));
+        return Inertia::render('Dashboard/' . ucfirst($model));
     }
 
     public function getAll($model)
@@ -128,19 +128,19 @@ class AutoCrudController extends Controller
         $sortBy = json_decode(Request::get('sortBy', '[]'), true);
         $search = json_decode(Request::get('search', '[]'), true);
         $deleted = filter_var(Request::get('deleted', 'false'), FILTER_VALIDATE_BOOLEAN);
-    
+
         $modelInstance = $this->getModel($model);
         $modelTable = $modelInstance->getTable();
         $query = $modelInstance::query();
-    
+
         $query->select($modelTable . '.*');
-    
+
         $query->with($modelInstance::getIncludes());
-    
+
         if ($deleted && in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($modelInstance))) {
             $query->onlyTrashed();
         }
-    
+
         if (!empty($search)) {
             foreach ($search as $key => $value) {
                 if (!empty($value)) {
@@ -157,7 +157,7 @@ class AutoCrudController extends Controller
                 }
             }
         }
-    
+
         if (!empty($sortBy)) {
             foreach ($sortBy as $sort) {
                 if (isset($sort['key']) && isset($sort['order'])) {
@@ -165,15 +165,15 @@ class AutoCrudController extends Controller
                     if (count($parts) == 2) {
                         $relatedMethod = $parts[0];
                         $relatedField = $parts[1];
-    
+
                         $relation = $modelInstance->$relatedMethod();
                         $foreignKey = $relation->getForeignKeyName();
                         $relatedTable = $relation->getRelated()->getTable();
                         $relatedModelKey = $relation->getRelated()->getKeyName();
-    
+
                         $query->addSelect("$relatedTable.$relatedField as $relatedMethod" . "_" . "$relatedField");
                         $query->leftJoin($relatedTable, "$modelTable.$foreignKey", '=', "$relatedTable.$relatedModelKey")
-                              ->orderBy("$relatedMethod" . "_" . "$relatedField", $sort['order']);
+                            ->orderBy("$relatedMethod" . "_" . "$relatedField", $sort['order']);
                     } else {
                         $query->orderBy($modelTable . '.' . $sort['key'], $sort['order']);
                     }
@@ -182,13 +182,13 @@ class AutoCrudController extends Controller
         } else {
             $query->orderBy($modelTable . ".id", "desc");
         }
-    
+
         if ($itemsPerPage == -1) {
             $itemsPerPage = $query->count();
-        }    
-    
+        }
+
         $items = $query->paginate($itemsPerPage);
-    
+
         return [
             'tableData' => [
                 'items' => $items->items(),
@@ -196,7 +196,7 @@ class AutoCrudController extends Controller
                 'itemsPerPage' => $items->perPage(),
                 'page' => $items->currentPage(),
                 'sortBy' => $sortBy,
-                'search' => $search, 
+                'search' => $search,
                 'deleted' => $deleted,
             ]
         ];
@@ -209,23 +209,23 @@ class AutoCrudController extends Controller
         $modelInstance = $this->getModel($model);
         $instance = $modelInstance::create($validatedData);
 
-        foreach ($modelInstance->formFields() as $field) {
+        foreach ($modelInstance::getFormFields() as $field) {
             if ($field['type'] === 'image' && Request::hasFile($field['field']) && $instance) {
-                $storagePath = $field['public'] ? 'public/images/'.$model : 'private/images/'.$model;
-                $imagePath = Request::file($field['field'])->storeAs($storagePath,  $field['field'].'/'.$instance['id']);
+                $storagePath = $field['public'] ? 'public/images/' . $model : 'private/images/' . $model;
+                $imagePath = Request::file($field['field'])->storeAs($storagePath,  $field['field'] . '/' . $instance['id']);
                 $instance->{$field['field']} = $imagePath;
             }
 
             if ($field['type'] === 'file' && Request::hasFile($field['field']) && $instance) {
-                $storagePath = $field['public'] ? 'public/files/'.$model : 'private/files/'.$model;
-                $filePath = Request::file($field['field'])->storeAs($storagePath,  $field['field'].'/'.$instance['id']);
+                $storagePath = $field['public'] ? 'public/files/' . $model : 'private/files/' . $model;
+                $filePath = Request::file($field['field'])->storeAs($storagePath,  $field['field'] . '/' . $instance['id']);
 
-                if(!$field['public']) {
+                if (!$field['public']) {
                     $fileContent = Storage::get($filePath);
-            
+
                     // Encriptar el contenido del archivo
                     $encryptedContent = Crypt::encryptString($fileContent);
-            
+
                     // Guardar el contenido encriptado de nuevo en el archivo
                     Storage::put($filePath, $encryptedContent);
                 }
@@ -241,50 +241,50 @@ class AutoCrudController extends Controller
             return Redirect::back()->with(['success' => 'Elemento creado.', 'data' => $instance]);
         }
     }
-    
+
     public function update($model, $id)
     {
         $instance = $this->getModel($model)::findOrFail($id);
         $rules = $this->getValidationRules($model, $id);
         $validatedData = Request::validate($rules);
 
-        foreach ($instance->formFields() as $field) {
+        foreach ($instance::getFormFields() as $field) {
             if ($field['type'] === 'image') {
-                if(Request::input($field['field'].'_edited')) {
-                    Storage::delete($field['public'] ? 'public/images/'.$model.'/'.$field['field'].'/'.$id : 'private/images/'.$model.'/'.$field['field'].'/'.$id );
+                if (Request::input($field['field'] . '_edited')) {
+                    Storage::delete($field['public'] ? 'public/images/' . $model . '/' . $field['field'] . '/' . $id : 'private/images/' . $model . '/' . $field['field'] . '/' . $id);
                     $validatedData[$field['field']] = null;
                 }
                 if (Request::hasFile($field['field'])) {
-                    $storagePath = $field['public'] ? 'public/images/'.$model : 'private/images/'.$model;
-                    $imagePath = Request::file($field['field'])->storeAs($storagePath, $field['field'].'/'.$id);
+                    $storagePath = $field['public'] ? 'public/images/' . $model : 'private/images/' . $model;
+                    $imagePath = Request::file($field['field'])->storeAs($storagePath, $field['field'] . '/' . $id);
                     $validatedData[$field['field']] = $imagePath;
-                }    
+                }
             }
 
             if ($field['type'] === 'file') {
-                if(Request::input($field['field'].'_edited')) {
-                    Storage::delete($field['public'] ? 'public/files/'.$model.'/'.$field['field'].'/'.$id : 'private/files/'.$model.'/'.$field['field'].'/'.$id );
+                if (Request::input($field['field'] . '_edited')) {
+                    Storage::delete($field['public'] ? 'public/files/' . $model . '/' . $field['field'] . '/' . $id : 'private/files/' . $model . '/' . $field['field'] . '/' . $id);
                     $validatedData[$field['field']] = null;
                 }
                 if (Request::hasFile($field['field'])) {
-                    $storagePath = $field['public'] ? 'public/files/'.$model : 'private/files/'.$model;
-                    $filePath = Request::file($field['field'])->storeAs($storagePath, $field['field'].'/'.$id);
+                    $storagePath = $field['public'] ? 'public/files/' . $model : 'private/files/' . $model;
+                    $filePath = Request::file($field['field'])->storeAs($storagePath, $field['field'] . '/' . $id);
                     $validatedData[$field['field']] = $filePath;
 
-                    if(!$field['public']) {
+                    if (!$field['public']) {
                         $fileContent = Storage::get($filePath);
-                
+
                         // Encriptar el contenido del archivo
                         $encryptedContent = Crypt::encryptString($fileContent);
-                
+
                         // Guardar el contenido encriptado de nuevo en el archivo
                         Storage::put($filePath, $encryptedContent);
                     }
-                } 
+                }
             }
 
-            if($field['type'] === 'password') {
-                if(!Request::input($field['field'])) {
+            if ($field['type'] === 'password') {
+                if (!Request::input($field['field'])) {
                     $validatedData[$field['field']] = $instance->{$field['field']};
                 }
             }
@@ -303,7 +303,7 @@ class AutoCrudController extends Controller
     {
         $instance = $this->getModel($model)::findOrFail($id);
 
-        if($instance->delete()) {
+        if ($instance->delete()) {
             return Redirect::back()->with('success', 'Elemento movido a la papelera.');
         }
     }
@@ -311,13 +311,13 @@ class AutoCrudController extends Controller
     public function destroyPermanent($model, $id)
     {
         $instance = $this->getModel($model)::onlyTrashed()->findOrFail($id);
-        foreach ($instance->formFields() as $field) {
+        foreach ($instance::getFormFields() as $field) {
             if ($field['type'] === 'image') {
-                Storage::delete($field['public'] ? 'public/images/'.$model.'/'.$field['field'].'/'.$id : 'private/images/'.$model.'/'.$field['field'].'/'.$id );
+                Storage::delete($field['public'] ? 'public/images/' . $model . '/' . $field['field'] . '/' . $id : 'private/images/' . $model . '/' . $field['field'] . '/' . $id);
             }
 
             if ($field['type'] === 'file') {
-                Storage::delete($field['public'] ? 'public/files/'.$model.'/'.$field['field'].'/'.$id : 'private/files/'.$model.'/'.$field['field'].'/'.$id );
+                Storage::delete($field['public'] ? 'public/files/' . $model . '/' . $field['field'] . '/' . $id : 'private/files/' . $model . '/' . $field['field'] . '/' . $id);
             }
         }
 
@@ -330,7 +330,7 @@ class AutoCrudController extends Controller
     {
         $instance = $this->getModel($model)::onlyTrashed()->findOrFail($id);
 
-        if($instance->restore()) {
+        if ($instance->restore()) {
             return Redirect::back()->with('success', 'Elemento restaurado.');
         }
     }
@@ -339,7 +339,7 @@ class AutoCrudController extends Controller
     {
         $items = $this->getModel($model)::all();
 
-        return  [ 'itemsExcel' => $items ];
+        return  ['itemsExcel' => $items];
     }
 
     public function bind($model, $id, $externalRelation, $item)
@@ -349,13 +349,12 @@ class AutoCrudController extends Controller
         $rules = $this->getValidationRules($model, $id, $item);
 
         $validatedData = Request::validate($rules);
-        
+
         $instance->{$externalRelation}()->attach($item, $validatedData);
 
         $instance->load($instance::getIncludes());
 
         return Redirect::back()->with(['success' => 'Elemento vinculado', 'data' => $instance]);
-
     }
 
     public function updatePivot($model, $id, $externalRelation, $item)
@@ -365,13 +364,12 @@ class AutoCrudController extends Controller
         $rules = $this->getValidationRules($model, $id, $item);
 
         $validatedData = Request::validate($rules);
-        
+
         $instance->{$externalRelation}()->updateExistingPivot($item, $validatedData);
 
         $instance->load($instance::getIncludes());
 
         return Redirect::back()->with(['success' => 'Elemento actualizado', 'data' => $instance]);
-
     }
 
     public function unbind($model, $id, $externalRelation, $item)

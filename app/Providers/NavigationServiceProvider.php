@@ -3,8 +3,6 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 
 use App\Models\Suscriptor;
@@ -17,13 +15,7 @@ class NavigationServiceProvider extends ServiceProvider
     public function register()
     {
         $this->app->singleton('navigation', function ($app) {
-            if (App::environment('production') || App::environment('prod')) {
-                return Cache::rememberForever('navigation_routes', function () {
-                    return $this->generateNavigation();
-                });
-            } else {
-                return $this->generateNavigation();
-            }
+            return $this->generateNavigation();
         });
     }
 

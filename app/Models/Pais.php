@@ -17,43 +17,33 @@ class Pais extends BaseModel
 
     protected static $endPoint = '/dashboard/pais';
 
-    protected function setIncludes()
-    {
-        return [];
-    }
+    protected static $includes = [];
 
-    protected function setFields()
-    {
-        return [
-            [
-                'name' => 'País', 
-                'field' => 'pais', 
-                'type' => 'string', 
-                'table' => true, 
-                'form' => true,
-                'rules' => [
-                    'required' => true,
-                    'unique' => true
-                ]
+    protected static $fields = [
+        [
+            'name' => 'País',
+            'field' => 'pais',
+            'type' => 'string',
+            'table' => true,
+            'form' => true,
+            'rules' => [
+                'required' => true
+            ]
+        ],
+    ];
 
-            ],
-        ];
-    }
-
-    protected function setExternalRelations()
-    {
-        return [
-            [
-                'name' => 'Suscriptores',
-                'relation' => 'suscriptores',
-                'formKey' => 'email',
-                'pivotTable' => 'suscriptores_paises',
-                'foreignKey' => 'pais_id',
-                'relatedKey' => 'suscriptor_id',
-                'model' => Suscriptor::class
-            ],
-        ];
-    }
+    protected static $externalRelations = [
+        [
+            'name' => 'Suscriptores',
+            'storeShortcut' => true,
+            'relation' => 'suscriptores',
+            'formKey' => 'email',
+            'pivotTable' => 'suscriptores_paises',
+            'foreignKey' => 'pais_id',
+            'relatedKey' => 'suscriptor_id',
+            'model' => Suscriptor::class
+        ],
+    ];
 
     protected static $forbiddenActions = [
         'user' => [
@@ -67,5 +57,4 @@ class Pais extends BaseModel
             'restore',
         ],
     ];
-    
 }
