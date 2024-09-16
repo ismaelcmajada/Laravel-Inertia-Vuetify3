@@ -18,7 +18,6 @@ const { mobile } = useDisplay()
 const props = defineProps([
   "title",
   "model",
-  "modifiedRows",
   "customFilters",
   "filteredItems",
   "search",
@@ -69,8 +68,6 @@ const {
   openDialog,
 } = useDialogs()
 
-const modifiedRows = props.modifiedRows
-
 const title = props.title
 endPoint.value = model.value.endPoint
 
@@ -82,6 +79,12 @@ watch(showFormDialog, (value) => {
     emit("openDialog")
   }
 })
+
+function getValueByNestedKey(obj, key) {
+  return key.split(".").reduce((currentObject, keyPart) => {
+    return currentObject ? currentObject[keyPart] : undefined
+  }, obj)
+}
 </script>
 
 <template>
@@ -247,12 +250,14 @@ watch(showFormDialog, (value) => {
       </template>
 
       <template
-        v-for="(modifier, key) in modifiedRows"
-        v-slot:[`item.${key}`]="slotProps"
+        v-slot:[`item.${header.key}`]="{ item }"
+        v-for="header in model.tableHeaders.filter(
+          (header) => header.key !== 'actions'
+        )"
       >
-        <template v-if="slotProps && 'item' in slotProps && slotProps.item">
-          <span v-html="modifier(slotProps.item)"></span>
-        </template>
+        <slot :name="`item.${header.key}`" :item="item">
+          <span>{{ getValueByNestedKey(item, header.key) }}</span>
+        </slot>
       </template>
 
       <template v-slot:item.actions="{ item }">
