@@ -65,32 +65,18 @@ abstract class BaseModel extends Model
         return static::$forbiddenActions;
     }
 
-    public static function getExternalRelations($processedModels = [])
+    public static function getExternalRelations()
     {
-
-
 
         foreach (static::$externalRelations as &$relation) {
 
-
-
             $relation['endPoint'] = $relation['model']::getEndpoint();
-
-            if (isset($relation['storeShortcut']) && $relation['storeShortcut']) {
-                if (in_array($relation['model'], $processedModels)) {
-                    $relation['storeShortcut'] = false;
-                    $relation['modelData'] = null;
-                } else {
-                    $processedModels[] = static::class;
-                    $relation['modelData'] = $relation['model']::getModel($processedModels);
-                }
-            }
         }
 
         return static::$externalRelations;
     }
 
-    public static function getFormFields($processedModels = [])
+    public static function getFormFields()
     {
 
 
@@ -115,16 +101,6 @@ abstract class BaseModel extends Model
 
             if (isset($field['relation'])) {
                 $formFields[$key]['relation']['endPoint'] = $field['relation']['model']::getEndpoint();
-            }
-
-            if (isset($field['relation']['storeShortcut']) && $field['relation']['storeShortcut']) {
-                if (in_array($field['relation']['model'], $processedModels)) {
-                    $formFields[$key]['relation']['storeShortcut'] = false;
-                    $formFields[$key]['relation']['modelData'] = null;
-                } else {
-                    $processedModels[] = static::class;
-                    $formFields[$key]['relation']['modelData'] = $field['relation']['model']::getModel($processedModels);
-                }
             }
         }
 

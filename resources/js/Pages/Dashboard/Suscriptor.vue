@@ -8,5 +8,5 @@ const model = page.props.models.suscriptor
 </script>
 
 <template>
-  <auto-table title="Suscriptores" :model="model" />
+  <auto-table title="Suscriptores" :model="model"> </auto-table>
 </template>

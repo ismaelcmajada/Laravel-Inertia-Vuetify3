@@ -89,7 +89,7 @@ const initFields = () => {
         }
       }
 
-      if (field.relation?.storeShortcut && field.relation?.modelData) {
+      if (field.relation?.storeShortcut) {
         storeShortcutShows.value[field.field] = false
       }
     })
@@ -97,14 +97,14 @@ const initFields = () => {
     filteredFormFields.value.forEach((field) => {
       formData[field.field] = field.default ?? null
 
-      if (field.relation?.storeShortcut && field.relation?.modelData) {
+      if (field.relation?.storeShortcut) {
         storeShortcutShows.value[field.field] = false
       }
     })
   }
 
   model.value.externalRelations.forEach((relation) => {
-    if (relation.storeShortcut && relation.modelData) {
+    if (relation.storeShortcut) {
       storeExternalShortcutShows.value[relation.relation] = false
     }
   })
@@ -407,10 +407,7 @@ getRelations()
           :rules="getFieldRules(formData[field.field], field)"
           @update:model-value="updateRelatedFields(field.field, $event)"
         >
-          <template
-            v-if="field.relation.storeShortcut && field.relation.modelData"
-            v-slot:prepend
-          >
+          <template v-if="field.relation.storeShortcut" v-slot:prepend>
             <v-btn
               icon="mdi-plus-circle"
               @click="storeShortcutShows[field.field] = true"
@@ -422,7 +419,7 @@ getRelations()
               :filteredItems="props.filteredItems"
               :customFilters="props.customFilters"
               :customItemProps="props.customItemProps"
-              :model="field.relation.modelData"
+              :modelName="field.relation.model"
             />
           </template>
         </v-autocomplete>

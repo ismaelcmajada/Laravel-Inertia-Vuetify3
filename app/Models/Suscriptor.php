@@ -21,7 +21,7 @@ class Suscriptor extends BaseModel
 
     protected static $fields = [
         [
-            'name' => 'Pepe',
+            'name' => 'Nombre',
             'field' => 'nombre',
             'type' => 'string',
             'table' => true,

@@ -1,6 +1,9 @@
 <script setup>
 import AutoForm from "./AutoForm.vue"
 import { computed } from "vue"
+import { usePage } from "@inertiajs/vue3"
+
+const page = usePage()
 
 const props = defineProps([
   "show",
@@ -10,6 +13,7 @@ const props = defineProps([
   "customFilters",
   "filteredItems",
   "customItemProps",
+  "modelName",
 ])
 
 const emit = defineEmits([
@@ -20,7 +24,14 @@ const emit = defineEmits([
 ])
 
 const model = computed(() => {
-  return props.model
+  if (props.modelName) {
+    const parts = props.modelName.split("\\")
+    const modelName = parts[parts.length - 1].toLowerCase()
+
+    return page.props.models[modelName]
+  } else {
+    return props.model
+  }
 })
 
 const show = computed({

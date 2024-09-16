@@ -1,9 +1,12 @@
 <script setup>
 import { ref } from "vue"
 import { router } from "@inertiajs/vue3"
+import { usePage } from "@inertiajs/vue3"
 import axios from "axios"
 import { ruleRequired, getFieldRules } from "@/Utils/rules"
 import AutoFormDialog from "./AutoFormDialog.vue"
+
+const page = usePage()
 
 const props = defineProps([
   "item",
@@ -158,13 +161,7 @@ getItems()
           hide-details
           @update:modelValue="addItem"
         >
-          <template
-            v-if="
-              props.externalRelation.storeShortcut &&
-              props.externalRelation.modelData
-            "
-            v-slot:prepend
-          >
+          <template v-if="props.externalRelation.storeShortcut" v-slot:prepend>
             <v-btn
               icon="mdi-plus-circle"
               @click="storeExternalShortcutShow = true"
@@ -175,7 +172,7 @@ getItems()
               :filteredItems="props.filteredItems"
               :customFilters="props.customFilters"
               :customItemProps="props.customItemProps"
-              :model="props.externalRelation.modelData"
+              :modelName="props.externalRelation.model"
             />
           </template>
         </v-autocomplete>
@@ -198,13 +195,7 @@ getItems()
           :rules="[ruleRequired]"
           density="compact"
         >
-          <template
-            v-if="
-              props.externalRelation.storeShortcut &&
-              props.externalRelation.modelData
-            "
-            v-slot:prepend
-          >
+          <template v-if="props.externalRelation.storeShortcut" v-slot:prepend>
             <v-btn
               icon="mdi-plus-circle"
               density="compact"
@@ -216,7 +207,7 @@ getItems()
               :filteredItems="props.filteredItems"
               :customFilters="props.customFilters"
               :customItemProps="props.customItemProps"
-              :model="props.externalRelation.modelData"
+              :modelName="props.externalRelation.model"
             />
           </template>
         </v-autocomplete>
