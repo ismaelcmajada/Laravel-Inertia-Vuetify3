@@ -147,12 +147,18 @@ class AutoCrudController extends Controller
                     $parts = explode('.', $key);
                     if (count($parts) == 2) {
                         $query->whereHas($parts[0], function ($q) use ($parts, $value) {
-                            $q->where($parts[1], 'LIKE', '%' . $value . '%');
+                            $words = explode(' ', $value);
+                            foreach ($words as $word) {
+                                $q->where($parts[1], 'LIKE', '%' . $word . '%');
+                            }
                         });
                     } else if ($key === 'created_at' || $key === 'updated_at' || $key === 'deleted_at') {
                         $query->where(DB::raw("DATE_FORMAT(" . $modelTable . "." . $key . ", '%d-%m-%Y%')"), 'LIKE', '%' . $value . '%');
                     } else {
-                        $query->where($modelTable . '.' . $key, 'LIKE', '%' . $value . '%');
+                        $words = explode(' ', $value);
+                        foreach ($words as $word) {
+                            $query->where($modelTable . '.' . $key, 'LIKE', '%' . $word . '%');
+                        }
                     }
                 }
             }
