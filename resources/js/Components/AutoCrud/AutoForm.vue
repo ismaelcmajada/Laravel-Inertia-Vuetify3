@@ -3,6 +3,7 @@ import { useForm } from "@inertiajs/vue3"
 import axios from "axios"
 import { ref, computed, watch } from "vue"
 import AutoExternalRelation from "./AutoExternalRelation.vue"
+import AutocompleteServer from "./AutocompleteServer.vue"
 import { formatDate } from "@/Utils/dates"
 import { getFieldRules } from "@/Utils/rules"
 import AutoFormDialog from "./AutoFormDialog.vue"
@@ -56,7 +57,7 @@ const filePreview = ref({})
 
 const getRelations = () => {
   const relationsFromFormFields = filteredFormFields.value.filter(
-    (field) => field.relation
+    (field) => field.relation && !field.relation.serverSide
   )
 
   relationsFromFormFields.forEach((field) => {
@@ -390,7 +391,9 @@ getRelations()
         ></v-textarea>
 
         <v-autocomplete
-          v-else-if="field.relation && !field.comboField"
+          v-else-if="
+            field.relation && !field.comboField && !field.relation.serverSide
+          "
           :items="
             props.filteredItems?.[field.relation.relation]
               ? props.filteredItems[field.relation.relation](
@@ -419,10 +422,43 @@ getRelations()
               :filteredItems="props.filteredItems"
               :customFilters="props.customFilters"
               :customItemProps="props.customItemProps"
+              @update:show="getRelations"
               :modelName="field.relation.model"
             />
           </template>
         </v-autocomplete>
+
+        <autocomplete-server
+          v-else-if="
+            field.relation && !field.comboField && field.relation.serverSide
+          "
+          :label="field.rules?.required ? field.name + ' *' : field.name"
+          :item-props="props.customItemProps?.[field.relation.relation]"
+          :item-title="field.relation.formKey"
+          :custom-filter="props.customFilters?.[field.relation.relation]"
+          v-model="formData[field.field]"
+          :end-point="field.relation.endPoint"
+          :rules="getFieldRules(formData[field.field], field)"
+          @update:model-value="updateRelatedFields(field.field, $event)"
+          :item="formData[field.field] ? item[field.relation.relation] : null"
+        >
+          <template v-if="field.relation.storeShortcut" v-slot:prepend>
+            <v-btn
+              icon="mdi-plus-circle"
+              @click="storeShortcutShows[field.field] = true"
+            >
+            </v-btn>
+            <auto-form-dialog
+              v-model:show="storeShortcutShows[field.field]"
+              type="create"
+              :filteredItems="props.filteredItems"
+              :customFilters="props.customFilters"
+              :customItemProps="props.customItemProps"
+              @update:show="getRelations"
+              :modelName="field.relation.model"
+            />
+          </template>
+        </autocomplete-server>
 
         <v-combobox
           v-else-if="field.relation && field.comboField"

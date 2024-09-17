@@ -122,6 +122,15 @@ class AutoCrudController extends Controller
         return $this->getModel($model)::all();
     }
 
+    public function loadAutocompleteItems($model)
+    {
+        $search = Request::get('search', '');
+        $key = Request::get('key', 'name');
+        $items = $this->getModel($model)::whereRaw("$key LIKE '%$search%'")->limit(6)->get();
+
+        return ['autocompleteItems' => $items];
+    }
+
     public function loadItems($model)
     {
         $itemsPerPage = Request::get('itemsPerPage', 10);

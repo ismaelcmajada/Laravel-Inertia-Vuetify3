@@ -12,12 +12,13 @@ Route::get('/dashboard/public/files/{model}/{field}/{id}', [FileController::clas
 
 
 Route::middleware(['auth', 'checkForbiddenActions'])->prefix('dashboard')->group(function () {
-	
-	Route::get('/private/images/{model}/{field}/{id}', [ImageController::class, 'privateImage']);
+
+    Route::get('/private/images/{model}/{field}/{id}', [ImageController::class, 'privateImage']);
     Route::get('/private/files/{model}/{field}/{id}', [FileController::class, 'privateFile']);
 
     Route::post('/session/setSession', [SessionController::class, 'setSession'])->name('dashboard.session.setSession');
 
+    Route::post('/{model}/load-autocomplete-items', [AutoCrudController::class, 'loadAutocompleteItems'])->name('dashboard.model.load-autocomplete-items');
     Route::post('/{model}/load-items', [AutoCrudController::class, 'loadItems'])->name('dashboard.model.load-items');
     Route::post('/{model}/{id}', [AutoCrudController::class, 'update'])->name('dashboard.model.update');
     Route::post('/{model}/{id}/destroy', [AutoCrudController::class, 'destroy'])->name('dashboard.model.destroy');
@@ -33,6 +34,4 @@ Route::middleware(['auth', 'checkForbiddenActions'])->prefix('dashboard')->group
     Route::post('/{model}/{id}/pivot/{externalRelation}/{item}', [AutoCrudController::class, 'updatePivot'])->name('dashboard.model.updatePivot');
     Route::post('/{model}/{id}/bind/{externalRelation}/{item}', [AutoCrudController::class, 'bind'])->name('dashboard.model.bind');
     Route::post('/{model}/{id}/unbind/{externalRelation}/{item}', [AutoCrudController::class, 'unbind'])->name('dashboard.model.unbind');
-    
 });
-

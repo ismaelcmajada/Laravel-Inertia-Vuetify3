@@ -15,7 +15,6 @@ return new class extends Migration
             $table->integer('id', true);
             $table->integer('suscriptor_id');
             $table->integer('pais_id');
-            $table->integer('people');
             $table->timestamps();
 
             $table->unique(['suscriptor_id', 'pais_id']);

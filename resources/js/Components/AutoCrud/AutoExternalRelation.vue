@@ -1,12 +1,10 @@
 <script setup>
 import { ref } from "vue"
 import { router } from "@inertiajs/vue3"
-import { usePage } from "@inertiajs/vue3"
+import AutocompleteServer from "./AutocompleteServer.vue"
 import axios from "axios"
 import { ruleRequired, getFieldRules } from "@/Utils/rules"
 import AutoFormDialog from "./AutoFormDialog.vue"
-
-const page = usePage()
 
 const props = defineProps([
   "item",
@@ -144,7 +142,10 @@ getItems()
         "
       >
         <v-autocomplete
-          v-if="!props.externalRelation.pivotFields"
+          v-if="
+            !props.externalRelation.pivotFields &&
+            !props.externalRelation.serverSide
+          "
           :label="props.externalRelation.name"
           v-model="selectedItem"
           :items="
@@ -173,12 +174,13 @@ getItems()
               :customFilters="props.customFilters"
               :customItemProps="props.customItemProps"
               :modelName="props.externalRelation.model"
+              @update:show="getItems"
             />
           </template>
         </v-autocomplete>
 
         <v-autocomplete
-          v-else
+          v-else-if="!props.externalRelation.serverSide"
           :label="props.externalRelation.name"
           v-model="selectedItem"
           :items="
@@ -208,9 +210,71 @@ getItems()
               :customFilters="props.customFilters"
               :customItemProps="props.customItemProps"
               :modelName="props.externalRelation.model"
+              @update:show="getItems"
             />
           </template>
         </v-autocomplete>
+        <autocomplete-server
+          v-else-if="!props.externalRelation.pivotFields"
+          :label="props.externalRelation.name"
+          v-model="selectedItem"
+          :custom-filter="
+            props.customFilters?.[props.externalRelation.relation]
+          "
+          :end-point="props.externalRelation.endPoint"
+          :item-props="props.customItemProps?.[props.externalRelation.relation]"
+          :item-title="props.externalRelation.formKey"
+          hide-details
+          :items="items"
+          @update:modelValue="addItem"
+        >
+          <template v-if="props.externalRelation.storeShortcut" v-slot:prepend>
+            <v-btn
+              icon="mdi-plus-circle"
+              @click="storeExternalShortcutShow = true"
+            ></v-btn>
+            <auto-form-dialog
+              v-model:show="storeExternalShortcutShow"
+              type="create"
+              :filteredItems="props.filteredItems"
+              :customFilters="props.customFilters"
+              :customItemProps="props.customItemProps"
+              :modelName="props.externalRelation.model"
+              @update:show="getItems"
+            />
+          </template>
+        </autocomplete-server>
+        <autocomplete-server
+          v-else-if="props.externalRelation.serverSide"
+          :label="props.externalRelation.name"
+          v-model="selectedItem"
+          :item-title="props.externalRelation.formKey"
+          :item-props="props.customItemProps?.[props.externalRelation.relation]"
+          :custom-filter="
+            props.customFilters?.[props.externalRelation.relation]
+          "
+          :rules="[ruleRequired]"
+          density="compact"
+          :end-point="props.externalRelation.endPoint"
+          :items="items"
+        >
+          <template v-if="props.externalRelation.storeShortcut" v-slot:prepend>
+            <v-btn
+              icon="mdi-plus-circle"
+              density="compact"
+              @click="storeExternalShortcutShow = true"
+            ></v-btn>
+            <auto-form-dialog
+              v-model:show="storeExternalShortcutShow"
+              type="create"
+              :filteredItems="props.filteredItems"
+              :customFilters="props.customFilters"
+              :customItemProps="props.customItemProps"
+              :modelName="props.externalRelation.model"
+              @update:show="getItems"
+            />
+          </template>
+        </autocomplete-server>
       </v-col>
       <v-col
         cols="12"

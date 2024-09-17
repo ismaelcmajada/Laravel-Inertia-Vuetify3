@@ -94,7 +94,9 @@ class Suscriptor extends BaseModel
                 'relation' => 'pais',
                 'tableKey' => 'pais',
                 'formKey' => 'pais',
-                'storeShortcut' => true
+                'storeShortcut' => true,
+                'serverSide' => true,
+                'searchKeys' => ['name', 'code'],
             ],
             'rules' => [
                 'required' => true
@@ -126,16 +128,6 @@ class Suscriptor extends BaseModel
             'relatedKey' => 'pais_id',
             'storeShortcut' => true,
             'model' => Pais::class,
-            'pivotFields' => [
-                [
-                    'name' => 'Habitantes',
-                    'field' => 'people',
-                    'type' => 'number',
-                    'rules' => [
-                        'required' => true
-                    ]
-                ]
-            ]
         ]
     ];
 
