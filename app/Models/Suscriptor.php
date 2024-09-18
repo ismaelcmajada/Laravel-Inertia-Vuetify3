@@ -96,7 +96,6 @@ class Suscriptor extends BaseModel
                 'formKey' => 'pais',
                 'storeShortcut' => true,
                 'serverSide' => true,
-                'searchKeys' => ['name', 'code'],
             ],
             'rules' => [
                 'required' => true
