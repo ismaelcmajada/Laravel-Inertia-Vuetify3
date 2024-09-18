@@ -1,40 +1,30 @@
 <script setup>
 import { Head } from "@inertiajs/vue3"
-import { useDisplay } from "vuetify"
+import { useDisplay, useTheme } from "vuetify"
 import AppLayout from "@/Layouts/App.vue"
 import NavBar from "@/Components/NavBar.vue"
 import NavBarMobile from "@/Components/NavBarMobile.vue"
-import { router } from "@inertiajs/vue3"
+import { watch, ref } from "vue"
 
 const { mobile } = useDisplay()
+const theme = useTheme()
 
-const mode = computed(() => {
-  return page.props?.mode ?? "customLight"
+const themeFromStorage = localStorage.getItem("theme")
+const themeMode = ref(themeFromStorage ?? "customLight")
+
+theme.global.name.value = themeMode.value
+
+watch(themeMode, (value) => {
+  theme.global.name.value = value
+  localStorage.setItem("theme", value)
 })
-
-const selectedStore = ref(mode.value)
-
-watch(mode, (value) => {
-  selectedStore.value = value
-})
-
-const updateSession = () => {
-  router.post(
-    "/dashboard/session/setSession",
-    {
-      key: "mode",
-      value: selectedStore.value,
-    },
-    { preserveState: true, preserveScroll: true }
-  )
-}
 </script>
 
 <template>
   <Head title="Dashboard" />
   <app-layout>
-    <nav-bar-mobile v-if="mobile" />
-    <nav-bar v-else />
+    <nav-bar-mobile v-model:theme="themeMode" v-if="mobile" />
+    <nav-bar v-model:theme="themeMode" v-else />
     <slot />
   </app-layout>
 </template>

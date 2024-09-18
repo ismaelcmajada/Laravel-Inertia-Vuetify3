@@ -1,8 +1,17 @@
 <script setup>
 import { usePage } from "@inertiajs/vue3"
-import { ref } from "vue"
+import { ref, computed } from "vue"
 
 const page = usePage()
+const props = defineProps(["theme"])
+const emit = defineEmits(["update:theme"])
+
+const theme = computed({
+  get: () => props.theme,
+  set: (value) => {
+    emit("update:theme", value)
+  },
+})
 
 const navigation = page.props.navigation
 
@@ -18,15 +27,6 @@ Object.values(navigation).forEach((route) => {
     })
   }
 })
-
-import { useTheme } from "vuetify"
-
-const theme = useTheme()
-const darkMode = ref(false)
-
-const toggleTheme = () => {
-  theme.global.name.value = darkMode.value ? "customDark" : "customLight"
-}
 </script>
 
 <template>
@@ -101,9 +101,10 @@ const toggleTheme = () => {
       <v-switch
         inset
         color="info"
-        v-model="darkMode"
-        @change="toggleTheme()"
-        class="mr-3"
+        v-model="theme"
+        false-value="customLight"
+        true-value="customDark"
+        class="mr-5"
         hide-details
       ></v-switch>
     </slot>
