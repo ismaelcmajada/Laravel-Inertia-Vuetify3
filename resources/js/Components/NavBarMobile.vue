@@ -18,6 +18,15 @@ Object.values(navigation).forEach((route) => {
     })
   }
 })
+
+import { useTheme } from "vuetify"
+
+const theme = useTheme()
+const darkMode = ref(false)
+
+const toggleTheme = () => {
+  theme.global.name.value = darkMode.value ? "customDark" : "customLight"
+}
 </script>
 
 <template>
@@ -87,6 +96,16 @@ Object.values(navigation).forEach((route) => {
     <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
     <slot name="top">
       <v-toolbar-title>Suscriptores</v-toolbar-title>
+    </slot>
+    <slot name="top-right">
+      <v-switch
+        inset
+        color="info"
+        v-model="darkMode"
+        @change="toggleTheme()"
+        class="mr-3"
+        hide-details
+      ></v-switch>
     </slot>
   </v-app-bar>
 </template>

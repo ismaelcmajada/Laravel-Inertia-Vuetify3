@@ -36,6 +36,22 @@ const openDrawer = () => {
     rail.value = false
   }
 }
+
+const toggleDarkTheme = () => {
+  if (page.props.darkTheme) {
+  } else {
+    page.props.darkTheme = true
+  }
+}
+
+import { useTheme } from "vuetify"
+
+const theme = useTheme()
+const darkMode = ref(false)
+
+const toggleTheme = () => {
+  theme.global.name.value = darkMode.value ? "customDark" : "customLight"
+}
 </script>
 
 <template>
@@ -106,6 +122,16 @@ const openDrawer = () => {
     <v-app-bar-nav-icon @click="closeAll"></v-app-bar-nav-icon>
     <slot name="top">
       <v-toolbar-title>Suscriptores</v-toolbar-title>
+    </slot>
+    <slot name="top-right">
+      <v-switch
+        inset
+        color="info"
+        v-model="darkMode"
+        @change="toggleTheme()"
+        class="mr-3"
+        hide-details
+      ></v-switch>
     </slot>
   </v-app-bar>
 </template>
