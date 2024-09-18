@@ -79,6 +79,7 @@ class Suscriptor extends BaseModel
             'table' => true,
             'form' => true,
             'options' => ['Masculino', 'Femenino'],
+            'multiple' => true,
             'rules' => [
                 'required' => true
             ]

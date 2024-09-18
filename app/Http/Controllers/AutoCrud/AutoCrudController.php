@@ -37,7 +37,19 @@ class AutoCrudController extends Controller
                 break;
             case 'select':
                 if (isset($field['options'])) {
-                    $fieldRules[] = 'in:' . implode(',', $field['options']);
+                    if (isset($field['multiple']) && $field['multiple']) {
+
+                        $fieldRules[] = function ($attribute, $value, $fail) use ($field) {
+
+                            foreach ($value as $option) {
+                                if (!in_array(trim($option), $field['options'])) {
+                                    $fail("La opción seleccionada '{$option}' no es válida.");
+                                }
+                            }
+                        };
+                    } else {
+                        $fieldRules[] = 'in:' . implode(',', $field['options']);
+                    }
                 }
                 break;
             case 'telephone':
@@ -247,6 +259,12 @@ class AutoCrudController extends Controller
 
                 $instance->{$field['field']} = $filePath;
             }
+
+            if ($field['type'] === 'select') {
+                if (isset($field['multiple']) && $field['multiple']) {
+                    $validatedData[$field['field']] = implode(', ', $validatedData[$field['field']]);
+                }
+            }
         }
 
         $created = $instance->save();
@@ -295,6 +313,12 @@ class AutoCrudController extends Controller
                         // Guardar el contenido encriptado de nuevo en el archivo
                         Storage::put($filePath, $encryptedContent);
                     }
+                }
+            }
+
+            if ($field['type'] === 'select') {
+                if (isset($field['multiple']) && $field['multiple']) {
+                    $validatedData[$field['field']] = implode(', ', $validatedData[$field['field']]);
                 }
             }
 

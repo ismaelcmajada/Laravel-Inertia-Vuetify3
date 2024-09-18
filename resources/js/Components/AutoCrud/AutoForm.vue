@@ -20,8 +20,6 @@ const props = defineProps([
 
 const emit = defineEmits(["update:item", "update:type", "formChange"])
 
-const page = usePage()
-
 const model = computed(() => {
   return props.model
 })
@@ -87,6 +85,11 @@ const initFields = () => {
         }
         if (field.type === "file") {
           filePreview.value[field.field] = item.value[field.field]
+        }
+        if (field.type === "select") {
+          if (field.multiple) {
+            formData[field.field] = item.value[field.field].split(", ")
+          }
         }
       }
 
@@ -381,6 +384,7 @@ getRelations()
           v-model="formData[field.field]"
           :rules="getFieldRules(formData[field.field], field)"
           :clearable="!field.rules?.required"
+          :multiple="field.multiple"
         ></v-select>
 
         <v-textarea
