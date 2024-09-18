@@ -12,8 +12,6 @@ const theme = useTheme()
 const themeFromStorage = localStorage.getItem("theme")
 const themeMode = ref(themeFromStorage ?? "customLight")
 
-theme.global.name.value = themeMode.value
-
 watch(themeMode, (value) => {
   theme.global.name.value = value
   localStorage.setItem("theme", value)

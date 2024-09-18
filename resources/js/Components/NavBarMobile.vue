@@ -30,7 +30,7 @@ Object.values(navigation).forEach((route) => {
 </script>
 
 <template>
-  <v-navigation-drawer theme="customDark" v-model="drawer" temporary>
+  <v-navigation-drawer theme="appTheme" v-model="drawer" temporary>
     <v-list>
       <v-list-item title="Suscriptores"> </v-list-item>
     </v-list>

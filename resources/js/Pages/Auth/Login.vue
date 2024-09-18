@@ -29,7 +29,7 @@ const submit = () => {
     <v-hover v-slot="{ isHovering, props }">
       <v-card
         title="Iniciar sesión"
-        theme="customDark"
+        theme="appTheme"
         v-bind="props"
         :elevation="isHovering ? 24 : 6"
         rounded="xl"
@@ -52,7 +52,12 @@ const submit = () => {
             class="mt-2"
           ></v-text-field>
 
-          <v-btn :disabled="!form" type="submit" color="primary" block class="mt-2"
+          <v-btn
+            :disabled="!form"
+            type="submit"
+            color="primary"
+            block
+            class="mt-2"
             >Iniciar sesión</v-btn
           >
         </v-form>

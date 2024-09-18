@@ -36,15 +36,13 @@ const vuetify = createVuetify({
       },
       customDark: {
         dark: true,
+      },
+      appTheme: {
+        dark: true,
         colors: {
-          background: "#363b42",
           surface: "#161d31",
           primary: "#3f51b5",
-          secondary: "#03dac6",
           error: "#f44336",
-          info: "#2196F3",
-          success: "#4caf50",
-          warning: "#fb8c00",
         },
       },
     },

@@ -48,7 +48,7 @@ const openDrawer = () => {
 </script>
 
 <template>
-  <v-navigation-drawer theme="customDark" elevation="6" :rail="rail" permanent>
+  <v-navigation-drawer theme="appTheme" elevation="6" :rail="rail" permanent>
     <v-list>
       <v-list-item title="Suscriptores"></v-list-item>
     </v-list>

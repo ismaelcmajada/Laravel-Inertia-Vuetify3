@@ -2,8 +2,15 @@
 import { useToast } from "vue-toastification"
 import { watch } from "vue"
 import { usePage } from "@inertiajs/vue3"
+import { useTheme } from "vuetify"
 
 const page = usePage()
+
+const theme = useTheme()
+
+const themeFromStorage = localStorage.getItem("theme")
+
+theme.global.name.value = themeFromStorage ?? "customLight"
 
 watch(
   () => page.props.flash,
