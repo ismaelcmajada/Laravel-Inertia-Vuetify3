@@ -143,6 +143,20 @@ abstract class BaseModel extends Model
         return $this->belongsTo($relatedModelClass, $field['field'])->withTrashed();
     }
 
+    protected function handlePolymorphicRelation($field, $method)
+    {
+        if (isset($field['relation']['polymorphic']) && $field['relation']['polymorphic']) {
+            if (isset($field['relation']['models'])) {
+                foreach ($field['relation']['models'] as $modelClass) {
+                    $modelName = (new \ReflectionClass($modelClass))->getShortName();
+                    if ($method === strtolower($modelName)) {
+                        return $this->morphTo($method, 'commentable_type', 'commentable_id');
+                    }
+                }
+            }
+        }
+    }
+
     protected function handleExternalRelation($relation)
     {
         $relatedModelClass = $relation['model'];

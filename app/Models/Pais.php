@@ -51,8 +51,6 @@ class Pais extends BaseModel
         ],
 
         'super-admin' => [
-            'destroy',
-            'destroyPermanent',
             'exportExcel',
             'restore',
         ],
