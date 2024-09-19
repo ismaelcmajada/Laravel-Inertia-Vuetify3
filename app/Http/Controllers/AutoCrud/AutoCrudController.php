@@ -236,13 +236,23 @@ class AutoCrudController extends Controller
         $modelInstance = $this->getModel($model);
 
         foreach ($modelInstance::getFormFields() as $field) {
-            if ($field['type'] === 'image' && Request::hasFile($field['field']) && $instance) {
+            if ($field['type'] === 'select') {
+                if (isset($field['multiple']) && $field['multiple']) {
+                    $validatedData[$field['field']] = implode(', ', $validatedData[$field['field']]);
+                }
+            }
+        }
+
+        $instance = $modelInstance::create($validatedData);
+
+        foreach ($modelInstance::getFormFields() as $field) {
+            if ($field['type'] === 'image' && Request::hasFile($field['field'])) {
                 $storagePath = $field['public'] ? 'public/images/' . $model : 'private/images/' . $model;
                 $imagePath = Request::file($field['field'])->storeAs($storagePath,  $field['field'] . '/' . $instance['id']);
                 $instance->{$field['field']} = $imagePath;
             }
 
-            if ($field['type'] === 'file' && Request::hasFile($field['field']) && $instance) {
+            if ($field['type'] === 'file' && Request::hasFile($field['field'])) {
                 $storagePath = $field['public'] ? 'public/files/' . $model : 'private/files/' . $model;
                 $filePath = Request::file($field['field'])->storeAs($storagePath,  $field['field'] . '/' . $instance['id']);
 
@@ -258,20 +268,14 @@ class AutoCrudController extends Controller
 
                 $instance->{$field['field']} = $filePath;
             }
-
-            if ($field['type'] === 'select') {
-                if (isset($field['multiple']) && $field['multiple']) {
-                    $validatedData[$field['field']] = implode(', ', $validatedData[$field['field']]);
-                }
-            }
         }
 
-        $created = $modelInstance::create($validatedData);
+        $created = $instance->save();
 
-        $created->load($modelInstance::getIncludes());
+        $instance->load($modelInstance::getIncludes());
 
         if ($created) {
-            return Redirect::back()->with(['success' => 'Elemento creado.', 'data' => $created]);
+            return Redirect::back()->with(['success' => 'Elemento creado.', 'data' => $instance]);
         }
     }
 
