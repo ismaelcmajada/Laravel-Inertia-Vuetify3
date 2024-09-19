@@ -234,7 +234,6 @@ class AutoCrudController extends Controller
         $rules = $this->getValidationRules($model);
         $validatedData = Request::validate($rules);
         $modelInstance = $this->getModel($model);
-        $instance = $modelInstance::create($validatedData);
 
         foreach ($modelInstance::getFormFields() as $field) {
             if ($field['type'] === 'image' && Request::hasFile($field['field']) && $instance) {
@@ -267,11 +266,12 @@ class AutoCrudController extends Controller
             }
         }
 
-        $created = $instance->save();
-        $instance->load($instance::getIncludes());
+        $created = $modelInstance::create($validatedData);
+
+        $created->load($modelInstance::getIncludes());
 
         if ($created) {
-            return Redirect::back()->with(['success' => 'Elemento creado.', 'data' => $instance]);
+            return Redirect::back()->with(['success' => 'Elemento creado.', 'data' => $created]);
         }
     }
 
