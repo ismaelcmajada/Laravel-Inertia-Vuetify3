@@ -2,9 +2,7 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Suscriptor;
-use App\Models\Pais;
+use App\Models\User;
 
 class Record extends BaseModel
 {
@@ -17,7 +15,7 @@ class Record extends BaseModel
 
     protected static $endPoint = '/dashboard/record';
 
-    protected static $includes = [];
+    protected static $includes = ['user', 'recordable'];
 
     protected static $fields = [
         [

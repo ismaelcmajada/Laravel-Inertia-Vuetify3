@@ -136,16 +136,11 @@ export function ruleFloat(v, label = null) {
 
 export const getFieldRules = (v, field, ty) => {
   const rules = []
+  if (field.rules?.required) {
+    rules.push(ruleRequired(v))
+  }
   switch (field.type) {
-    case "image":
-      if (field.rules?.required) {
-        rules.push(ruleRequired(v))
-      }
-      break
     case "string":
-      if (field.rules?.required) {
-        rules.push(ruleRequired(v))
-      }
       if (field.rules?.maxLength) {
         rules.push(ruleMaxLength(v, field.rules.maxLength))
       }
@@ -154,9 +149,6 @@ export const getFieldRules = (v, field, ty) => {
       }
       break
     case "text":
-      if (field.rules?.required) {
-        rules.push(ruleRequired(v))
-      }
       if (field.rules?.maxLength) {
         rules.push(ruleMaxLength(v, field.rules.maxLength))
       }
@@ -165,9 +157,6 @@ export const getFieldRules = (v, field, ty) => {
       }
       break
     case "number":
-      if (field.rules?.required) {
-        rules.push(ruleRequired(v))
-      }
       rules.push(ruleNumber(v))
       if (field.rules?.min) {
         rules.push(ruleGreaterThan(v, field.rules.min))
@@ -177,9 +166,6 @@ export const getFieldRules = (v, field, ty) => {
       }
       break
     case "float":
-      if (field.rules?.required) {
-        rules.push(ruleRequired(v))
-      }
       rules.push(ruleFloat(v))
       if (field.rules?.min) {
         rules.push(ruleGreaterThan(v, field.rules.min))
@@ -189,9 +175,6 @@ export const getFieldRules = (v, field, ty) => {
       }
       break
     case "email":
-      if (field.rules?.required) {
-        rules.push(ruleRequired(v))
-      }
       rules.push(ruleEmail(v))
       if (field.rules?.maxLength) {
         rules.push(ruleMaxLength(v, field.rules.maxLength))
@@ -200,32 +183,11 @@ export const getFieldRules = (v, field, ty) => {
         rules.push(ruleMinLength(v, field.rules.minLength))
       }
       break
-    case "boolean":
-      if (field.rules?.required) {
-        rules.push(ruleRequired(v))
-      }
-      break
-    case "date":
-      if (field.rules?.required) {
-        rules.push(ruleRequired(v))
-      }
-      break
     case "dni":
-      if (field.rules?.required) {
-        rules.push(ruleRequired(v))
-      }
       rules.push(ruleDNI(v))
       break
     case "telephone":
-      if (field.rules?.required) {
-        rules.push(ruleRequired(v))
-      }
       rules.push(ruleTelephone(v))
-      break
-    case "select":
-      if (field.rules?.required) {
-        rules.push(ruleRequired(v))
-      }
       break
     default:
       break

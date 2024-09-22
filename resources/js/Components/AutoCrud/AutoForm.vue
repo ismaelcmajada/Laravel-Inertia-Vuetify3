@@ -7,7 +7,6 @@ import AutocompleteServer from "./AutocompleteServer.vue"
 import { formatDate } from "@/Utils/dates"
 import { getFieldRules } from "@/Utils/rules"
 import AutoFormDialog from "./AutoFormDialog.vue"
-import { usePage } from "@inertiajs/vue3"
 
 const props = defineProps([
   "item",
@@ -112,6 +111,7 @@ const initFields = () => {
       storeExternalShortcutShows.value[relation.relation] = false
     }
   })
+  formData.defaults()
 }
 
 const submit = () => {
@@ -243,6 +243,10 @@ const updateComboField = (field, value) => {
 }
 
 getRelations()
+
+const isFormModified = computed(() => {
+  return formData.isDirty
+})
 </script>
 
 <template>
@@ -486,7 +490,7 @@ getRelations()
     <div class="d-flex justify-center">
       <v-btn
         color="blue-darken-1"
-        :disabled="!form"
+        :disabled="!isFormModified"
         variant="text"
         @click="submit"
       >

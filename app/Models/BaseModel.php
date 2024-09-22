@@ -36,12 +36,17 @@ abstract class BaseModel extends Model
                 $this->hidden[] = $field['field'];
             } elseif ($field['type'] === 'date') {
                 $this->casts[$field['field']] = 'date:d-m-Y';
+            } else if ($field['type'] === 'telephone') {
+                $this->casts[$field['field']] = 'string';
             }
         }
     }
 
     public static function getIncludes()
     {
+
+        static::$includes[] = 'records.user';
+
         foreach (static::$fields as $field) {
             if (isset($field['relation'])) {
                 static::$includes[] = $field['relation']['relation'];

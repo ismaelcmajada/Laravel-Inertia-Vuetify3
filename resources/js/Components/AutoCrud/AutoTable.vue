@@ -7,9 +7,10 @@ import DestroyPermanentDialog from "../DestroyPermanentDialog.vue"
 import LoadingOverlay from "../LoadingOverlay.vue"
 import useTableServer from "../../Composables/useTableServer"
 import useDialogs from "../../Composables/useDialogs"
+import HistoryDialog from "./HistoryDialog.vue"
 import { usePage } from "@inertiajs/vue3"
 import { useDisplay } from "vuetify"
-import { computed, watch } from "vue"
+import { computed, watch, ref } from "vue"
 
 const page = usePage()
 
@@ -85,6 +86,13 @@ function getValueByNestedKey(obj, key) {
     return currentObject ? currentObject[keyPart] : undefined
   }, obj)
 }
+
+const showHistoryDialog = ref(false)
+
+const openHistoryDialog = (historyItem) => {
+  item.value = historyItem
+  showHistoryDialog.value = true
+}
 </script>
 
 <template>
@@ -144,6 +152,12 @@ function getValueByNestedKey(obj, key) {
       </template>
     </auto-form-dialog>
   </slot>
+
+  <history-dialog
+    :show="showHistoryDialog"
+    @closeDialog="showHistoryDialog = false"
+    :records="item.records"
+  />
 
   <destroy-dialog
     :show="showDestroyDialog"
@@ -270,6 +284,16 @@ function getValueByNestedKey(obj, key) {
           :loadItems="loadItems"
           :forbiddenActions="forbiddenActions"
         >
+          <v-btn
+            v-if="item.records?.length > 0"
+            density="compact"
+            variant="text"
+            icon
+            @click="openHistoryDialog(item)"
+          >
+            <v-icon>mdi-history</v-icon>
+            <v-tooltip activator="parent">Historial</v-tooltip>
+          </v-btn>
           <div v-if="!tableData.deleted">
             <v-btn
               v-if="forbiddenActions.indexOf('update') === -1"
