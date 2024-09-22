@@ -99,7 +99,7 @@ abstract class BaseModel extends Model
                 ];
             }
 
-            if (isset($field['relation'])) {
+            if (isset($field['relation']) && (!isset($field['relation']['polymorphic']) || !$field['relation']['polymorphic'])) {
                 $formFields[$key]['relation']['endPoint'] = $field['relation']['model']::getEndpoint();
             }
         }
@@ -119,8 +119,13 @@ abstract class BaseModel extends Model
     public function __call($method, $parameters)
     {
         foreach (static::$fields as $field) {
-            if (isset($field['relation']) && $field['relation']['relation'] === $method) {
-                return $this->handleRelation($field);
+            if (isset($field['relation']) && isset($field['relation']['relation']) && $field['relation']['relation'] === $method) {
+                if(isset($field['relation']['polymorphic']) && $field['relation']['polymorphic'] && $field['relation']['relation'] === $method) {
+                    return $this->morphTo($field['relation']['relation'], $field['relation']['morphType'], $field['field'])->withTrashed();
+                } else {
+                    return $this->handleRelation($field);
+            
+                }   
             }
         }
 
@@ -141,20 +146,6 @@ abstract class BaseModel extends Model
         }
 
         return $this->belongsTo($relatedModelClass, $field['field'])->withTrashed();
-    }
-
-    protected function handlePolymorphicRelation($field, $method)
-    {
-        if (isset($field['relation']['polymorphic']) && $field['relation']['polymorphic']) {
-            if (isset($field['relation']['models'])) {
-                foreach ($field['relation']['models'] as $modelClass) {
-                    $modelName = (new \ReflectionClass($modelClass))->getShortName();
-                    if ($method === strtolower($modelName)) {
-                        return $this->morphTo($method, 'commentable_type', 'commentable_id');
-                    }
-                }
-            }
-        }
     }
 
     protected function handleExternalRelation($relation)
@@ -194,21 +185,24 @@ abstract class BaseModel extends Model
     protected static function getTableHeaders()
     {
         $headers = array_map(function ($field) {
+
             if (isset($field['relation'])) {
-                if (isset($field['comboField'])) {
-                    return [
-                        'title' => $field['name'],
-                        'sortable' => true,
-                        'key' => $field['comboField'],
-                        'align' => 'center',
-                    ];
-                } else {
-                    return [
-                        'title' => $field['name'],
-                        'sortable' => true,
-                        'key' => $field['relation']['relation'] . '.' . $field['relation']['tableKey'],
-                        'align' => 'center',
-                    ];
+                if (!isset($field['relation']['polymorphic']) || !$field['relation']['polymorphic']) {
+                    if (isset($field['comboField'])) {
+                        return [
+                            'title' => $field['name'],
+                            'sortable' => true,
+                            'key' => $field['comboField'],
+                            'align' => 'center',
+                        ];
+                    } else {
+                        return [
+                            'title' => $field['name'],
+                            'sortable' => true,
+                            'key' => $field['relation']['relation'] . '.' . $field['relation']['tableKey'],
+                            'align' => 'center',
+                        ];
+                    }
                 }
             }
             return [
@@ -264,10 +258,6 @@ abstract class BaseModel extends Model
         static::saved(function ($model) {
             $model->handleEvent('saved');
         });
-
-        static::restored(function ($model) {
-            $model->handleEvent('restored');
-        });
     }
 
     protected function handleEvent($event)
@@ -275,5 +265,9 @@ abstract class BaseModel extends Model
         if (method_exists($this, $event . 'Event')) {
             call_user_func([$this, $event . 'Event']);
         }
+    }
+
+    public function records() {
+        return $this->morphMany(Record::class, 'recordable', 'model', 'element_id');
     }
 }

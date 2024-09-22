@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Crypt;
+use App\Models\Record;
+use Illuminate\Support\Facades\Auth;
 
 class AutoCrudController extends Controller
 {
@@ -275,6 +277,15 @@ class AutoCrudController extends Controller
         $instance->load($modelInstance::getIncludes());
 
         if ($created) {
+
+            $record = new Record();
+            $record->user_id = Auth::user()->id;
+            $record->element_id = $instance->id;
+            $record->action = 'create';
+            $record->model = 'App\\Models\\' . ucfirst($model);
+
+            $record->save();
+
             return Redirect::back()->with(['success' => 'Elemento creado.', 'data' => $instance]);
         }
     }
@@ -338,6 +349,15 @@ class AutoCrudController extends Controller
         $instance->load($instance::getIncludes());
 
         if ($updated) {
+
+            $record = new Record();
+            $record->user_id = Auth::user()->id;
+            $record->element_id = $instance->id;
+            $record->action = 'update';
+            $record->model = 'App\\Models\\' . ucfirst($model);
+
+            $record->save();
+
             return Redirect::back()->with(['success' => 'Elemento editado.', 'data' => $instance]);
         }
     }
@@ -347,6 +367,15 @@ class AutoCrudController extends Controller
         $instance = $this->getModel($model)::findOrFail($id);
 
         if ($instance->delete()) {
+
+            $record = new Record();
+            $record->user_id = Auth::user()->id;
+            $record->element_id = $instance->id;
+            $record->action = 'destroy';
+            $record->model = 'App\\Models\\' . ucfirst($model);
+
+            $record->save();
+
             return Redirect::back()->with('success', 'Elemento movido a la papelera.');
         }
     }
@@ -365,6 +394,15 @@ class AutoCrudController extends Controller
         }
 
         if ($instance->forceDelete()) {
+
+            $record = new Record();
+            $record->user_id = Auth::user()->id;
+            $record->element_id = $instance->id;
+            $record->action = 'destroyPermanent';
+            $record->model = 'App\\Models\\' . ucfirst($model);
+
+            $record->save();
+
             return Redirect::back()->with('success', 'Elemento eliminado de forma permanente.');
         }
     }
@@ -374,6 +412,15 @@ class AutoCrudController extends Controller
         $instance = $this->getModel($model)::onlyTrashed()->findOrFail($id);
 
         if ($instance->restore()) {
+
+            $record = new Record();
+            $record->user_id = Auth::user()->id;
+            $record->element_id = $instance->id;
+            $record->action = 'restore';
+            $record->model = 'App\\Models\\' . ucfirst($model);
+
+            $record->save();
+
             return Redirect::back()->with('success', 'Elemento restaurado.');
         }
     }
@@ -397,6 +444,14 @@ class AutoCrudController extends Controller
 
         $instance->load($instance::getIncludes());
 
+        $record = new Record();
+        $record->user_id = Auth::user()->id;
+        $record->element_id = $instance->id;
+        $record->action = 'update';
+        $record->model = 'App\\Models\\' . ucfirst($model);
+
+        $record->save();
+
         return Redirect::back()->with(['success' => 'Elemento vinculado', 'data' => $instance]);
     }
 
@@ -412,6 +467,14 @@ class AutoCrudController extends Controller
 
         $instance->load($instance::getIncludes());
 
+        $record = new Record();
+        $record->user_id = Auth::user()->id;
+        $record->element_id = $instance->id;
+        $record->action = 'update';
+        $record->model = 'App\\Models\\' . ucfirst($model);
+
+        $record->save();
+
         return Redirect::back()->with(['success' => 'Elemento actualizado', 'data' => $instance]);
     }
 
@@ -421,6 +484,14 @@ class AutoCrudController extends Controller
         $instance->{$externalRelation}()->detach($item);
 
         $instance->load($instance::getIncludes());
+
+        $record = new Record();
+        $record->user_id = Auth::user()->id;
+        $record->element_id = $instance->id;
+        $record->action = 'update';
+        $record->model = 'App\\Models\\' . ucfirst($model);
+
+        $record->save();
 
         return Redirect::back()->with(['success' => 'Elemento desvinculado', 'data' => $instance]);
     }

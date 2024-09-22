@@ -4,10 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Suscriptor;
+use App\Models\Pais;
 
-class Pais extends BaseModel
+class Record extends BaseModel
 {
-    use SoftDeletes;
     /**
      * The table associated with the model.
      * 
@@ -40,8 +40,13 @@ class Pais extends BaseModel
             'name' => 'Elemento',
             'field' => 'element_id',
             'type' => 'number',
-            'table' => true,
-            'form' => true,
+            'relation' => [
+                'relation' => 'recordable',
+                'polymorphic' => true,
+                'morphType' => 'model',
+            ],
+            'table' => false,
+            'form' => false,
             'rules' => [
                 'required' => true
             ]
