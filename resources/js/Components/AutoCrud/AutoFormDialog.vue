@@ -1,6 +1,6 @@
 <script setup>
 import AutoForm from "./AutoForm.vue"
-import { computed } from "vue"
+import { computed, ref, watch } from "vue"
 import { usePage } from "@inertiajs/vue3"
 
 const page = usePage()
@@ -21,6 +21,7 @@ const emit = defineEmits([
   "update:type",
   "update:item",
   "formChange",
+  "isDirty",
 ])
 
 const model = computed(() => {
@@ -54,6 +55,13 @@ const item = computed({
     emit("update:item", value)
   },
 })
+
+const isFormDirty = ref(false)
+
+const handleIsFormDirty = (value) => {
+  isFormDirty.value = value
+  emit("isDirty", value)
+}
 </script>
 
 <template>
@@ -62,6 +70,15 @@ const item = computed({
       <v-card-title class="mt-2 text-center">
         <span v-if="type == 'create'"> Crear elemento </span>
         <span v-else> Editar elemento </span>
+        <v-chip
+          v-if="isFormDirty"
+          class="ml-2 pa-4"
+          color="warning"
+          small
+          prependIcon="mdi-alert"
+        >
+          Sin guardar
+        </v-chip>
       </v-card-title>
 
       <v-divider></v-divider>
@@ -69,7 +86,14 @@ const item = computed({
       <v-card-text>
         <v-container>
           <slot name="prepend" :model="model" :type="type" :item="item"> </slot>
-          <slot name="auto-form" :model="model" :type="type" :item="item">
+          <slot
+            name="auto-form"
+            :model="model"
+            :type="type"
+            :item="item"
+            :isFormDirty="isFormDirty"
+            :handleIsFormDirty="handleIsFormDirty"
+          >
             <auto-form
               :model="model"
               v-model:type="type"
@@ -78,6 +102,7 @@ const item = computed({
               :filteredItems="props.filteredItems"
               :customItemProps="props.customItemProps"
               @formChange="emit('formChange', $event)"
+              @isDirty="handleIsFormDirty($event)"
             />
           </slot>
           <slot name="append" :model="model" :type="type" :item="item"> </slot>

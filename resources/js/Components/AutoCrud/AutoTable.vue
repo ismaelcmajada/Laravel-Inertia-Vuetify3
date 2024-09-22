@@ -124,7 +124,7 @@ const openHistoryDialog = (historyItem) => {
           :item="item"
         ></slot>
       </template>
-      <template #auto-form>
+      <template #auto-form="{ handleIsFormDirty }">
         <slot
           name="auto-form-dialog.auto-form"
           :model="model"
@@ -139,6 +139,7 @@ const openHistoryDialog = (historyItem) => {
             :filteredItems="props.filteredItems"
             :customItemProps="props.customItemProps"
             @formChange="emit('formChange', $event)"
+            @isDirty="handleIsFormDirty($event)"
           />
         </slot>
       </template>

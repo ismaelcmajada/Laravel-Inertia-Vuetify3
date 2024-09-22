@@ -17,7 +17,12 @@ const props = defineProps([
   "customItemProps",
 ])
 
-const emit = defineEmits(["update:item", "update:type", "formChange"])
+const emit = defineEmits([
+  "update:item",
+  "update:type",
+  "formChange",
+  "isDirty",
+])
 
 const model = computed(() => {
   return props.model
@@ -112,6 +117,7 @@ const initFields = () => {
     }
   })
   formData.defaults()
+  emit("isDirty", false)
 }
 
 const submit = () => {
@@ -244,8 +250,12 @@ const updateComboField = (field, value) => {
 
 getRelations()
 
-const isFormModified = computed(() => {
+const isFormDirty = computed(() => {
   return formData.isDirty
+})
+
+watch(isFormDirty, (value) => {
+  emit("isDirty", value)
 })
 </script>
 
@@ -490,7 +500,7 @@ const isFormModified = computed(() => {
     <div class="d-flex justify-center">
       <v-btn
         color="blue-darken-1"
-        :disabled="!isFormModified || !form"
+        :disabled="!isFormDirty || !form"
         variant="text"
         @click="submit"
       >
