@@ -490,7 +490,7 @@ const isFormModified = computed(() => {
     <div class="d-flex justify-center">
       <v-btn
         color="blue-darken-1"
-        :disabled="!isFormModified"
+        :disabled="!isFormModified || !form"
         variant="text"
         @click="submit"
       >
