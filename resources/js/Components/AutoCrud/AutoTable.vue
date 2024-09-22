@@ -285,7 +285,10 @@ const openHistoryDialog = (historyItem) => {
           :forbiddenActions="forbiddenActions"
         >
           <v-btn
-            v-if="item.records?.length > 0"
+            v-if="
+              item.records?.length > 0 &&
+              forbiddenActions.indexOf('showRecords') === -1
+            "
             density="compact"
             variant="text"
             icon
@@ -294,50 +297,55 @@ const openHistoryDialog = (historyItem) => {
             <v-icon>mdi-history</v-icon>
             <v-tooltip activator="parent">Historial</v-tooltip>
           </v-btn>
-          <div v-if="!tableData.deleted">
-            <v-btn
-              v-if="forbiddenActions.indexOf('update') === -1"
-              density="compact"
-              variant="text"
-              icon
-              @click="openDialog('edit', item)"
-            >
-              <v-icon>mdi-pencil</v-icon>
-              <v-tooltip activator="parent">Editar</v-tooltip>
-            </v-btn>
-            <v-btn
-              v-if="forbiddenActions.indexOf('destroy') === -1"
-              density="compact"
-              variant="text"
-              icon
-              @click="openDialog('destroy', item)"
-            >
-              <v-icon>mdi-delete</v-icon>
-              <v-tooltip activator="parent">Eliminar</v-tooltip>
-            </v-btn>
-          </div>
-          <div v-else>
-            <v-btn
-              v-if="forbiddenActions.indexOf('restore') === -1"
-              density="compact"
-              variant="text"
-              icon
-              @click="openDialog('restore', item)"
-            >
-              <v-icon>mdi-restore</v-icon>
-              <v-tooltip activator="parent">Restaurar</v-tooltip>
-            </v-btn>
-            <v-btn
-              v-if="forbiddenActions.indexOf('destroyPermanent') === -1"
-              density="compact"
-              variant="text"
-              icon
-              @click="openDialog('destroyPermanent', item)"
-            >
-              <v-icon>mdi-delete-alert</v-icon>
-              <v-tooltip activator="parent">Eliminar permanente</v-tooltip>
-            </v-btn>
-          </div>
+          <v-btn
+            v-if="
+              !tableData.deleted && forbiddenActions.indexOf('update') === -1
+            "
+            density="compact"
+            variant="text"
+            icon
+            @click="openDialog('edit', item)"
+          >
+            <v-icon>mdi-pencil</v-icon>
+            <v-tooltip activator="parent">Editar</v-tooltip>
+          </v-btn>
+          <v-btn
+            v-if="
+              !tableData.deleted && forbiddenActions.indexOf('destroy') === -1
+            "
+            density="compact"
+            variant="text"
+            icon
+            @click="openDialog('destroy', item)"
+          >
+            <v-icon>mdi-delete</v-icon>
+            <v-tooltip activator="parent">Eliminar</v-tooltip>
+          </v-btn>
+          <v-btn
+            v-if="
+              tableData.deleted && forbiddenActions.indexOf('restore') === -1
+            "
+            density="compact"
+            variant="text"
+            icon
+            @click="openDialog('restore', item)"
+          >
+            <v-icon>mdi-restore</v-icon>
+            <v-tooltip activator="parent">Restaurar</v-tooltip>
+          </v-btn>
+          <v-btn
+            v-if="
+              tableData.deleted &&
+              forbiddenActions.indexOf('destroyPermanent') === -1
+            "
+            density="compact"
+            variant="text"
+            icon
+            @click="openDialog('destroyPermanent', item)"
+          >
+            <v-icon>mdi-delete-alert</v-icon>
+            <v-tooltip activator="parent">Eliminar permanente</v-tooltip>
+          </v-btn>
         </slot>
       </template>
     </v-data-table-server>
