@@ -278,13 +278,7 @@ class AutoCrudController extends Controller
 
         if ($created) {
 
-            $record = new Record();
-            $record->user_id = Auth::user()->id;
-            $record->element_id = $instance->id;
-            $record->action = 'create';
-            $record->model = 'App\\Models\\' . ucfirst($model);
-
-            $record->save();
+            $this->setRecord($model, $instance->id, 'create');
 
             return Redirect::back()->with(['success' => 'Elemento creado.', 'data' => $instance]);
         }
@@ -350,13 +344,7 @@ class AutoCrudController extends Controller
 
         if ($updated) {
 
-            $record = new Record();
-            $record->user_id = Auth::user()->id;
-            $record->element_id = $instance->id;
-            $record->action = 'update';
-            $record->model = 'App\\Models\\' . ucfirst($model);
-
-            $record->save();
+            $this->setRecord($model, $instance->id, 'update');
 
             return Redirect::back()->with(['success' => 'Elemento editado.', 'data' => $instance]);
         }
@@ -368,13 +356,7 @@ class AutoCrudController extends Controller
 
         if ($instance->delete()) {
 
-            $record = new Record();
-            $record->user_id = Auth::user()->id;
-            $record->element_id = $instance->id;
-            $record->action = 'destroy';
-            $record->model = 'App\\Models\\' . ucfirst($model);
-
-            $record->save();
+            $this->setRecord($model, $instance->id, 'destroy');
 
             return Redirect::back()->with('success', 'Elemento movido a la papelera.');
         }
@@ -395,13 +377,7 @@ class AutoCrudController extends Controller
 
         if ($instance->forceDelete()) {
 
-            $record = new Record();
-            $record->user_id = Auth::user()->id;
-            $record->element_id = $instance->id;
-            $record->action = 'destroyPermanent';
-            $record->model = 'App\\Models\\' . ucfirst($model);
-
-            $record->save();
+            $this->setRecord($model, $instance->id, 'destroyPermanent');
 
             return Redirect::back()->with('success', 'Elemento eliminado de forma permanente.');
         }
@@ -413,13 +389,7 @@ class AutoCrudController extends Controller
 
         if ($instance->restore()) {
 
-            $record = new Record();
-            $record->user_id = Auth::user()->id;
-            $record->element_id = $instance->id;
-            $record->action = 'restore';
-            $record->model = 'App\\Models\\' . ucfirst($model);
-
-            $record->save();
+            $this->setRecord($model, $instance->id, 'restore');
 
             return Redirect::back()->with('success', 'Elemento restaurado.');
         }
@@ -444,13 +414,7 @@ class AutoCrudController extends Controller
 
         $instance->load($instance::getIncludes());
 
-        $record = new Record();
-        $record->user_id = Auth::user()->id;
-        $record->element_id = $instance->id;
-        $record->action = 'update';
-        $record->model = 'App\\Models\\' . ucfirst($model);
-
-        $record->save();
+        $this->setRecord($model, $instance->id, 'update');
 
         return Redirect::back()->with(['success' => 'Elemento vinculado', 'data' => $instance]);
     }
@@ -467,14 +431,7 @@ class AutoCrudController extends Controller
 
         $instance->load($instance::getIncludes());
 
-        $record = new Record();
-        $record->user_id = Auth::user()->id;
-        $record->element_id = $instance->id;
-        $record->action = 'update';
-        $record->model = 'App\\Models\\' . ucfirst($model);
-
-        $record->save();
-
+        $this->setRecord($model, $instance->id, 'update');
         return Redirect::back()->with(['success' => 'Elemento actualizado', 'data' => $instance]);
     }
 
@@ -485,14 +442,18 @@ class AutoCrudController extends Controller
 
         $instance->load($instance::getIncludes());
 
+        $this->setRecord($model, $instance->id, 'update');
+        return Redirect::back()->with(['success' => 'Elemento desvinculado', 'data' => $instance]);
+    }
+
+    public function setRecord($model, $element_id, $action)
+    {
         $record = new Record();
         $record->user_id = Auth::user()->id;
-        $record->element_id = $instance->id;
-        $record->action = 'update';
+        $record->element_id = $element_id;
+        $record->action = $action;
         $record->model = 'App\\Models\\' . ucfirst($model);
 
         $record->save();
-
-        return Redirect::back()->with(['success' => 'Elemento desvinculado', 'data' => $instance]);
     }
 }
