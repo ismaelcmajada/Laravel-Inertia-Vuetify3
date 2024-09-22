@@ -67,15 +67,16 @@ const handleIsFormDirty = (value) => {
 <template>
   <v-dialog scrollable v-model="show" width="1024">
     <v-card>
-      <v-card-title class="mt-2 text-center">
-        <span v-if="type == 'create'"> Crear elemento </span>
-        <span v-else> Editar elemento </span>
+      <v-card-title class="mt-2 position-relative d-flex align-middle">
+        <div class="text-center" style="flex: 1">
+          <span v-if="type == 'create'"> Crear elemento </span>
+          <span v-else> Editar elemento </span>
+        </div>
         <v-chip
           v-if="isFormDirty"
-          class="ml-2 pa-4"
           color="warning"
-          small
-          prependIcon="mdi-alert"
+          size="small"
+          class="position-absolute right-0 mr-10"
         >
           Sin guardar
         </v-chip>
