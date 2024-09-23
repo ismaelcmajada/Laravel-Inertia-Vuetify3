@@ -93,6 +93,21 @@ const openHistoryDialog = (historyItem) => {
   item.value = historyItem
   showHistoryDialog.value = true
 }
+
+function generateItemTitle(templateString, dataObject) {
+  if (!dataObject) return ""
+  return templateString.replace(/\{([\w\.]+)\}/g, (match, p1) => {
+    const keys = p1.split(".")
+    let value = dataObject
+    for (let key of keys) {
+      if (value[key] === undefined) {
+        return match
+      }
+      value = value[key]
+    }
+    return value
+  })
+}
 </script>
 
 <template>
@@ -271,7 +286,21 @@ const openHistoryDialog = (historyItem) => {
         )"
       >
         <slot :name="`item.${header.key}`" :item="item">
-          <span>{{ getValueByNestedKey(item, header.key) }}</span>
+          <span>
+            <!-- Si header tiene relation y tableKey -->
+            <template v-if="header.relation && header.relation.tableKey">
+              {{
+                generateItemTitle(
+                  header.relation.tableKey,
+                  item[header.relation.relation]
+                )
+              }}
+            </template>
+            <!-- Si no, usamos el valor normal -->
+            <template v-else>
+              {{ getValueByNestedKey(item, header.key) }}
+            </template>
+          </span>
         </slot>
       </template>
 

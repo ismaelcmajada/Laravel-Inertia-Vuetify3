@@ -139,37 +139,30 @@ class AutoCrudController extends Controller
     public function loadAutocompleteItems($model)
     {
         $search = Request::get('search', '');
-        $key = Request::get('key', 'hay un codigo que es {code} y un nombre que es {name}');
+        $key = Request::get('key', null);
 
-        preg_match_all('/\{(\w+)\}/', $key, $matches);
-        $fields = $matches[1];
+        $modelInstance = $this->getModel($model);
+        $query = $modelInstance::query();
 
-        $literals = preg_split('/\{\w+\}/', $key);
+        if ($key === null) {
+            // Obtener el primer formKey definido en el modelo
+            $formKeyFields = $modelInstance::getFormKeyFields();
+            if (!empty($formKeyFields)) {
+                $firstField = array_keys($formKeyFields)[0];
+                $relationInfo = $formKeyFields[$firstField];
+                $key = $relationInfo['formKey'];
+                $relationName = $relationInfo['relation'];
+            } else {
+                // Si no hay formKey, usar un key por defecto
+                $key = '{id}';
+                $relationName = null;
+            }
+        } else {
+            $relationName = null;
+        }
 
-        $query = $this->getModel($model)::query();
-
-        if (!empty($search) && !empty($fields)) {
-            $query->where(function ($q) use ($fields, $literals, $search) {
-                $concatString = "";
-
-                foreach ($fields as $index => $field) {
-                    if (isset($literals[$index])) {
-                        $concatString .= "'" . $literals[$index] . "', ";
-                    }
-
-                    $concatString .= "IFNULL(`$field`, ''), ";
-                }
-                if (isset($literals[count($fields)])) {
-                    $concatString .= "'" . $literals[count($fields)] . "'";
-                } else {
-                    $concatString = rtrim($concatString, ', ');
-                }
-
-                $searchWords = explode(' ', $search);
-                foreach ($searchWords as $word) {
-                    $q->whereRaw("CONCAT_WS('', $concatString) LIKE ?", ["%{$word}%"]);
-                }
-            });
+        if (!empty($search)) {
+            $this->applyDynamicSearch($query, $relationName, $key, $search);
         }
 
         $items = $query->limit(6)->get();
@@ -196,47 +189,62 @@ class AutoCrudController extends Controller
             $query->onlyTrashed();
         }
 
+        $tableKeyFields = $modelInstance::getTableKeyFields();
+
         if (!empty($search)) {
             foreach ($search as $key => $value) {
                 if (!empty($value)) {
-                    $parts = explode('.', $key);
-                    if (count($parts) == 2) {
-                        $query->whereHas($parts[0], function ($q) use ($parts, $value) {
-                            $words = explode(' ', $value);
-                            foreach ($words as $word) {
-                                $q->where($parts[1], 'LIKE', '%' . $word . '%');
-                            }
-                        });
-                    } else if ($key === 'created_at' || $key === 'updated_at' || $key === 'deleted_at') {
-                        $query->where(DB::raw("DATE_FORMAT(" . $modelTable . "." . $key . ", '%d-%m-%Y%')"), 'LIKE', '%' . $value . '%');
+                    if (isset($tableKeyFields[$key])) {
+                        // Si el campo tiene un tableKey dinámico
+                        $relationInfo = $tableKeyFields[$key];
+                        $relationName = $relationInfo['relation'];
+                        $tableKey = $relationInfo['tableKey'];
+
+                        $this->applyDynamicSearch($query, $relationName, $tableKey, $value);
                     } else {
-                        $words = explode(' ', $value);
-                        foreach ($words as $word) {
-                            $query->where($modelTable . '.' . $key, 'LIKE', '%' . $word . '%');
+                        // Lógica existente
+                        $parts = explode('.', $key);
+                        if (count($parts) == 2) {
+                            $query->whereHas($parts[0], function ($q) use ($parts, $value) {
+                                $q->where($parts[1], 'LIKE', '%' . $value . '%');
+                            });
+                        } else if ($key === 'created_at' || $key === 'updated_at' || $key === 'deleted_at') {
+                            $query->whereDate($modelTable . '.' . $key, $value);
+                        } else {
+                            $query->where($modelTable . '.' . $key, 'LIKE', '%' . $value . '%');
                         }
                     }
                 }
             }
         }
 
+        // Ordenamiento
         if (!empty($sortBy)) {
             foreach ($sortBy as $sort) {
                 if (isset($sort['key']) && isset($sort['order'])) {
-                    $parts = explode('.', $sort['key']);
-                    if (count($parts) == 2) {
-                        $relatedMethod = $parts[0];
-                        $relatedField = $parts[1];
+                    $key = $sort['key'];
+                    $order = $sort['order'];
 
-                        $relation = $modelInstance->$relatedMethod();
-                        $foreignKey = $relation->getForeignKeyName();
-                        $relatedTable = $relation->getRelated()->getTable();
-                        $relatedModelKey = $relation->getRelated()->getKeyName();
+                    if (isset($tableKeyFields[$key])) {
+                        $relationInfo = $tableKeyFields[$key];
+                        $relationName = $relationInfo['relation'];
+                        $tableKey = $relationInfo['tableKey'];
 
-                        $query->addSelect("$relatedTable.$relatedField as $relatedMethod" . "_" . "$relatedField");
-                        $query->leftJoin($relatedTable, "$modelTable.$foreignKey", '=', "$relatedTable.$relatedModelKey")
-                            ->orderBy("$relatedMethod" . "_" . "$relatedField", $sort['order']);
+                        $concatString = $this->buildConcatString($relationInfo['fields'], $relationInfo['literals']);
+
+                        $query->leftJoin($relationName, $modelTable . '.' . $relationName . '_id', '=', $relationName . '.id')
+                            ->orderByRaw("CONCAT_WS('', $concatString) $order");
                     } else {
-                        $query->orderBy($modelTable . '.' . $sort['key'], $sort['order']);
+                        $parts = explode('.', $key);
+                        if (count($parts) == 2) {
+                            $relationName = $parts[0];
+                            $field = $parts[1];
+
+                            $query->leftJoin($relationName, $modelTable . '.' . $relationName . '_id', '=', $relationName . '.id')
+                                ->orderBy($relationName . '.' . $field, $order);
+                        } else {
+                            $query->orderBy($modelTable . '.' . $key, $order);
+                        }
                     }
                 }
             }
@@ -244,6 +252,7 @@ class AutoCrudController extends Controller
             $query->orderBy($modelTable . ".id", "desc");
         }
 
+        // Paginación
         if ($itemsPerPage == -1) {
             $itemsPerPage = $query->count();
         }
@@ -261,6 +270,26 @@ class AutoCrudController extends Controller
                 'deleted' => $deleted,
             ]
         ];
+    }
+
+    private function buildConcatString($fields, $literals)
+    {
+        $concatString = "";
+
+        foreach ($fields as $index => $field) {
+            if (isset($literals[$index])) {
+                $concatString .= "'" . $literals[$index] . "', ";
+            }
+
+            $concatString .= "IFNULL(" . $this->wrapField($field) . ", ''), ";
+        }
+        if (isset($literals[count($fields)])) {
+            $concatString .= "'" . $literals[count($fields)] . "'";
+        } else {
+            $concatString = rtrim($concatString, ', ');
+        }
+
+        return $concatString;
     }
 
     public function store($model)
@@ -487,5 +516,68 @@ class AutoCrudController extends Controller
         $record->model = 'App\\Models\\' . ucfirst($model);
 
         $record->save();
+    }
+
+    private function applyDynamicSearch($query, $relationName, $templateString, $value)
+    {
+        preg_match_all('/\{([\w\.]+)\}/', $templateString, $matches);
+        $fields = $matches[1];
+        $literals = preg_split('/\{[\w\.]+\}/', $templateString);
+    
+        if ($relationName) {
+            $query->whereHas($relationName, function ($q) use ($fields, $literals, $value) {
+                $concatString = "";
+    
+                foreach ($fields as $index => $field) {
+                    if (isset($literals[$index])) {
+                        $concatString .= "'" . $literals[$index] . "', ";
+                    }
+    
+                    $concatString .= "IFNULL(" . $this->wrapField($field) . ", ''), ";
+                }
+                if (isset($literals[count($fields)])) {
+                    $concatString .= "'" . $literals[count($fields)] . "'";
+                } else {
+                    $concatString = rtrim($concatString, ', ');
+                }
+    
+                $searchWords = explode(' ', $value);
+                foreach ($searchWords as $word) {
+                    $q->whereRaw("CONCAT_WS('', $concatString) LIKE ?", ["%{$word}%"]);
+                }
+            });
+        } else {
+            $query->where(function ($q) use ($fields, $literals, $value) {
+                $concatString = "";
+    
+                foreach ($fields as $index => $field) {
+                    if (isset($literals[$index])) {
+                        $concatString .= "'" . $literals[$index] . "', ";
+                    }
+    
+                    $concatString .= "IFNULL(" . $this->wrapField($field) . ", ''), ";
+                }
+                if (isset($literals[count($fields)])) {
+                    $concatString .= "'" . $literals[count($fields)] . "'";
+                } else {
+                    $concatString = rtrim($concatString, ', ');
+                }
+    
+                $searchWords = explode(' ', $value);
+                foreach ($searchWords as $word) {
+                    $q->whereRaw("CONCAT_WS('', $concatString) LIKE ?", ["%{$word}%"]);
+                }
+            });
+        }
+    }
+    
+    private function wrapField($field)
+    {
+        if (strpos($field, '.') !== false) {
+            $parts = explode('.', $field);
+            return '`' . implode('`.`', $parts) . '`';
+        } else {
+            return '`' . $field . '`';
+        }
     }
 }

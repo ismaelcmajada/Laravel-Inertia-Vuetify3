@@ -194,21 +194,13 @@ abstract class BaseModel extends Model
 
             if (isset($field['relation'])) {
                 if (!isset($field['relation']['polymorphic']) || !$field['relation']['polymorphic']) {
-                    if (isset($field['comboField'])) {
-                        return [
-                            'title' => $field['name'],
-                            'sortable' => true,
-                            'key' => $field['comboField'],
-                            'align' => 'center',
-                        ];
-                    } else {
-                        return [
-                            'title' => $field['name'],
-                            'sortable' => true,
-                            'key' => $field['relation']['relation'] . '.' . $field['relation']['tableKey'],
-                            'align' => 'center',
-                        ];
-                    }
+                    return [
+                        'title' => $field['name'],
+                        'sortable' => true,
+                        'key' => $field['field'],
+                        'relation' => $field['relation'],
+                        'align' => 'center',
+                    ];
                 }
             }
             return [
@@ -228,6 +220,49 @@ abstract class BaseModel extends Model
 
         return $headers;
     }
+
+    public static function getTableKeyFields()
+    {
+        $tableKeyFields = [];
+
+        foreach (static::$fields as $field) {
+            if (isset($field['relation']) && isset($field['relation']['tableKey'])) {
+                $tableKey = $field['relation']['tableKey'];
+                preg_match_all('/\{([\w\.]+)\}/', $tableKey, $matches);
+                $fields = $matches[1];
+                $tableKeyFields[$field['field']] = [
+                    'relation' => $field['relation']['relation'],
+                    'fields' => $fields,
+                    'literals' => preg_split('/\{[\w\.]+\}/', $tableKey),
+                    'tableKey' => $tableKey
+                ];
+            }
+        }
+
+        return $tableKeyFields;
+    }
+
+    public static function getFormKeyFields()
+    {
+        $formKeyFields = [];
+
+        foreach (static::$fields as $field) {
+            if (isset($field['relation']) && isset($field['relation']['formKey'])) {
+                $formKey = $field['relation']['formKey'];
+                preg_match_all('/\{(\w+)\}/', $formKey, $matches);
+                $fields = $matches[1];
+                $formKeyFields[$field['field']] = [
+                    'relation' => $field['relation']['relation'],
+                    'fields' => $fields,
+                    'literals' => preg_split('/\{\w+\}/', $formKey),
+                    'formKey' => $formKey
+                ];
+            }
+        }
+
+        return $formKeyFields;
+    }
+
 
     protected static function boot()
     {
