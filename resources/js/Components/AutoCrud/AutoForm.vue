@@ -7,6 +7,7 @@ import AutocompleteServer from "./AutocompleteServer.vue"
 import { formatDate } from "@/Utils/dates"
 import { getFieldRules } from "@/Utils/rules"
 import AutoFormDialog from "./AutoFormDialog.vue"
+import { searchByWords, generateItemTitle } from "@/Utils/autocompleteUtils"
 
 const props = defineProps([
   "item",
@@ -421,8 +422,16 @@ watch(isFormDirty, (value) => {
           "
           :label="field.rules?.required ? field.name + ' *' : field.name"
           :item-props="props.customItemProps?.[field.relation.relation]"
-          :item-title="field.relation.formKey"
-          :custom-filter="props.customFilters?.[field.relation.relation]"
+          :item-title="generateItemTitle(field.relation.formKey)"
+          :custom-filter="
+            (item, queryText, itemText) =>
+              searchByWords(
+                item,
+                queryText,
+                itemText,
+                props.customFilters?.[field.relation.relation]
+              )
+          "
           item-value="id"
           v-model="formData[field.field]"
           :rules="getFieldRules(formData[field.field], field)"
@@ -453,7 +462,15 @@ watch(isFormDirty, (value) => {
           :label="field.rules?.required ? field.name + ' *' : field.name"
           :item-props="props.customItemProps?.[field.relation.relation]"
           :item-title="field.relation.formKey"
-          :custom-filter="props.customFilters?.[field.relation.relation]"
+          :custom-filter="
+            (item, queryText, itemText) =>
+              searchByWords(
+                item,
+                queryText,
+                itemText,
+                props.customFilters?.[field.relation.relation]
+              )
+          "
           v-model="formData[field.field]"
           :end-point="field.relation.endPoint"
           :rules="getFieldRules(formData[field.field], field)"
@@ -490,9 +507,17 @@ watch(isFormDirty, (value) => {
                 )
               : relations[field.field]
           "
-          :item-title="field.relation.formKey"
+          :item-title="generateItemTitle(field.relation.formKey)"
           :item-props="props.customItemProps?.[field.relation.relation]"
-          :custom-filter="props.customFilters?.[field.relation.relation]"
+          :custom-filter="
+            (item, queryText, itemText) =>
+              searchByWords(
+                item,
+                queryText,
+                itemText,
+                props.customFilters?.[field.relation.relation]
+              )
+          "
           @update:model-value="updateComboField(field, $event)"
         ></v-combobox>
       </v-col>

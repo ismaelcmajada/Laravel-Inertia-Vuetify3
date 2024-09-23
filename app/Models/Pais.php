@@ -37,7 +37,7 @@ class Pais extends BaseModel
             'name' => 'Suscriptores',
             'storeShortcut' => true,
             'relation' => 'suscriptores',
-            'formKey' => 'email',
+            'formKey' => '{email}',
             'pivotTable' => 'suscriptores_paises',
             'foreignKey' => 'pais_id',
             'relatedKey' => 'suscriptor_id',

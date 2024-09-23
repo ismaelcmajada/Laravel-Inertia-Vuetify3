@@ -139,8 +139,40 @@ class AutoCrudController extends Controller
     public function loadAutocompleteItems($model)
     {
         $search = Request::get('search', '');
-        $key = Request::get('key', 'name');
-        $items = $this->getModel($model)::whereRaw("$key LIKE '%$search%'")->limit(6)->get();
+        $key = Request::get('key', 'hay un codigo que es {code} y un nombre que es {name}');
+
+        preg_match_all('/\{(\w+)\}/', $key, $matches);
+        $fields = $matches[1];
+
+        $literals = preg_split('/\{\w+\}/', $key);
+
+        $query = $this->getModel($model)::query();
+
+        if (!empty($search) && !empty($fields)) {
+            $query->where(function ($q) use ($fields, $literals, $search) {
+                $concatString = "";
+
+                foreach ($fields as $index => $field) {
+                    if (isset($literals[$index])) {
+                        $concatString .= "'" . $literals[$index] . "', ";
+                    }
+
+                    $concatString .= "IFNULL(`$field`, ''), ";
+                }
+                if (isset($literals[count($fields)])) {
+                    $concatString .= "'" . $literals[count($fields)] . "'";
+                } else {
+                    $concatString = rtrim($concatString, ', ');
+                }
+
+                $searchWords = explode(' ', $search);
+                foreach ($searchWords as $word) {
+                    $q->whereRaw("CONCAT_WS('', $concatString) LIKE ?", ["%{$word}%"]);
+                }
+            });
+        }
+
+        $items = $query->limit(6)->get();
 
         return ['autocompleteItems' => $items];
     }

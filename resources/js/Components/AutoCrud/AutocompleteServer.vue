@@ -2,6 +2,7 @@
 import { ref, watch } from "vue"
 import axios from "axios"
 import debounce from "lodash.debounce"
+import { generateItemTitle } from "@/Utils/autocompleteUtils"
 
 const props = defineProps([
   "modelValue",
@@ -70,7 +71,7 @@ const debounceLoadAutocompleteItems = debounce((search) => {
 <template>
   <v-autocomplete
     clearable
-    :item-title="props.itemTitle"
+    :item-title="generateItemTitle(props.itemTitle)"
     :label="props.label"
     v-model="selectedItem"
     :loading="loading"

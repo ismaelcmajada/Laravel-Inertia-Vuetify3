@@ -26,7 +26,7 @@ class Record extends BaseModel
                 'model' => User::class,
                 'relation' => 'user',
                 'tableKey' => 'user_id',
-                'formKey' => 'user_id',
+                'formKey' => '{user_id}',
             ],
             'table' => true,
             'form' => true,

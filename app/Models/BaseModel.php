@@ -27,8 +27,10 @@ abstract class BaseModel extends Model
         $this->fillable = array_column(static::getFormFields(), 'field');
 
         foreach (static::$fields as $field) {
-            if ($field['type'] === 'number') {
+            if ($field['type'] === 'number' && isset($field['relation'])) {
                 $this->casts[$field['field']] = 'integer';
+            } elseif ($field['type'] === 'number') {
+                $this->casts[$field['field']] = 'string';
             } elseif ($field['type'] === 'boolean') {
                 $this->casts[$field['field']] = 'boolean';
             } elseif ($field['type'] === 'password') {
@@ -125,12 +127,11 @@ abstract class BaseModel extends Model
     {
         foreach (static::$fields as $field) {
             if (isset($field['relation']) && isset($field['relation']['relation']) && $field['relation']['relation'] === $method) {
-                if(isset($field['relation']['polymorphic']) && $field['relation']['polymorphic'] && $field['relation']['relation'] === $method) {
+                if (isset($field['relation']['polymorphic']) && $field['relation']['polymorphic'] && $field['relation']['relation'] === $method) {
                     return $this->morphTo($field['relation']['relation'], $field['relation']['morphType'], $field['field'])->withTrashed();
                 } else {
                     return $this->handleRelation($field);
-            
-                }   
+                }
             }
         }
 
@@ -272,7 +273,8 @@ abstract class BaseModel extends Model
         }
     }
 
-    public function records() {
+    public function records()
+    {
         return $this->morphMany(Record::class, 'recordable', 'model', 'element_id');
     }
 }

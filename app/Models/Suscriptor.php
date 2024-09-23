@@ -94,7 +94,7 @@ class Suscriptor extends BaseModel
                 'model' => Pais::class,
                 'relation' => 'pais',
                 'tableKey' => 'pais',
-                'formKey' => 'pais',
+                'formKey' => '{pais}',
                 'storeShortcut' => true,
                 'serverSide' => true,
             ],
@@ -122,7 +122,7 @@ class Suscriptor extends BaseModel
         [
             'name' => 'País',
             'relation' => 'paises',
-            'formKey' => 'pais',
+            'formKey' => '{pais}',
             'pivotTable' => 'suscriptores_paises',
             'foreignKey' => 'suscriptor_id',
             'relatedKey' => 'pais_id',

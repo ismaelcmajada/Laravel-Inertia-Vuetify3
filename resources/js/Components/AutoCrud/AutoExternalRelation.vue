@@ -5,6 +5,7 @@ import AutocompleteServer from "./AutocompleteServer.vue"
 import axios from "axios"
 import { ruleRequired, getFieldRules } from "@/Utils/rules"
 import AutoFormDialog from "./AutoFormDialog.vue"
+import { generateItemTitle, searchByWords } from "@/Utils/autocompleteUtils"
 
 const props = defineProps([
   "item",
@@ -114,10 +115,6 @@ const removeItem = (value) => {
   )
 }
 
-function getNestedProperty(obj, keyString) {
-  return keyString.split(".").reduce((o, k) => (o || {})[k], obj)
-}
-
 getItems()
 </script>
 
@@ -154,10 +151,16 @@ getItems()
               : items
           "
           :custom-filter="
-            props.customFilters?.[props.externalRelation.relation]
+            (item, queryText, itemText) =>
+              searchByWords(
+                item,
+                queryText,
+                itemText,
+                props.customFilters?.[props.externalRelation.relation]
+              )
           "
           :item-props="props.customItemProps?.[props.externalRelation.relation]"
-          :item-title="props.externalRelation.formKey"
+          :item-title="generateItemTitle(props.externalRelation.formKey)"
           item-value="id"
           hide-details
           @update:modelValue="addItem"
@@ -188,10 +191,16 @@ getItems()
               ? props.filteredItems[props.externalRelation.relation](items)
               : items
           "
-          :item-title="props.externalRelation.formKey"
+          :item-title="generateItemTitle(props.externalRelation.formKey)"
           :item-props="props.customItemProps?.[props.externalRelation.relation]"
           :custom-filter="
-            props.customFilters?.[props.externalRelation.relation]
+            (item, queryText, itemText) =>
+              searchByWords(
+                item,
+                queryText,
+                itemText,
+                props.customFilters?.[props.externalRelation.relation]
+              )
           "
           item-value="id"
           :rules="[ruleRequired]"
@@ -219,7 +228,13 @@ getItems()
           :label="props.externalRelation.name"
           v-model="selectedItem"
           :custom-filter="
-            props.customFilters?.[props.externalRelation.relation]
+            (item, queryText, itemText) =>
+              searchByWords(
+                item,
+                queryText,
+                itemText,
+                props.customFilters?.[props.externalRelation.relation]
+              )
           "
           :end-point="props.externalRelation.endPoint"
           :item-props="props.customItemProps?.[props.externalRelation.relation]"
@@ -251,7 +266,13 @@ getItems()
           :item-title="props.externalRelation.formKey"
           :item-props="props.customItemProps?.[props.externalRelation.relation]"
           :custom-filter="
-            props.customFilters?.[props.externalRelation.relation]
+            (item, queryText, itemText) =>
+              searchByWords(
+                item,
+                queryText,
+                itemText,
+                props.customFilters?.[props.externalRelation.relation]
+              )
           "
           :rules="[ruleRequired]"
           density="compact"
@@ -367,7 +388,7 @@ getItems()
       class="align-center justify-center my-2 mx-1 elevation-6 rounded pa-2"
     >
       <v-col class="my-3">
-        {{ getNestedProperty(relationItem, props.externalRelation.formKey) }}
+        {{ generateItemTitle(props.externalRelation.formKey)(relationItem) }}
       </v-col>
       <v-col
         class="d-flex align-center justify-center"
@@ -429,7 +450,7 @@ getItems()
             :label="props.externalRelation.name"
             :model-value="relationItem[props.externalRelation.formKey]"
             :items="items"
-            :item-title="props.externalRelation.formKey"
+            :item-title="generateItemTitle(props.externalRelation.formKey)"
             item-value="id"
             density="compact"
             disabled
