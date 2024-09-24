@@ -17,7 +17,7 @@ class Suscriptor extends BaseModel
 
     protected static $endPoint = '/dashboard/suscriptor';
 
-    protected static $includes = [];
+    protected static $includes = ['pais.presidente', 'paises.presidente'];
 
     protected static $fields = [
         [
@@ -78,7 +78,7 @@ class Suscriptor extends BaseModel
             'type' => 'select',
             'table' => true,
             'form' => true,
-            'options' => ['Masculino', 'Femenino'],
+            'options' => ['Masculino', 'Femenino', 'Otro'],
             'multiple' => true,
             'rules' => [
                 'required' => true
@@ -93,8 +93,8 @@ class Suscriptor extends BaseModel
             'relation' => [
                 'model' => Pais::class,
                 'relation' => 'pais',
-                'tableKey' => '{pais} ({id})',
-                'formKey' => '{pais} ({id})',
+                'tableKey' => 'Mi país es {pais} que tiene el presidente {presidente.name}',
+                'formKey' => 'Mi país es {pais} que tiene el presidente {presidente.name}',
                 'storeShortcut' => true,
                 'serverSide' => true,
             ],
@@ -122,7 +122,7 @@ class Suscriptor extends BaseModel
         [
             'name' => 'País',
             'relation' => 'paises',
-            'formKey' => '{pais}',
+            'formKey' => 'Mi país es {pais} que tiene el presidente {presidente.name}',
             'pivotTable' => 'suscriptores_paises',
             'foreignKey' => 'suscriptor_id',
             'relatedKey' => 'pais_id',

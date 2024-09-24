@@ -30,6 +30,22 @@ class Pais extends BaseModel
                 'required' => true
             ]
         ],
+        [
+            'name' => 'Presidente',
+            'field' => 'presidente_id',
+            'type' => 'number',
+            'relation' => [
+                'model' => Presidente::class,
+                'relation' => 'presidente',
+                'tableKey' => '{name} ({id})',
+                'formKey' => '{name} ({id})',
+                'storeShortcut' => true,
+                'serverSide' => false,
+            ],
+            'table' => true,
+            'form' => true,
+            'rules' => []
+        ],
     ];
 
     protected static $externalRelations = [

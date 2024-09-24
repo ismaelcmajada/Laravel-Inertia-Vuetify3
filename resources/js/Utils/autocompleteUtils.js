@@ -1,11 +1,22 @@
 export function generateItemTitle(template) {
-  const functionBody = template.replace(/\{(\w+)\}/g, (_, key) => {
-    return `\${item.${key}}`
+  // Construir el cuerpo de la función reemplazando los placeholders con propiedades del item
+  const functionBody = template.replace(/\{([\w\.]+)\}/g, (match, propPath) => {
+    // Reemplazar {prop} con ' + (item.prop?.subprop ?? '') + '
+    const safeAccess = propPath
+      .split(".")
+      .map((key) => `?.${key}`)
+      .join("")
+    return `' + (item${safeAccess} ?? '') + '`
   })
 
-  return new Function("item", `return \`${functionBody}\`;`)
-}
+  // Envolver el cuerpo de la función con una declaración de retorno
+  const functionString = `return '${functionBody}';`
 
+  // Crear una nueva función con 'item' como argumento y el cuerpo generado
+  const generatedFunction = new Function("item", functionString)
+
+  return generatedFunction
+}
 export function searchByWords(item, queryText, itemText, customFilters) {
   if (!queryText) return true
 

@@ -11,6 +11,7 @@ import HistoryDialog from "./HistoryDialog.vue"
 import { usePage } from "@inertiajs/vue3"
 import { useDisplay } from "vuetify"
 import { computed, watch, ref } from "vue"
+import { generateItemTitle } from "@/Utils/datatableUtils"
 
 const page = usePage()
 
@@ -92,21 +93,6 @@ const showHistoryDialog = ref(false)
 const openHistoryDialog = (historyItem) => {
   item.value = historyItem
   showHistoryDialog.value = true
-}
-
-function generateItemTitle(templateString, dataObject) {
-  if (!dataObject) return ""
-  return templateString.replace(/\{([\w\.]+)\}/g, (match, p1) => {
-    const keys = p1.split(".")
-    let value = dataObject
-    for (let key of keys) {
-      if (value[key] === undefined) {
-        return match
-      }
-      value = value[key]
-    }
-    return value
-  })
 }
 </script>
 

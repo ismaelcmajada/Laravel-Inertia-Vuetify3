@@ -9,6 +9,4 @@ const model = page.props.models.user
 
 <template>
   <auto-table title="Usuarios" :model="model" />
-
-  <auto-table title="Paises" :model="page.props.models.pais" />
 </template>

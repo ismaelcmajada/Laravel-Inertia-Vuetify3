@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\AutoCrud\AutoCrudController;
+use App\Http\Controllers\AutoCrud\AutoTableController;
+use App\Http\Controllers\AutoCrud\AutoCompleteController;
 use App\Http\Controllers\AutoCrud\SessionController;
 use App\Http\Controllers\AutoCrud\ImageController;
 use App\Http\Controllers\AutoCrud\FileController;
@@ -18,8 +20,8 @@ Route::middleware(['auth', 'checkForbiddenActions'])->prefix('dashboard')->group
 
     Route::post('/session/setSession', [SessionController::class, 'setSession'])->name('dashboard.session.setSession');
 
-    Route::post('/{model}/load-autocomplete-items', [AutoCrudController::class, 'loadAutocompleteItems'])->name('dashboard.model.load-autocomplete-items');
-    Route::post('/{model}/load-items', [AutoCrudController::class, 'loadItems'])->name('dashboard.model.load-items');
+    Route::post('/{model}/load-autocomplete-items', [AutoCompleteController::class, 'loadAutocompleteItems'])->name('dashboard.model.load-autocomplete-items');
+    Route::post('/{model}/load-items', [AutoTableController::class, 'loadItems'])->name('dashboard.model.load-items');
     Route::post('/{model}/{id}', [AutoCrudController::class, 'update'])->name('dashboard.model.update');
     Route::post('/{model}/{id}/destroy', [AutoCrudController::class, 'destroy'])->name('dashboard.model.destroy');
     Route::post('/{model}/{id}/permanent', [AutoCrudController::class, 'destroyPermanent'])->name('dashboard.model.destroyPermanent');
@@ -28,7 +30,7 @@ Route::middleware(['auth', 'checkForbiddenActions'])->prefix('dashboard')->group
     Route::get('/{model}/export-excel', [AutoCrudController::class, 'exportExcel'])->name('dashboard.model.exportExcel');
 
     Route::get('/{model}', [AutoCrudController::class, 'index'])->name('dashboard.model.index');
-    Route::get('/{model}/all', [AutoCrudController::class, 'getAll'])->name('dashboard.model.all');
+    Route::get('/{model}/all', [AutoCompleteController::class, 'getAll'])->name('dashboard.model.all');
     Route::post('/{model}', [AutoCrudController::class, 'store'])->name('dashboard.model.store');
 
     Route::post('/{model}/{id}/pivot/{externalRelation}/{item}', [AutoCrudController::class, 'updatePivot'])->name('dashboard.model.updatePivot');
