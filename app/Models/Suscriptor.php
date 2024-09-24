@@ -27,7 +27,8 @@ class Suscriptor extends BaseModel
             'table' => true,
             'form' => true,
             'rules' => [
-                'required' => true
+                'required' => true,
+                'custom' => ['dni', 'telephone']
             ]
         ],
         [
@@ -132,4 +133,20 @@ class Suscriptor extends BaseModel
     ];
 
     protected static $forbiddenActions = [];
+
+    public static function getCustomRules()
+    {
+        return [
+            'dni' => function ($attribute, $value, $fail) {
+                if (!preg_match('/^\d{8}[A-Z]$/', $value)) {
+                    $fail('El DNI debe tener 8 números seguidos de una letra mayúscula.');
+                }
+            },
+            'telephone' => function ($attribute, $value, $fail) {
+                if (!preg_match('/^\d{8,15}$/', $value)) {
+                    $fail('El teléfono debe tener 8 o 15 números.');
+                }
+            }
+        ];
+    }
 }

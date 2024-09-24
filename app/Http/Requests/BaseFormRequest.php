@@ -136,9 +136,16 @@ abstract class BaseFormRequest extends FormRequest
             $fieldRules[] = $uniqueRule;
         }
 
-        // Añadir reglas personalizadas definidas en el campo
-        if (isset($field['rules']['custom'])) {
-            $fieldRules = array_merge($fieldRules, $field['rules']['custom']);
+        // Añadir reglas personalizadas definidas en el modelo mediante getCustomRules
+        if (isset($field['rules']['custom']) && is_array($field['rules']['custom'])) {
+            $customRules = $modelInstance::getCustomRules();
+
+            // Iterar sobre cada regla personalizada definida en el array 'custom'
+            foreach ($field['rules']['custom'] as $customRule) {
+                if (isset($customRules[$customRule])) {
+                    $fieldRules[] = $customRules[$customRule];
+                }
+            }
         }
 
         return $fieldRules;
