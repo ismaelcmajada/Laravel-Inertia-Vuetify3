@@ -90,6 +90,8 @@ class AutoTableController extends Controller
         ];
     }
 
+    private $addedJoins = [];
+
     private function applyDynamicSearch($query, $relationInfo, $searchKey, $value)
     {
         if (strpos($searchKey, '{') === false) {
@@ -165,8 +167,6 @@ class AutoTableController extends Controller
                 $concatString = rtrim($concatString, ', ');
             }
 
-            // Construir los JOINs necesarios sin duplicados
-            $addedJoins = [];
             foreach (array_keys($usedRelations) as $relationPath) {
                 $relations = explode('.', $relationPath);
                 $previousAlias = $mainTable;
@@ -176,7 +176,7 @@ class AutoTableController extends Controller
                     $alias = implode('_', array_slice($relations, 0, $index + 1));
 
                     // Verificar si ya se ha agregado este alias
-                    if (in_array($alias, $addedJoins)) {
+                    if (in_array($alias, $this->addedJoins)) {
                         $previousAlias = $alias;
                         $relationModel = $relationModel->$relation()->getRelated();
                         continue;
@@ -194,7 +194,7 @@ class AutoTableController extends Controller
                     $relationModel = $relationMethod->getRelated();
 
                     // Registrar que este alias ya ha sido agregado
-                    $addedJoins[] = $alias;
+                    $this->addedJoins[] = $alias;
                 }
             }
 
@@ -276,8 +276,6 @@ class AutoTableController extends Controller
                 $concatString = rtrim($concatString, ', ');
             }
 
-            // Construir los JOINs necesarios sin duplicados
-            $addedJoins = [];
             foreach (array_keys($usedRelations) as $relationPath) {
                 $relations = explode('.', $relationPath);
                 $previousAlias = $mainTable;
@@ -287,7 +285,7 @@ class AutoTableController extends Controller
                     $alias = implode('_', array_slice($relations, 0, $index + 1));
 
                     // Verificar si ya se ha agregado este alias
-                    if (in_array($alias, $addedJoins)) {
+                    if (in_array($alias, $this->addedJoins)) {
                         $previousAlias = $alias;
                         $relationModel = $relationModel->$relation()->getRelated();
                         continue;
@@ -305,7 +303,7 @@ class AutoTableController extends Controller
                     $relationModel = $relationMethod->getRelated();
 
                     // Registrar que este alias ya ha sido agregado
-                    $addedJoins[] = $alias;
+                    $this->addedJoins[] = $alias;
                 }
             }
 
