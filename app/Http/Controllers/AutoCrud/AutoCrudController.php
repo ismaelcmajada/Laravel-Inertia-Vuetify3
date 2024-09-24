@@ -11,109 +11,10 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Crypt;
 use App\Models\Record;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Requests\DynamicFormRequest;
 
 class AutoCrudController extends Controller
 {
-
-    private function buildFieldRules($field, $modelInstance, $id, $relation = null, $itemId = null)
-    {
-        $fieldRules = [];
-
-        if (isset($field['rules']['required']) && $field['rules']['required']) {
-            if ($field['type'] !== 'image' && $field['type'] !== 'password') {
-                $fieldRules[] = 'required';
-            }
-        }
-
-        switch ($field['type']) {
-            case 'string':
-                $fieldRules[] = 'max:191';
-                break;
-            case 'email':
-                $fieldRules[] = 'email';
-                $fieldRules[] = 'max:191';
-                break;
-            case 'number':
-                $fieldRules[] = 'integer';
-                break;
-            case 'select':
-                if (isset($field['options'])) {
-                    if (isset($field['multiple']) && $field['multiple']) {
-
-                        $fieldRules[] = function ($attribute, $value, $fail) use ($field) {
-
-                            foreach ($value as $option) {
-                                if (!in_array(trim($option), $field['options'])) {
-                                    $fail("La opción seleccionada '{$option}' no es válida.");
-                                }
-                            }
-                        };
-                    } else {
-                        $fieldRules[] = 'in:' . implode(',', $field['options']);
-                    }
-                }
-                break;
-            case 'telephone':
-                $fieldRules[] = 'digits_between:8,15';
-                break;
-        }
-
-        if (isset($field['rules']['unique']) && $field['rules']['unique']) {
-            if ($relation) {
-                $uniqueRule = Rule::unique($relation['pivotTable'], $field['field'])->where(function ($query) use ($field, $relation, $id, $itemId) {
-                    if ($field['type'] === 'boolean') {
-                        $query->where($field['field'], '=', true)
-                            ->where($relation['foreignKey'], '=', $id)
-                            ->where($relation['relatedKey'], '!=', $itemId);
-                    }
-                });
-            } else {
-                $uniqueRule = Rule::unique($modelInstance->getTable(), $field['field'])->where(function ($query) use ($field) {
-                    if ($field['type'] === 'boolean') {
-                        $query->where($field['field'], '=', true);
-                    }
-                });
-
-                if ($id !== null) {
-                    $uniqueRule = $uniqueRule->ignore($id);
-                }
-            }
-
-
-
-
-            $fieldRules[] = $uniqueRule;
-        }
-
-        return $fieldRules;
-    }
-
-    public function getValidationRules($model, $id = null, $itemId = null)
-    {
-        $modelInstance = $this->getModel($model);
-        $rules = [];
-
-        if (!$itemId) {
-            foreach ($modelInstance::getFormFields() as $field) {
-                $fieldRules = $this->buildFieldRules($field, $modelInstance, $id);
-                $rules[$field['field']] = $fieldRules;
-            }
-
-            return $rules;
-        }
-
-        foreach ($modelInstance::getExternalRelations() as $relation) {
-            if (isset($relation['pivotFields'])) {
-                foreach ($relation['pivotFields'] as $pivotField) {
-                    $fieldRules = $this->buildFieldRules($pivotField, $modelInstance, $id, $relation, $itemId);
-                    $rules[$pivotField['field']] = $fieldRules;
-                }
-            }
-        }
-
-        return $rules;
-    }
-
     private function getModel($model)
     {
         $modelClass = 'App\\Models\\' . ucfirst($model);
@@ -130,40 +31,30 @@ class AutoCrudController extends Controller
         return Inertia::render('Dashboard/' . ucfirst($model));
     }
 
-    public function store($model)
+    public function store(DynamicFormRequest $request, $model)
     {
-        $rules = $this->getValidationRules($model);
-        $validatedData = Request::validate($rules);
+        $validatedData = $request->validated();
         $modelInstance = $this->getModel($model);
 
         foreach ($modelInstance::getFormFields() as $field) {
-            if ($field['type'] === 'select') {
-                if (isset($field['multiple']) && $field['multiple']) {
-                    $validatedData[$field['field']] = implode(', ', $validatedData[$field['field']]);
-                }
+            if ($field['type'] === 'select' && isset($field['multiple']) && $field['multiple']) {
+                $validatedData[$field['field']] = implode(', ', $validatedData[$field['field']]);
             }
         }
 
         $instance = $modelInstance::create($validatedData);
 
+        // Manejo de archivos
         foreach ($modelInstance::getFormFields() as $field) {
-            if ($field['type'] === 'image' && Request::hasFile($field['field'])) {
-                $storagePath = $field['public'] ? 'public/images/' . $model : 'private/images/' . $model;
-                $imagePath = Request::file($field['field'])->storeAs($storagePath,  $field['field'] . '/' . $instance['id']);
-                $instance->{$field['field']} = $imagePath;
-            }
+            if (($field['type'] === 'image' || $field['type'] === 'file') && $request->hasFile($field['field'])) {
+                $storagePath = $field['public'] ? 'public/' : 'private/';
+                $storagePath .= $field['type'] === 'image' ? 'images/' : 'files/';
+                $storagePath .= $model;
+                $filePath = $request->file($field['field'])->storeAs($storagePath,  $field['field'] . '/' . $instance['id']);
 
-            if ($field['type'] === 'file' && Request::hasFile($field['field'])) {
-                $storagePath = $field['public'] ? 'public/files/' . $model : 'private/files/' . $model;
-                $filePath = Request::file($field['field'])->storeAs($storagePath,  $field['field'] . '/' . $instance['id']);
-
-                if (!$field['public']) {
+                if (!$field['public'] && $field['type'] === 'file') {
                     $fileContent = Storage::get($filePath);
-
-                    // Encriptar el contenido del archivo
                     $encryptedContent = Crypt::encryptString($fileContent);
-
-                    // Guardar el contenido encriptado de nuevo en el archivo
                     Storage::put($filePath, $encryptedContent);
                 }
 
@@ -176,78 +67,56 @@ class AutoCrudController extends Controller
         $instance->load($modelInstance::getIncludes());
 
         if ($created) {
-
             $this->setRecord($model, $instance->id, 'create');
-
             return Redirect::back()->with(['success' => 'Elemento creado.', 'data' => $instance]);
         }
     }
 
-    public function update($model, $id)
+    public function update(DynamicFormRequest $request, $model, $id)
     {
         $instance = $this->getModel($model)::findOrFail($id);
-        $rules = $this->getValidationRules($model, $id);
-        $validatedData = Request::validate($rules);
+        $validatedData = $request->validated();
 
         foreach ($instance::getFormFields() as $field) {
-            if ($field['type'] === 'image') {
-                if (Request::input($field['field'] . '_edited')) {
-                    Storage::delete($field['public'] ? 'public/images/' . $model . '/' . $field['field'] . '/' . $id : 'private/images/' . $model . '/' . $field['field'] . '/' . $id);
+            if ($field['type'] === 'image' || $field['type'] === 'file') {
+                if ($request->input($field['field'] . '_edited')) {
+                    Storage::delete($field['public'] ? 'public/' : 'private/' . $field['type'] . '/' . $model . '/' . $field['field'] . '/' . $id);
                     $validatedData[$field['field']] = null;
                 }
-                if (Request::hasFile($field['field'])) {
-                    $storagePath = $field['public'] ? 'public/images/' . $model : 'private/images/' . $model;
-                    $imagePath = Request::file($field['field'])->storeAs($storagePath, $field['field'] . '/' . $id);
-                    $validatedData[$field['field']] = $imagePath;
-                }
-            }
+                if ($request->hasFile($field['field'])) {
+                    $storagePath = $field['public'] ? 'public/' : 'private/';
+                    $storagePath .= $field['type'] === 'image' ? 'images/' : 'files/';
+                    $storagePath .= $model;
+                    $filePath = $request->file($field['field'])->storeAs($storagePath, $field['field'] . '/' . $id);
 
-            if ($field['type'] === 'file') {
-                if (Request::input($field['field'] . '_edited')) {
-                    Storage::delete($field['public'] ? 'public/files/' . $model . '/' . $field['field'] . '/' . $id : 'private/files/' . $model . '/' . $field['field'] . '/' . $id);
-                    $validatedData[$field['field']] = null;
-                }
-                if (Request::hasFile($field['field'])) {
-                    $storagePath = $field['public'] ? 'public/files/' . $model : 'private/files/' . $model;
-                    $filePath = Request::file($field['field'])->storeAs($storagePath, $field['field'] . '/' . $id);
-                    $validatedData[$field['field']] = $filePath;
-
-                    if (!$field['public']) {
+                    if (!$field['public'] && $field['type'] === 'file') {
                         $fileContent = Storage::get($filePath);
-
-                        // Encriptar el contenido del archivo
                         $encryptedContent = Crypt::encryptString($fileContent);
-
-                        // Guardar el contenido encriptado de nuevo en el archivo
                         Storage::put($filePath, $encryptedContent);
                     }
+
+                    $validatedData[$field['field']] = $filePath;
                 }
             }
 
-            if ($field['type'] === 'select') {
-                if (isset($field['multiple']) && $field['multiple']) {
-                    $validatedData[$field['field']] = implode(', ', $validatedData[$field['field']]);
-                }
+            if ($field['type'] === 'select' && isset($field['multiple']) && $field['multiple']) {
+                $validatedData[$field['field']] = implode(', ', $validatedData[$field['field']]);
             }
 
-            if ($field['type'] === 'password') {
-                if (!Request::input($field['field'])) {
-                    $validatedData[$field['field']] = $instance->{$field['field']};
-                }
+            if ($field['type'] === 'password' && !$request->input($field['field'])) {
+                unset($validatedData[$field['field']]);
             }
         }
-
 
         $updated = $instance->update($validatedData);
         $instance->load($instance::getIncludes());
 
         if ($updated) {
-
             $this->setRecord($model, $instance->id, 'update');
-
             return Redirect::back()->with(['success' => 'Elemento editado.', 'data' => $instance]);
         }
     }
+
 
     public function destroy($model, $id)
     {
@@ -301,13 +170,10 @@ class AutoCrudController extends Controller
         return  ['itemsExcel' => $items];
     }
 
-    public function bind($model, $id, $externalRelation, $item)
+    public function bind(DynamicFormRequest $request, $model, $id, $externalRelation, $item)
     {
         $instance = $this->getModel($model)::findOrFail($id);
-
-        $rules = $this->getValidationRules($model, $id, $item);
-
-        $validatedData = Request::validate($rules);
+        $validatedData = $request->validated();
 
         $instance->{$externalRelation}()->attach($item, $validatedData);
 
@@ -318,13 +184,10 @@ class AutoCrudController extends Controller
         return Redirect::back()->with(['success' => 'Elemento vinculado', 'data' => $instance]);
     }
 
-    public function updatePivot($model, $id, $externalRelation, $item)
+    public function updatePivot(DynamicFormRequest $request, $model, $id, $externalRelation, $item)
     {
         $instance = $this->getModel($model)::findOrFail($id);
-
-        $rules = $this->getValidationRules($model, $id, $item);
-
-        $validatedData = Request::validate($rules);
+        $validatedData = $request->validated();
 
         $instance->{$externalRelation}()->updateExistingPivot($item, $validatedData);
 

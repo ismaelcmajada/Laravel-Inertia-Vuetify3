@@ -34,7 +34,10 @@ class AutoCompleteController extends Controller
         $keyField = Request::get('key', null);
 
         $modelInstance = $this->getModel($model);
+        $mainTable = $modelInstance->getTable();
         $query = $modelInstance::query();
+
+        $query->select("{$mainTable}.*");
 
         $query->with($modelInstance::getIncludes());
 
@@ -47,7 +50,9 @@ class AutoCompleteController extends Controller
             $this->applyDynamicSearch($query, $relationInfo, $formKey, $search);
         }
 
+
         $items = $query->limit(6)->get();
+
 
         return ['autocompleteItems' => $items];
     }
