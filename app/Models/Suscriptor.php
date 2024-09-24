@@ -144,7 +144,7 @@ class Suscriptor extends BaseModel
             },
             'telephone' => function ($attribute, $value, $fail) {
                 if (!preg_match('/^\d{8,15}$/', $value)) {
-                    $fail('El teléfono debe tener 8 o 15 números.');
+                    $fail('El teléfono debe tener entre 8 y 15 números.');
                 }
             }
         ];

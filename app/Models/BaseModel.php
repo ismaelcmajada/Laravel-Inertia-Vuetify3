@@ -20,6 +20,7 @@ abstract class BaseModel extends Model
     protected static $forbiddenActions;
 
 
+
     public function __construct($attributes = [])
     {
         parent::__construct($attributes);
@@ -65,6 +66,16 @@ abstract class BaseModel extends Model
     public static function getEndpoint()
     {
         return static::$endPoint;
+    }
+
+    public static function getCustomRules()
+    {
+        return [];
+    }
+
+    protected function setCustomRules($customRules)
+    {
+        $this->customRules = $customRules;
     }
 
     public static function getForbiddenActions()
