@@ -30,6 +30,8 @@ class AutoTableController extends Controller
         $mainTable = $modelInstance->getTable();
         $query = $modelInstance::query();
 
+        $query->select("{$mainTable}.*");
+
         $query->with($modelInstance::getIncludes());
 
         if ($deleted && in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($modelInstance))) {
