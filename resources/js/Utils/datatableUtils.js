@@ -5,7 +5,7 @@ export function generateItemTitle(templateString, dataObject) {
     let value = dataObject
     for (let key of keys) {
       if (!value[key]) {
-        return match
+        return ""
       }
       value = value[key]
     }
