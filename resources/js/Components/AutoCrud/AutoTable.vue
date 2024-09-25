@@ -25,6 +25,8 @@ const props = defineProps([
   "search",
   "orderBy",
   "customItemProps",
+  "itemsPerPage",
+  "itemsPerPageOptions",
 ])
 
 const emit = defineEmits(["closeDialog", "openDialog", "formChange"])
@@ -95,7 +97,12 @@ const openHistoryDialog = (historyItem) => {
   showHistoryDialog.value = true
 }
 
-console.log(forbiddenActions)
+if (props.itemsPerPageOptions)
+  itemsPerPageOptions.value = props.itemsPerPageOptions
+
+console.log(itemsPerPageOptions.value)
+
+if (props.itemsPerPage) tableData.itemsPerPage = props.itemsPerPage
 </script>
 
 <template>
