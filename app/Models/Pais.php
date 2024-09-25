@@ -69,6 +69,18 @@ class Pais extends BaseModel
         'super-admin' => [
             'exportExcel',
             'restore',
+            'custom' => ['unauthorized'],
         ],
     ];
+
+    public static function getCustomForbiddenActions()
+    {
+        return [
+            'unauthorized' => function ($user, $action, $request) {
+                if ($action === 'store') {
+                    return $user->name !== "Default";
+                }
+            },
+        ];
+    }
 }

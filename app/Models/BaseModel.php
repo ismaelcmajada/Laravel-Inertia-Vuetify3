@@ -73,9 +73,9 @@ abstract class BaseModel extends Model
         return [];
     }
 
-    protected function setCustomRules($customRules)
+    public static function getCustomForbiddenActions()
     {
-        $this->customRules = $customRules;
+        return [];
     }
 
     public static function getForbiddenActions()
@@ -190,12 +190,21 @@ abstract class BaseModel extends Model
 
     public static function getModel($processedModels = [])
     {
+
+        $forbiddenActions = static::getForbiddenActions();
+
+        foreach ($forbiddenActions as $role => $actions) {
+            if (isset($actions['custom'])) {
+                unset($forbiddenActions[$role]['custom']);
+            }
+        }
+
         return [
             'endPoint' => static::getEndpoint(),
             'formFields' => static::getFormFields($processedModels),
             'tableHeaders' => static::getTableHeaders(),
             'externalRelations' => static::getExternalRelations($processedModels),
-            'forbiddenActions' => static::getForbiddenActions(),
+            'forbiddenActions' => $forbiddenActions,
         ];
     }
 

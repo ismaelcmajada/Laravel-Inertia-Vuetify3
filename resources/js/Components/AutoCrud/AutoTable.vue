@@ -94,6 +94,8 @@ const openHistoryDialog = (historyItem) => {
   item.value = historyItem
   showHistoryDialog.value = true
 }
+
+console.log(forbiddenActions)
 </script>
 
 <template>
