@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,6 +25,10 @@ Route::middleware(['auth', 'checkForbiddenActions'])->prefix('dashboard')->group
     // destroyPermanent: /item/{id}/permanent
     // restore: /item/{id}/restore
     // exportExcel: /item/export-excel
+
+    Route::get('/calendar-example',function () {
+        return Inertia::render('Dashboard/CalendarExpample');
+    })->name('dashboard.calendar-example');
     
 });
 

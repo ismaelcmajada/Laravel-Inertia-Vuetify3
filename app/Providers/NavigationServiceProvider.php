@@ -43,6 +43,11 @@ class NavigationServiceProvider extends ServiceProvider
                 'model' => User::class,
             ],
             [
+                'name' => 'Calendario',
+                'icon' => 'mdi-calendar',
+                'path' => '/dashboard/calendar-example',
+            ],
+            [
                 'name' => 'Cerrar sesión',
                 'icon' => 'mdi-logout-variant',
                 'path' => '/logout',

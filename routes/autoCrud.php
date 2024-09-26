@@ -8,6 +8,7 @@ use App\Http\Controllers\AutoCrud\AutoCompleteController;
 use App\Http\Controllers\AutoCrud\SessionController;
 use App\Http\Controllers\AutoCrud\ImageController;
 use App\Http\Controllers\AutoCrud\FileController;
+use App\Http\Controllers\AutoCrud\CalendarController;
 
 Route::get('/dashboard/public/images/{model}/{field}/{id}', [ImageController::class, 'publicImage']);
 Route::get('/dashboard/public/files/{model}/{field}/{id}', [FileController::class, 'publicFile']);
@@ -20,6 +21,7 @@ Route::middleware(['auth', 'checkForbiddenActions'])->prefix('dashboard')->group
 
     Route::post('/session/setSession', [SessionController::class, 'setSession'])->name('dashboard.session.setSession');
 
+    Route::post('/{model}/load-calendar-events', [CalendarController::class, 'loadEvents'])->name('dashboard.model.load-calendar-events');
     Route::post('/{model}/load-autocomplete-items', [AutoCompleteController::class, 'loadAutocompleteItems'])->name('dashboard.model.load-autocomplete-items');
     Route::post('/{model}/load-items', [AutoTableController::class, 'loadItems'])->name('dashboard.model.load-items');
     Route::post('/{model}/{id}', [AutoCrudController::class, 'update'])->name('dashboard.model.update');

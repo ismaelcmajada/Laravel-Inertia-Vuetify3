@@ -46,6 +46,26 @@ class Pais extends BaseModel
             'form' => true,
             'rules' => []
         ],
+        [
+            'name' => 'Fecha de inicio',
+            'field' => 'start_date',
+            'type' => 'date',
+            'table' => true,
+            'form' => true,
+            'rules' => [
+                'required' => false
+            ]
+        ],
+        [
+            'name' => 'Fecha de fin',
+            'field' => 'end_date',
+            'type' => 'date',
+            'table' => true,
+            'form' => true,
+            'rules' => [
+                'required' => false
+            ]
+        ]
     ];
 
     protected static $externalRelations = [
@@ -71,6 +91,12 @@ class Pais extends BaseModel
             'restore',
             'custom' => ['unauthorized'],
         ],
+    ];
+
+    protected static $calendarFields = [
+        'title' => 'pais',
+        'start' => 'start_date',
+        'end' => 'end_date',
     ];
 
     public static function getCustomForbiddenActions()

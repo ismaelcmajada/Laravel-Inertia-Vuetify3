@@ -18,6 +18,7 @@ abstract class BaseModel extends Model
     protected static $externalRelations;
     protected static $endPoint;
     protected static $forbiddenActions;
+    protected static $calendarFields;
 
 
 
@@ -205,6 +206,7 @@ abstract class BaseModel extends Model
             'tableHeaders' => static::getTableHeaders(),
             'externalRelations' => static::getExternalRelations($processedModels),
             'forbiddenActions' => $forbiddenActions,
+            'calendarFields' => static::getCalendarFields(),
         ];
     }
 
@@ -281,6 +283,11 @@ abstract class BaseModel extends Model
         }
 
         return $formKeyFields;
+    }
+
+    protected static function getCalendarFields()
+    {
+        return static::$calendarFields;
     }
 
 

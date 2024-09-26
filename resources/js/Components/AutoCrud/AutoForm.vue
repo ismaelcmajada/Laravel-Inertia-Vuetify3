@@ -82,7 +82,9 @@ const initFields = () => {
       if (field.type === "password") {
         formData[field.field] = ""
       } else if (field.type === "date") {
-        formData[field.field] = formatDate(item.value[field.field])
+        if (item.value[field.field]) {
+          formData[field.field] = formatDate(item.value[field.field])
+        }
       } else {
         formData[field.field] = item.value[field.field]
         if (field.type === "image") {
