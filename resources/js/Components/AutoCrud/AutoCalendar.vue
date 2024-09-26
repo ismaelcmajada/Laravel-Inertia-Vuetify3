@@ -2,13 +2,17 @@
 import VueCal from "vue-cal"
 import "vue-cal/dist/vuecal.css"
 import axios from "axios"
-import { ref } from "vue"
+import AutoFormDialog from "./AutoFormDialog.vue"
+import useDialogs from "../../Composables/useDialogs"
+import { ref, watch } from "vue"
 import { usePage } from "@inertiajs/vue3"
 
 const page = usePage()
 
 const props = defineProps(["model"])
 const endPoint = props.model.endPoint
+
+const { showFormDialog, formDialogType, item, openDialog } = useDialogs()
 
 const events = ref([])
 
@@ -35,12 +39,26 @@ const loadEvents = () => {
   })
 }
 
+watch(showFormDialog, (value) => {
+  if (!value) {
+    loadEvents()
+  }
+})
+
 loadEvents()
 
 const today = new Date()
 </script>
 
 <template>
+  <auto-form-dialog
+    v-model:show="showFormDialog"
+    v-model:type="formDialogType"
+    v-model:item="item"
+    :model="props.model"
+    @closeDialog="console.log('close')"
+  >
+  </auto-form-dialog>
   <vue-cal
     class="ma-5"
     events-on-month-view="short"
@@ -49,7 +67,7 @@ const today = new Date()
     :events="events"
     :time="true"
     locale="es"
-    :editable-events="{ title: true, drag: true, resize: true }"
+    :onEventClick="(item) => openDialog('edit', item.item)"
   ></vue-cal>
 </template>
 
