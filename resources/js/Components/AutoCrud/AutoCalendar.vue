@@ -5,12 +5,13 @@ import axios from "axios"
 import AutoFormDialog from "./AutoFormDialog.vue"
 import useDialogs from "../../Composables/useDialogs"
 import { ref, watch } from "vue"
-import { usePage } from "@inertiajs/vue3"
-
-const page = usePage()
 
 const props = defineProps(["model"])
 const endPoint = props.model.endPoint
+const currentMonth = ref({
+  startDate: null,
+  endDate: null,
+})
 
 const { showFormDialog, formDialogType, item, openDialog } = useDialogs()
 
@@ -28,15 +29,25 @@ function convertirFecha(fechaISO) {
   return `${year}-${month}-${day} ${hours}:${minutes}`
 }
 
+const changeCurrentMonth = (event) => {
+  currentMonth.value.startDate = event.startDate
+  currentMonth.value.endDate = event.endDate
+}
+
 const loadEvents = () => {
-  axios.post(`${endPoint}/load-calendar-events`, {}).then((response) => {
-    events.value = response.data.eventsData.items
-    events.value = events.value.map((event) => {
-      event.start = convertirFecha(event.start)
-      event.end = convertirFecha(event.end)
-      return event
+  axios
+    .post(`${endPoint}/load-calendar-events`, {
+      start: currentMonth.value.startDate,
+      end: currentMonth.value.endDate,
     })
-  })
+    .then((response) => {
+      events.value = response.data.eventsData.items
+      events.value = events.value.map((event) => {
+        event.start = convertirFecha(event.start)
+        event.end = convertirFecha(event.end)
+        return event
+      })
+    })
 }
 
 watch(showFormDialog, (value) => {
@@ -45,9 +56,15 @@ watch(showFormDialog, (value) => {
   }
 })
 
-loadEvents()
+watch(
+  currentMonth,
+  () => {
+    loadEvents()
+  },
+  { deep: true }
+)
 
-const today = new Date()
+const activeView = ref("month")
 </script>
 
 <template>
@@ -62,12 +79,14 @@ const today = new Date()
   <vue-cal
     class="ma-5"
     events-on-month-view="short"
-    :selected-date="today"
-    active-view="month"
+    :active-view="activeView"
+    @view-change="changeCurrentMonth"
+    @ready="changeCurrentMonth"
     :events="events"
     :time="true"
     locale="es"
     :onEventClick="(item) => openDialog('edit', item.item)"
+    @cell-click="openDialog('create')"
   ></vue-cal>
 </template>
 
