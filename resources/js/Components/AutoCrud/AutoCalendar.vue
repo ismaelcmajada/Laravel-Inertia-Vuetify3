@@ -119,7 +119,7 @@ const activeView = ref("month")
 
 .vuecal__header,
 .vuecal__menu {
-  border-radius: 4px;
+  border-radius: 4px 4px 0px 0px;
 }
 
 .vuecal__body,
@@ -129,7 +129,7 @@ const activeView = ref("month")
 }
 
 .vuecal__body {
-  border-radius: 4px;
+  border-radius: 0px 0px 4px 4px;
 }
 
 .vuecal__cell--out-of-scope {
