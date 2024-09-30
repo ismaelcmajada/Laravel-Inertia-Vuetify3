@@ -95,7 +95,7 @@ const activeView = ref("month")
     @view-change="changeCurrentMonth"
     @ready="changeCurrentMonth"
     :events="events"
-    :time="true"
+    :time="false"
     locale="es"
     :onEventClick="(item) => handleDialog(null, 'edit', item.item)"
     @cell-click="($event) => handleDialog($event, 'create')"
