@@ -4,6 +4,7 @@ import "vue-cal/dist/vuecal.css"
 import axios from "axios"
 import AutoFormDialog from "./AutoFormDialog.vue"
 import useDialogs from "../../Composables/useDialogs"
+import { formatCalendarDate, formatDate } from "@/Utils/dates"
 import { ref, watch } from "vue"
 
 const props = defineProps(["model"])
@@ -17,18 +18,6 @@ const { showFormDialog, formDialogType, item, openDialog } = useDialogs()
 
 const events = ref([])
 
-function convertirFecha(fechaISO) {
-  const fecha = new Date(fechaISO)
-
-  const year = fecha.getFullYear()
-  const month = String(fecha.getMonth() + 1).padStart(2, "0")
-  const day = String(fecha.getDate()).padStart(2, "0")
-  const hours = String(fecha.getHours()).padStart(2, "0")
-  const minutes = String(fecha.getMinutes()).padStart(2, "0")
-
-  return `${year}-${month}-${day} ${hours}:${minutes}`
-}
-
 const changeCurrentMonth = (event) => {
   if (event.view === "month" || event.view === "week" || event.view === "day") {
     currentDateInterval.value.startDate = event.startDate.toISOString()
@@ -37,14 +26,29 @@ const changeCurrentMonth = (event) => {
   }
 }
 
-const handleDialog = (type, item) => {
+const handleDialog = (date, type, item) => {
   if (
     activeView.value === "month" ||
     activeView.value === "week" ||
     activeView.value === "day"
   ) {
     if (type === "create") {
-      openDialog("create")
+      if (date) {
+        let createItem = {}
+        createItem[props.model.calendarFields.start] = formatCalendarDate(
+          date,
+          true
+        )
+
+        createItem[props.model.calendarFields.end] = formatCalendarDate(
+          date,
+          true
+        )
+
+        openDialog("create", createItem)
+      } else {
+        openDialog("create")
+      }
     } else if (type === "edit") {
       openDialog("edit", item)
     }
@@ -60,8 +64,8 @@ const loadEvents = () => {
     .then((response) => {
       events.value = response.data.eventsData.items
       events.value = events.value.map((event) => {
-        event.start = convertirFecha(event.start)
-        event.end = convertirFecha(event.end)
+        event.start = formatCalendarDate(event.start)
+        event.end = formatCalendarDate(event.end)
         return event
       })
     })
@@ -93,8 +97,8 @@ const activeView = ref("month")
     :events="events"
     :time="true"
     locale="es"
-    :onEventClick="(item) => handleDialog('edit', item.item)"
-    @cell-click="handleDialog('create')"
+    :onEventClick="(item) => handleDialog(null, 'edit', item.item)"
+    @cell-click="($event) => handleDialog($event, 'create')"
   ></vue-cal>
 </template>
 

@@ -108,6 +108,10 @@ const initFields = () => {
     filteredFormFields.value.forEach((field) => {
       formData[field.field] = field.default ?? null
 
+      if (item.value[field.field]) {
+        formData[field.field] = formatDate(item.value[field.field])
+      }
+
       if (field.relation?.storeShortcut) {
         storeShortcutShows.value[field.field] = false
       }
