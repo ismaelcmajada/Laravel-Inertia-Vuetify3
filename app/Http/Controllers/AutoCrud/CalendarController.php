@@ -27,7 +27,19 @@ class CalendarController extends Controller
 
         $query->with($modelInstance::getIncludes());
 
-        $items= $query->whereNotNull($eventFields['start'])->whereNotNull($eventFields['end'])->get();
+        $startDate = request('start');
+        $endDate = request('end');
+
+        // Aseguramos que las fechas no sean nulas y las convertimos a un formato manejable por la base de datos
+        if ($startDate && $endDate) {
+            $query->where(function ($query) use ($eventFields, $startDate, $endDate) {
+                $query->whereBetween($eventFields['start'], [$startDate, $endDate])
+                    ->orWhereBetween($eventFields['end'], [$startDate, $endDate]);
+            });
+        }
+
+        // Obtener eventos
+        $items = $query->whereNotNull($eventFields['start'])->whereNotNull($eventFields['end'])->get();
 
         $events = $items->map(function ($item) use ($eventFields) {
             $event = [
@@ -38,15 +50,15 @@ class CalendarController extends Controller
                 'class' => 'cell',
                 'drag' => true,
             ];
-            
+
             return $event;
-        }); 
+        });
 
         return [
             'eventsData' => [
                 'items' => $events,
-                
+
             ]
         ];
-    }   
+    }
 }
