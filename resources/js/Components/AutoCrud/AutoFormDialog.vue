@@ -39,6 +39,9 @@ const show = computed({
   get: () => props.show,
   set: (value) => {
     emit("update:show", value)
+    if (!value) {
+      item.value = null
+    }
   },
 })
 

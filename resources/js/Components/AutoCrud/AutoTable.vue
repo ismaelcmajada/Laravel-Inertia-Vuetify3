@@ -100,8 +100,6 @@ const openHistoryDialog = (historyItem) => {
 if (props.itemsPerPageOptions)
   itemsPerPageOptions.value = props.itemsPerPageOptions
 
-console.log(itemsPerPageOptions.value)
-
 if (props.itemsPerPage) tableData.itemsPerPage = props.itemsPerPage
 </script>
 
@@ -167,7 +165,7 @@ if (props.itemsPerPage) tableData.itemsPerPage = props.itemsPerPage
   <history-dialog
     :show="showHistoryDialog"
     @closeDialog="showHistoryDialog = false"
-    :records="item.records"
+    :records="item?.records"
   />
 
   <destroy-dialog

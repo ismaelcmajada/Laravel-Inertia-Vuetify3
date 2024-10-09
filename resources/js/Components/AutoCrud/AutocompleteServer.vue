@@ -26,7 +26,6 @@ const items = ref([])
 const selectedItem = ref(props.item)
 
 watch(selectedItem, (value) => {
-  console.log(selectedItem.value)
   emit("update:modelValue", value?.id)
 })
 
@@ -53,7 +52,6 @@ const debounceLoadAutocompleteItems = debounce((search) => {
       })
       .then((response) => {
         items.value = response.data.autocompleteItems
-        console.log(items.value)
 
         if (props.items) {
           items.value = items.value?.filter((item) =>

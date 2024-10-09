@@ -77,7 +77,7 @@ const formData = useForm(
 )
 
 const initFields = () => {
-  if (type.value === "edit") {
+  if (type.value === "edit" && item.value) {
     filteredFormFields.value.forEach((field) => {
       if (field.type === "password") {
         formData[field.field] = ""
@@ -108,7 +108,7 @@ const initFields = () => {
     filteredFormFields.value.forEach((field) => {
       formData[field.field] = field.default ?? null
 
-      if (item.value[field.field]) {
+      if (item.value?.[field.field] && field.type === "date") {
         formData[field.field] = formatDate(item.value[field.field])
       }
 
@@ -481,7 +481,7 @@ watch(isFormDirty, (value) => {
           :end-point="field.relation.endPoint"
           :rules="getFieldRules(formData[field.field], field)"
           @update:model-value="updateRelatedFields(field.field, $event)"
-          :item="formData[field.field] ? item[field.relation.relation] : null"
+          :item="formData[field.field] ? item?.[field.relation.relation] : null"
         >
           <template v-if="field.relation.storeShortcut" v-slot:prepend>
             <v-btn
