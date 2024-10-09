@@ -81,6 +81,7 @@ const initFields = () => {
     filteredFormFields.value.forEach((field) => {
       if (field.type === "password") {
         formData[field.field] = ""
+        field.rules.required = false
       } else if (field.type === "date") {
         if (item.value[field.field]) {
           formData[field.field] = formatDate(item.value[field.field])
