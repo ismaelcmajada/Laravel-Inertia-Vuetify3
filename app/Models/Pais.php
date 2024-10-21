@@ -49,7 +49,7 @@ class Pais extends BaseModel
         [
             'name' => 'Fecha de inicio',
             'field' => 'start_date',
-            'type' => 'date',
+            'type' => 'datetime',
             'table' => true,
             'form' => true,
             'rules' => [
@@ -59,7 +59,7 @@ class Pais extends BaseModel
         [
             'name' => 'Fecha de fin',
             'field' => 'end_date',
-            'type' => 'date',
+            'type' => 'datetime',
             'table' => true,
             'form' => true,
             'rules' => [
