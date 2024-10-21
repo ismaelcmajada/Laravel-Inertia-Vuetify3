@@ -4,6 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Schema;
+use App\Casts\DateTimeWithUserTimezone;
+use App\Casts\DateWithUserTimezone;
+use Illuminate\Support\Facades\Date;
 
 abstract class BaseModel extends Model
 {
@@ -39,7 +42,9 @@ abstract class BaseModel extends Model
                 $this->casts[$field['field']] = 'hashed';
                 $this->hidden[] = $field['field'];
             } elseif ($field['type'] === 'date') {
-                $this->casts[$field['field']] = 'date:d-m-Y';
+                $this->casts[$field['field']] = DateWithUserTimezone::class . ':d-m-Y';
+            } elseif ($field['type'] === 'datetime') {
+                $this->casts[$field['field']] = DateTimeWithUserTimezone::class . ':d-m-Y H:i';
             } else if ($field['type'] === 'telephone') {
                 $this->casts[$field['field']] = 'string';
             }
@@ -48,20 +53,22 @@ abstract class BaseModel extends Model
 
     public static function getIncludes()
     {
-
-        static::$includes[] = 'records.user';
+        $totalIncludes = static::$includes;
+        $totalIncludes[] = 'records.user';
 
         foreach (static::$fields as $field) {
-            if (isset($field['relation'])) {
-                static::$includes[] = $field['relation']['relation'];
+            if (isset($field['relation']) && !in_array($field['relation']['relation'], $totalIncludes)) {
+                $totalIncludes[] = $field['relation']['relation'];
             }
         }
 
         foreach (static::$externalRelations as $relation) {
-            static::$includes[] = $relation['relation'];
+            if (!in_array($relation['relation'], $totalIncludes)) {
+                $totalIncludes[] = $relation['relation'];
+            }
         }
 
-        return static::$includes;
+        return $totalIncludes;
     }
 
     public static function getEndpoint()
@@ -159,11 +166,18 @@ abstract class BaseModel extends Model
     protected function handleRelation($field)
     {
         $relatedModelClass = $field['relation']['model'];
+
         if (!class_exists($relatedModelClass)) {
             throw new \Exception("Modelo relacionado {$relatedModelClass} no existe");
         }
 
-        return $this->belongsTo($relatedModelClass, $field['field'])->withTrashed();
+        $relation = $this->belongsTo($relatedModelClass, $field['field']);
+
+        if ($this->usesSoftDeletes($relatedModelClass)) {
+            $relation = $relation->withTrashed();
+        }
+
+        return $relation;
     }
 
     protected function handleExternalRelation($relation)
@@ -175,9 +189,13 @@ abstract class BaseModel extends Model
 
         $relatedPivotModelClass = $relation['pivotModel'] ?? null;
         if (class_exists($relatedPivotModelClass)) {
-            $relationMethod = $this->belongsToMany($relatedModelClass, $relation['pivotTable'], $relation['foreignKey'], $relation['relatedKey'])->using($relatedPivotModelClass)->withTrashed();
+            $relationMethod = $this->belongsToMany($relatedModelClass, $relation['pivotTable'], $relation['foreignKey'], $relation['relatedKey'])->using($relatedPivotModelClass);
         } else {
-            $relationMethod = $this->belongsToMany($relatedModelClass, $relation['pivotTable'], $relation['foreignKey'], $relation['relatedKey'])->withTrashed();
+            $relationMethod = $this->belongsToMany($relatedModelClass, $relation['pivotTable'], $relation['foreignKey'], $relation['relatedKey']);
+        }
+
+        if ($this->usesSoftDeletes($relatedModelClass)) {
+            $relationMethod = $relationMethod->withTrashed();
         }
 
         if (isset($relation['pivotFields'])) {
@@ -326,6 +344,14 @@ abstract class BaseModel extends Model
         static::saved(function ($model) {
             $model->handleEvent('saved');
         });
+    }
+
+    protected function usesSoftDeletes($modelClass)
+    {
+        return in_array(
+            'Illuminate\Database\Eloquent\SoftDeletes',
+            class_uses_recursive($modelClass)
+        );
     }
 
     protected function handleEvent($event)

@@ -448,8 +448,8 @@ getItems()
         >
           <v-autocomplete
             :label="props.externalRelation.name"
-            :model-value="relationItem[props.externalRelation.formKey]"
-            :items="items"
+            :model-value="relationItem"
+            :items="[relationItem]"
             :item-title="generateItemTitle(props.externalRelation.formKey)"
             item-value="id"
             density="compact"

@@ -26,3 +26,12 @@ export function formatCalendarDate(date, inverted = false) {
 
   return newDate
 }
+
+export function formatDateTime(date) {
+  const [fechaPart, horaPart] = date.split(" ")
+  const [dia, mes, anio] = fechaPart.split("-")
+  const [horas, minutos] = horaPart.split(":")
+
+  // Creamos un objeto Date con los componentes
+  return new Date(`${anio}-${mes}-${dia}T${horas}:${minutos}:00`)
+}

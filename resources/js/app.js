@@ -9,6 +9,9 @@ import { ZiggyVue } from "../../vendor/tightenco/ziggy/dist/vue.m"
 import Toast from "vue-toastification"
 import "vue-toastification/dist/index.css"
 
+import VueDatePicker from "@vuepic/vue-datepicker"
+import "@vuepic/vue-datepicker/dist/main.css"
+
 import "vuetify/styles"
 import { createVuetify } from "vuetify"
 import { es } from "vuetify/locale"
@@ -21,11 +24,14 @@ import "@mdi/font/css/materialdesignicons.css"
 import AppLayout from "@/Layouts/App.vue"
 import DashboardLayout from "@/Layouts/Dashboard.vue"
 
+import { VTimePicker } from "vuetify/labs/VTimePicker"
+
 const appName =
   window.document.getElementsByTagName("title")[0]?.innerText || "Dashboard"
 
 const vuetify = createVuetify({
   theme: {
+    options: { customProperties: true },
     defaultTheme: "customLight",
     themes: {
       customLight: {
@@ -73,10 +79,14 @@ createInertiaApp({
     return page
   },
   setup({ el, App, props, plugin }) {
-    return createApp({ render: () => h(App, props) })
+    return createApp({
+      render: () => h(App, props),
+    })
       .use(plugin)
       .use(Toast)
       .use(vuetify)
+      .component("VueDatePicker", VueDatePicker)
+      .component("VTimePicker", VTimePicker)
       .use(link)
       .use(ZiggyVue, Ziggy)
       .mount(el)

@@ -17,6 +17,7 @@ export function generateItemTitle(template) {
 
   return generatedFunction
 }
+
 export function searchByWords(item, queryText, itemText, customFilters) {
   if (!queryText) return true
 

@@ -34,10 +34,13 @@ class CalendarController extends Controller
         if ($startDate && $endDate) {
             $query->where(function ($query) use ($eventFields, $startDate, $endDate) {
                 $query->whereBetween($eventFields['start'], [$startDate, $endDate])
-                    ->orWhereBetween($eventFields['end'], [$startDate, $endDate]);
+                    ->orWhereBetween($eventFields['end'], [$startDate, $endDate])
+                    ->orWhere(function ($query) use ($eventFields, $startDate, $endDate) {
+                        $query->where($eventFields['start'], '<=', $startDate)
+                            ->where($eventFields['end'], '>=', $endDate);
+                    });
             });
         }
-
         // Obtener eventos
         $items = $query->whereNotNull($eventFields['start'])->whereNotNull($eventFields['end'])->get();
 
@@ -45,7 +48,7 @@ class CalendarController extends Controller
             $event = [
                 'start' => $item->{$eventFields['start']},
                 'end' => $item->{$eventFields['end']},
-                'title' => $item->{$eventFields['title']},
+                'title' => $eventFields['title'],
                 'item' => $item,
                 'class' => 'cell',
                 'drag' => true,
