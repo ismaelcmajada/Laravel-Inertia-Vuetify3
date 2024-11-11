@@ -1,7 +1,7 @@
 <script setup>
 import { Head, useForm } from "@inertiajs/vue3"
 import { ref } from "vue"
-import { ruleRequired, ruleEmail } from "@/Utils/rules"
+import { ruleRequired, ruleEmail } from "@/Utils/LaravelAutoCrud/rules"
 
 defineProps({
   status: String,

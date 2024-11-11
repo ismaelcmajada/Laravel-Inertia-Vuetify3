@@ -2,71 +2,75 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Suscriptor;
+use Ismaelcmajada\LaravelAutoCrud\Models\Traits\AutoCrud;
 
-class Pais extends BaseModel
+class Pais extends Model
 {
     use SoftDeletes;
+    use AutoCrud;
     /**
      * The table associated with the model.
      * 
      * @var string
      */
-    protected $table = 'paises';
 
-    protected static $endPoint = '/dashboard/pais';
+    protected $table = 'paises';
 
     protected static $includes = [];
 
-    protected static $fields = [
-        [
-            'name' => 'País',
-            'field' => 'pais',
-            'type' => 'string',
-            'table' => true,
-            'form' => true,
-            'rules' => [
-                'required' => true
-            ]
-        ],
-        [
-            'name' => 'Presidente',
-            'field' => 'presidente_id',
-            'type' => 'number',
-            'relation' => [
-                'model' => Presidente::class,
-                'relation' => 'presidente',
-                'tableKey' => '{name} ({id})',
-                'formKey' => '{name} ({id})',
-                'storeShortcut' => true,
-                'serverSide' => false,
+    protected static function getFields()
+    {
+        return [
+            [
+                'name' => 'País',
+                'field' => 'pais',
+                'type' => 'string',
+                'table' => true,
+                'form' => true,
+                'rules' => [
+                    'required' => true
+                ]
             ],
-            'table' => true,
-            'form' => true,
-            'rules' => []
-        ],
-        [
-            'name' => 'Fecha de inicio',
-            'field' => 'start_date',
-            'type' => 'datetime',
-            'table' => true,
-            'form' => true,
-            'rules' => [
-                'required' => false
+            [
+                'name' => 'Presidente',
+                'field' => 'presidente_id',
+                'type' => 'number',
+                'relation' => [
+                    'model' => Presidente::class,
+                    'relation' => 'presidente',
+                    'tableKey' => '{name} ({id})',
+                    'formKey' => '{name} ({id})',
+                    'storeShortcut' => true,
+                    'serverSide' => false,
+                ],
+                'table' => true,
+                'form' => true,
+                'rules' => []
+            ],
+            [
+                'name' => 'Fecha de inicio',
+                'field' => 'start_date',
+                'type' => 'datetime',
+                'table' => true,
+                'form' => true,
+                'rules' => [
+                    'required' => false
+                ]
+            ],
+            [
+                'name' => 'Fecha de fin',
+                'field' => 'end_date',
+                'type' => 'datetime',
+                'table' => true,
+                'form' => true,
+                'rules' => [
+                    'required' => false
+                ]
             ]
-        ],
-        [
-            'name' => 'Fecha de fin',
-            'field' => 'end_date',
-            'type' => 'datetime',
-            'table' => true,
-            'form' => true,
-            'rules' => [
-                'required' => false
-            ]
-        ]
-    ];
+        ];
+    }
 
     protected static $externalRelations = [
         [

@@ -3,9 +3,12 @@ import { ref } from "vue"
 import { router } from "@inertiajs/vue3"
 import AutocompleteServer from "./AutocompleteServer.vue"
 import axios from "axios"
-import { ruleRequired, getFieldRules } from "@/Utils/rules"
+import { ruleRequired, getFieldRules } from "../../Utils/LaravelAutoCrud/rules"
 import AutoFormDialog from "./AutoFormDialog.vue"
-import { generateItemTitle, searchByWords } from "@/Utils/autocompleteUtils"
+import {
+  generateItemTitle,
+  searchByWords,
+} from "../../Utils/LaravelAutoCrud/autocompleteUtils"
 
 const props = defineProps([
   "item",

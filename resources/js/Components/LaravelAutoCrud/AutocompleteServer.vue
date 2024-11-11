@@ -2,7 +2,7 @@
 import { ref, watch } from "vue"
 import axios from "axios"
 import debounce from "lodash.debounce"
-import { generateItemTitle } from "@/Utils/autocompleteUtils"
+import { generateItemTitle } from "../../Utils/LaravelAutoCrud/autocompleteUtils"
 
 const props = defineProps([
   "modelValue",

@@ -3,10 +3,13 @@ import VueCal from "vue-cal"
 import "vue-cal/dist/vuecal.css"
 import axios from "axios"
 import AutoFormDialog from "./AutoFormDialog.vue"
-import useDialogs from "../../Composables/useDialogs"
-import { formatCalendarDate, formatDateTime } from "@/Utils/dates"
+import useDialogs from "../../Composables/LaravelAutoCrud/useDialogs"
+import {
+  formatCalendarDate,
+  formatDateTime,
+} from "../../Utils/LaravelAutoCrud/dates"
 import { ref, watch } from "vue"
-import { generateItemTitle } from "@/Utils/datatableUtils"
+import { generateItemTitle } from "../../Utils/LaravelAutoCrud/datatableUtils"
 
 const props = defineProps(["model"])
 const endPoint = props.model.endPoint

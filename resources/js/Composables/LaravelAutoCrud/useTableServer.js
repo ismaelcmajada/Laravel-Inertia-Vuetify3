@@ -16,21 +16,19 @@ export default function useTableServer() {
     deleted: false,
   })
 
-  const itemsPerPageOptions = ref([
+  let itemsPerPageOptions = [
     { value: 10, title: "10" },
     { value: 25, title: "25" },
     { value: 50, title: "50" },
     { value: 100, title: "100" },
-  ])
+  ]
 
   const tableHeaders = computed(() =>
     itemHeaders.value.filter((e) => selectedHeaders.value.includes(e.key))
   )
   const selectedHeaders = ref([])
   const itemHeaders = ref([])
-  const allHeaders = computed(
-    () => selectedHeaders.value.length == itemHeaders.value.length
-  )
+  const allHeaders = computed(() => selectedHeaders.value.length == itemHeaders.value.length)
 
   const toggleAllHeaders = () => {
     if (allHeaders.value) selectedHeaders.value = []

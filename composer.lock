@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "55870046b7a5b0eedd28eb4a54e89f92",
+    "content-hash": "34b037830e235447a59c4de3ff20ab93",
     "packages": [
         {
             "name": "brick/math",
@@ -1125,6 +1125,58 @@
                 }
             ],
             "time": "2023-10-27T10:59:02+00:00"
+        },
+        {
+            "name": "ismaelcmajada/laravel-auto-crud",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ismaelcmajada/laravel-auto-crud.git",
+                "reference": "41de4e6a15a2188ad4df22ead60ebca6284fbb5f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/ismaelcmajada/laravel-auto-crud/zipball/41de4e6a15a2188ad4df22ead60ebca6284fbb5f",
+                "reference": "41de4e6a15a2188ad4df22ead60ebca6284fbb5f",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/contracts": "^8.0|^9.0|^10.0|^11.0",
+                "illuminate/database": "^8.0|^9.0|^10.0|^11.0",
+                "illuminate/support": "^8.0|^9.0|^10.0|^11.0",
+                "php": ">=7.4"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Ismaelcmajada\\LaravelAutoCrud\\AutoCrudServiceProvider",
+                        "Ismaelcmajada\\LaravelAutoCrud\\ModelScanServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Ismaelcmajada\\LaravelAutoCrud\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "ismaelcmajada",
+                    "email": "ismaelcmajada@gmail.com"
+                }
+            ],
+            "description": "Automated cruds based on laravel, vue and inertia",
+            "support": {
+                "issues": "https://github.com/ismaelcmajada/laravel-auto-crud/issues",
+                "source": "https://github.com/ismaelcmajada/laravel-auto-crud/tree/main"
+            },
+            "time": "2024-11-11T14:57:45+00:00"
         },
         {
             "name": "laravel-notification-channels/telegram",
@@ -9279,7 +9331,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "ismaelcmajada/laravel-auto-crud": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {

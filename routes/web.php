@@ -26,11 +26,9 @@ Route::middleware(['auth', 'checkForbiddenActions'])->prefix('dashboard')->group
     // restore: /item/{id}/restore
     // exportExcel: /item/export-excel
 
-    Route::get('/calendar-example',function () {
+    Route::get('/calendar-example', function () {
         return Inertia::render('Dashboard/CalendarExpample');
     })->name('dashboard.calendar-example');
-    
 });
 
-require __DIR__ . '/autoCrud.php';
 require __DIR__ . '/auth.php';

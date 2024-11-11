@@ -4,11 +4,14 @@ import axios from "axios"
 import { ref, computed, watch } from "vue"
 import AutoExternalRelation from "./AutoExternalRelation.vue"
 import AutocompleteServer from "./AutocompleteServer.vue"
-import { formatDate, formatDateTime } from "@/Utils/dates"
-import { getFieldRules } from "@/Utils/rules"
+import { formatDate, formatDateTime } from "../../Utils/LaravelAutoCrud/dates"
+import { getFieldRules } from "../../Utils/LaravelAutoCrud/rules"
 import AutoFormDialog from "./AutoFormDialog.vue"
-import { searchByWords, generateItemTitle } from "@/Utils/autocompleteUtils"
-import VDatetimePicker from "@/Components/VDatetimePicker.vue"
+import {
+  searchByWords,
+  generateItemTitle,
+} from "../../Utils/LaravelAutoCrud/autocompleteUtils"
+import VDatetimePicker from "./VDatetimePicker.vue"
 
 const props = defineProps([
   "item",

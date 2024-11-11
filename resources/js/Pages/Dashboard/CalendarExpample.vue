@@ -1,5 +1,5 @@
 <script setup>
-import AutoCalendar from "@/Components/AutoCrud/AutoCalendar.vue"
+import AutoCalendar from "@/Components/LaravelAutoCrud/AutoCalendar.vue"
 import { usePage } from "@inertiajs/vue3"
 
 const page = usePage()

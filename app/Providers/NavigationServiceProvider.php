@@ -25,7 +25,7 @@ class NavigationServiceProvider extends ServiceProvider
             [
                 'name' => Auth::user()->name ?? null,
                 'icon' => 'mdi-account-circle',
-				'dividers' => true,
+                'dividers' => true,
             ],
             [
                 'name' => 'Suscriptores',
@@ -63,7 +63,7 @@ class NavigationServiceProvider extends ServiceProvider
         foreach ($routes as &$route) {
             $modelClass = $route['model'] ?? null;
             if (class_exists($modelClass)) {
-                $route['path'] = $modelClass::getEndpoint();
+                $route['path'] = "/dashboard/{$modelClass::getModelName()}";
             }
 
             if (isset($route['childs'])) {
@@ -98,4 +98,3 @@ class NavigationServiceProvider extends ServiceProvider
         });
     }
 }
-

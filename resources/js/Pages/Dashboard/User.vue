@@ -1,5 +1,5 @@
 <script setup>
-import AutoTable from "@/Components/AutoCrud/AutoTable.vue"
+import AutoTable from "@/Components/LaravelAutoCrud/AutoTable.vue"
 import { usePage } from "@inertiajs/vue3"
 
 const page = usePage()

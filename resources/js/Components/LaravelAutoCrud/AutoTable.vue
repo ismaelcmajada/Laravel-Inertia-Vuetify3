@@ -1,17 +1,17 @@
 <script setup>
 import AutoFormDialog from "./AutoFormDialog.vue"
 import AutoForm from "./AutoForm.vue"
-import DestroyDialog from "../DestroyDialog.vue"
-import RestoreDialog from "../RestoreDialog.vue"
-import DestroyPermanentDialog from "../DestroyPermanentDialog.vue"
-import LoadingOverlay from "../LoadingOverlay.vue"
-import useTableServer from "../../Composables/useTableServer"
-import useDialogs from "../../Composables/useDialogs"
+import DestroyDialog from "./DestroyDialog.vue"
+import RestoreDialog from "./RestoreDialog.vue"
+import DestroyPermanentDialog from "./DestroyPermanentDialog.vue"
+import LoadingOverlay from "./LoadingOverlay.vue"
+import useTableServer from "../../Composables/LaravelAutoCrud/useTableServer"
+import useDialogs from "../../Composables/LaravelAutoCrud/useDialogs"
 import HistoryDialog from "./HistoryDialog.vue"
 import { usePage } from "@inertiajs/vue3"
 import { useDisplay } from "vuetify"
 import { computed, watch, ref } from "vue"
-import { generateItemTitle } from "@/Utils/datatableUtils"
+import { generateItemTitle } from "../../Utils/LaravelAutoCrud/datatableUtils"
 
 const page = usePage()
 
