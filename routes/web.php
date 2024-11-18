@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use Ismaelcmajada\LaravelAutoCrud\Http\Controllers\AutoCrudController;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,6 +30,8 @@ Route::middleware(['auth', 'checkForbiddenActions'])->prefix('dashboard')->group
     Route::get('/calendar-example', function () {
         return Inertia::render('Dashboard/CalendarExpample');
     })->name('dashboard.calendar-example');
+
+    Route::get('/{model}', [AutoCrudController::class, 'index'])->name('laravel-auto-crud.model.index');
 });
 
 require __DIR__ . '/auth.php';
