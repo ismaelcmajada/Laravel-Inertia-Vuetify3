@@ -130,6 +130,7 @@ if (props.itemsPerPage) tableData.itemsPerPage = props.itemsPerPage
           :model="model"
           :type="formDialogType"
           :item="item"
+          :show="showFormDialog"
         ></slot>
       </template>
       <template #auto-form="{ handleIsFormDirty }">
@@ -148,7 +149,19 @@ if (props.itemsPerPage) tableData.itemsPerPage = props.itemsPerPage
             :customItemProps="props.customItemProps"
             @formChange="emit('formChange', $event)"
             @isDirty="handleIsFormDirty($event)"
-          />
+          >
+            <template #prepend="slotProps">
+              <slot
+                name="auto-form-dialog.auto-form.prepend"
+                v-bind="slotProps"
+              >
+              </slot>
+            </template>
+            <template #append="slotProps">
+              <slot name="auto-form-dialog.auto-form.append" v-bind="slotProps">
+              </slot>
+            </template>
+          </auto-form>
         </slot>
       </template>
       <template #append>
@@ -157,6 +170,7 @@ if (props.itemsPerPage) tableData.itemsPerPage = props.itemsPerPage
           :model="model"
           :type="formDialogType"
           :item="item"
+          :show="showFormDialog"
         ></slot>
       </template>
     </auto-form-dialog>

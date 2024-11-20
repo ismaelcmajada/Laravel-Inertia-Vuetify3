@@ -277,6 +277,15 @@ watch(isFormDirty, (value) => {
 
 <template>
   <v-form v-model="form" @submit.prevent="submit">
+    <slot
+      name="prepend"
+      :model="model"
+      :type="type"
+      :item="item"
+      :formData="formData"
+      :submit="submit"
+    >
+    </slot>
     <v-row>
       <v-col
         cols="12"
@@ -545,6 +554,14 @@ watch(isFormDirty, (value) => {
         ></v-combobox>
       </v-col>
     </v-row>
+    <slot
+      name="append"
+      :model="model"
+      :type="type"
+      :item="item"
+      :formData="formData"
+      :submit="submit"
+    ></slot>
     <div class="d-flex justify-center">
       <v-btn
         color="blue-darken-1"

@@ -89,7 +89,14 @@ const handleIsFormDirty = (value) => {
 
       <v-card-text>
         <v-container>
-          <slot name="prepend" :model="model" :type="type" :item="item"> </slot>
+          <slot
+            name="prepend"
+            :model="model"
+            :type="type"
+            :item="item"
+            :show="show"
+          >
+          </slot>
           <slot
             name="auto-form"
             :model="model"
@@ -107,9 +114,23 @@ const handleIsFormDirty = (value) => {
               :customItemProps="props.customItemProps"
               @formChange="emit('formChange', $event)"
               @isDirty="handleIsFormDirty($event)"
-            />
+            >
+              <template #prepend="slotProps">
+                <slot name="auto-form.prepend" v-bind="slotProps"> </slot>
+              </template>
+              <template #append="slotProps">
+                <slot name="auto-form.append" v-bind="slotProps"> </slot>
+              </template>
+            </auto-form>
           </slot>
-          <slot name="append" :model="model" :type="type" :item="item"> </slot>
+          <slot
+            name="append"
+            :model="model"
+            :type="type"
+            :item="item"
+            :show="show"
+          >
+          </slot>
         </v-container>
       </v-card-text>
 
