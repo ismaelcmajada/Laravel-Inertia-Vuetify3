@@ -97,8 +97,8 @@ class Suscriptor extends Model
                     'relation' => 'pais',
                     'tableKey' => 'Mi país es {pais} que tiene el presidente {presidente.name}',
                     'formKey' => 'Mi país es {pais} que tiene el presidente {presidente.name}',
-                    'storeShortcut' => true,
-                    'serverSide' => true,
+                    'storeShortcut' => false,
+                    'serverSide' => false,
                 ],
                 'rules' => [
                     'required' => true
