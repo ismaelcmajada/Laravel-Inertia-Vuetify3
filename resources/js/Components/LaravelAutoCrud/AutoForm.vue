@@ -114,7 +114,9 @@ const initFields = () => {
       } else {
         formData[field.field] = item.value[field.field]
         if (field.type === "image") {
-          imagePreview.value[field.field] = item.value[field.field]
+          imagePreview.value[field.field] = `/laravel-auto-crud/${
+            item.value[field.field]
+          }`
         }
         if (field.type === "file") {
           filePreview.value[field.field] = item.value[field.field]
