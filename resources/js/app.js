@@ -9,9 +9,6 @@ import { ZiggyVue } from "../../vendor/tightenco/ziggy/dist/vue.m"
 import Toast from "vue-toastification"
 import "vue-toastification/dist/index.css"
 
-import VueDatePicker from "@vuepic/vue-datepicker"
-import "@vuepic/vue-datepicker/dist/main.css"
-
 import "vuetify/styles"
 import { createVuetify } from "vuetify"
 import { es } from "vuetify/locale"
@@ -85,7 +82,6 @@ createInertiaApp({
       .use(plugin)
       .use(Toast)
       .use(vuetify)
-      .component("VueDatePicker", VueDatePicker)
       .component("VTimePicker", VTimePicker)
       .use(link)
       .use(ZiggyVue, Ziggy)

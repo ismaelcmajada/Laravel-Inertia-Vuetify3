@@ -129,7 +129,6 @@ class Suscriptor extends Model
             'pivotTable' => 'suscriptores_paises',
             'foreignKey' => 'suscriptor_id',
             'relatedKey' => 'pais_id',
-            'storeShortcut' => true,
             'model' => Pais::class,
         ]
     ];
