@@ -1,6 +1,7 @@
 <script setup>
 import AutoFormDialog from "./AutoFormDialog.vue"
 import AutoForm from "./AutoForm.vue"
+import AutoExternalRelation from "./AutoExternalRelation.vue"
 import DestroyDialog from "./DestroyDialog.vue"
 import RestoreDialog from "./RestoreDialog.vue"
 import DestroyPermanentDialog from "./DestroyPermanentDialog.vue"
@@ -27,12 +28,109 @@ const props = defineProps([
   "customItemProps",
   "itemsPerPage",
   "itemsPerPageOptions",
+  "customHeaders",
 ])
 
-const emit = defineEmits(["closeDialog", "openDialog", "formChange"])
+const emit = defineEmits([
+  "closeDialog",
+  "openDialog",
+  "formChange",
+  "update:item",
+])
 
 const model = computed(() => {
   return props.model
+})
+
+const finalHeaders = computed(() => {
+  const originalHeaders = [...model.value.tableHeaders]
+
+  // Asegurar que customHeaders es array
+  const extraHeaders = Array.isArray(props.customHeaders)
+    ? props.customHeaders
+    : []
+
+  // If no custom headers, return original headers
+  if (extraHeaders.length === 0) {
+    return originalHeaders
+  }
+
+  // Sort custom headers into groups: those with specific positions and those without
+  const headersWithPosition = extraHeaders.filter(h => h.position || h.before || h.after)
+  const headersWithoutPosition = extraHeaders.filter(h => !h.position && !h.before && !h.after)
+
+  // Start with the original headers
+  let result = [...originalHeaders]
+
+  // Process headers with specific position settings
+  headersWithPosition.forEach(header => {
+    // Create a copy of the header without position metadata for actual insertion
+    const cleanHeader = { ...header }
+    delete cleanHeader.position
+    delete cleanHeader.before
+    delete cleanHeader.after
+
+    if (header.before) {
+      // Insert before specified column
+      const targetIndex = result.findIndex(h => h.key === header.before)
+      if (targetIndex !== -1) {
+        result = [
+          ...result.slice(0, targetIndex),
+          cleanHeader,
+          ...result.slice(targetIndex)
+        ]
+      } else {
+        // If target not found, append to end
+        result.push(cleanHeader)
+      }
+    } 
+    else if (header.after) {
+      // Insert after specified column
+      const targetIndex = result.findIndex(h => h.key === header.after)
+      if (targetIndex !== -1) {
+        result = [
+          ...result.slice(0, targetIndex + 1),
+          cleanHeader,
+          ...result.slice(targetIndex + 1)
+        ]
+      } else {
+        // If target not found, append to end
+        result.push(cleanHeader)
+      }
+    }
+    else if (header.position === 'start') {
+      // Insert at beginning
+      result = [cleanHeader, ...result]
+    }
+    else if (header.position === 'end') {
+      // Insert at end
+      result.push(cleanHeader)
+    }
+    else {
+      // Default: append to end
+      result.push(cleanHeader)
+    }
+  })
+
+  // Handle headers without specific positions - insert before actions by default
+  if (headersWithoutPosition.length > 0) {
+    // Insert before actions column
+    const actionsIndex = result.findIndex((h) => h.key === "actions")
+
+    if (actionsIndex === -1) {
+      // If no actions column, add at the end
+      result = [...result, ...headersWithoutPosition]
+    } else {
+      // Insert before actions column
+      result = [
+        ...result.slice(0, actionsIndex),
+        ...headersWithoutPosition,
+        ...result.slice(actionsIndex),
+      ]
+    }
+  }
+
+  return result
 })
 
 const forbiddenActions =
@@ -101,6 +199,10 @@ if (props.itemsPerPageOptions)
   itemsPerPageOptions.value = props.itemsPerPageOptions
 
 if (props.itemsPerPage) tableData.itemsPerPage = props.itemsPerPage
+
+watch(item, (value) => {
+  emit("update:item", value)
+})
 </script>
 
 <template>
@@ -157,9 +259,44 @@ if (props.itemsPerPage) tableData.itemsPerPage = props.itemsPerPage
               >
               </slot>
             </template>
+
+            <template
+              v-for="field in model.formFields"
+              :key="field.field"
+              #[`field.${field.field}`]="fieldSlotProps"
+            >
+              <!-- 
+                Reexponemos un slot llamado:
+                "auto-form-dialog.auto-form.field.nombreCampo"
+
+                Si el padre lo define, se inyectará aquí.
+                De lo contrario, AutoForm.vue mostrará su fallback.
+              -->
+              <slot
+                :name="`auto-form-dialog.auto-form.field.${field.field}`"
+                v-bind="fieldSlotProps"
+              >
+                <!-- No ponemos fallback aquí, porque el fallback
+                     está en <AutoForm> mismo, en su <slot :name="field.xxx"> -->
+              </slot>
+            </template>
+
             <template #append="slotProps">
               <slot name="auto-form-dialog.auto-form.append" v-bind="slotProps">
               </slot>
+            </template>
+
+            <template
+              v-for="relation in model.externalRelations"
+              :key="relation.relation"
+              v-slot:[`auto-external-relation.${relation.relation}.actions`]="{
+                item,
+              }"
+            >
+              <slot
+                :name="`auto-external-relation.${relation.relation}.actions`"
+                :item="item"
+              ></slot>
             </template>
           </auto-form>
         </slot>
@@ -210,7 +347,7 @@ if (props.itemsPerPage) tableData.itemsPerPage = props.itemsPerPage
     <v-data-table-server
       multi-sort
       :loading="loading"
-      :headers="model.tableHeaders"
+      :headers="finalHeaders"
       :items="tableData.items"
       :items-length="tableData.itemsLength"
       :items-per-page-options="itemsPerPageOptions"
@@ -226,6 +363,13 @@ if (props.itemsPerPage) tableData.itemsPerPage = props.itemsPerPage
           </v-toolbar-title>
           <v-divider class="mx-4" inset vertical></v-divider>
           <slot
+            name="table.actions.prepend"
+            :openDialog="openDialog"
+            :resetTable="resetTable"
+            :tableData="tableData"
+            :loadItems="loadItems"
+          ></slot>
+          <slot
             name="table.actions"
             :openDialog="openDialog"
             :resetTable="resetTable"
@@ -239,8 +383,10 @@ if (props.itemsPerPage) tableData.itemsPerPage = props.itemsPerPage
               </v-btn>
 
               <v-btn
+                v-if="
+                  forbiddenActions.indexOf('store') === -1
+                "
                 icon
-                v-if="forbiddenActions.indexOf('store') === -1"
                 @click="openDialog('create')"
               >
                 <v-icon>mdi-file-plus-outline</v-icon>
@@ -263,14 +409,21 @@ if (props.itemsPerPage) tableData.itemsPerPage = props.itemsPerPage
               }}</v-tooltip>
             </v-btn>
           </slot>
+          <slot
+            name="table.actions.append"
+            :openDialog="openDialog"
+            :resetTable="resetTable"
+            :tableData="tableData"
+            :loadItems="loadItems"
+          ></slot>
         </v-toolbar>
       </template>
 
-      <template v-if="!mobile" v-slot:thead>
+      <template v-slot:thead>
         <tr>
           <td
-            v-for="header in model.tableHeaders.filter(
-              (header) => header.key != 'actions'
+            v-for="header in finalHeaders.filter(
+              (header) => header.key != 'actions' && header.searchable !== false
             )"
             :key="header.key"
           >
@@ -288,7 +441,7 @@ if (props.itemsPerPage) tableData.itemsPerPage = props.itemsPerPage
 
       <template
         v-slot:[`item.${header.key}`]="{ item }"
-        v-for="header in model.tableHeaders.filter(
+        v-for="header in finalHeaders.filter(
           (header) => header.key !== 'actions'
         )"
       >
@@ -312,6 +465,15 @@ if (props.itemsPerPage) tableData.itemsPerPage = props.itemsPerPage
       </template>
 
       <template v-slot:item.actions="{ item }">
+        <slot
+          name="item.actions.prepend"
+          :item="item"
+          :openDialog="openDialog"
+          :resetTable="resetTable"
+          :tableData="tableData"
+          :loadItems="loadItems"
+          :forbiddenActions="forbiddenActions"
+        ></slot>
         <slot
           name="item.actions"
           :item="item"
@@ -384,6 +546,15 @@ if (props.itemsPerPage) tableData.itemsPerPage = props.itemsPerPage
             <v-tooltip activator="parent">Eliminar permanente</v-tooltip>
           </v-btn>
         </slot>
+        <slot
+          name="item.actions.append"
+          :item="item"
+          :openDialog="openDialog"
+          :resetTable="resetTable"
+          :tableData="tableData"
+          :loadItems="loadItems"
+          :forbiddenActions="forbiddenActions"
+        ></slot>
       </template>
     </v-data-table-server>
     <loading-overlay v-if="loading" />

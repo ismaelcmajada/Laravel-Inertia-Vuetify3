@@ -56,6 +56,7 @@ const hiddenFormFieldsLength = computed(() => {
 })
 
 const relations = ref({})
+const comboboxItems = ref({})
 const storeShortcutShows = ref({})
 const storeExternalShortcutShows = ref({})
 
@@ -72,6 +73,22 @@ const getRelations = () => {
       relations.value[field.field] = response.data
     })
   })
+}
+
+const getComboboxItems = () => {
+  const comboboxFields = filteredFormFields.value.filter(
+    (field) => field.type === "combobox"
+  )
+
+  comboboxFields.forEach((field) => {
+    axios.get(`${field.endPoint}/all`).then((response) => {
+      comboboxItems.value[field.field] = response.data
+    })
+  })
+}
+
+const mapComboboxItems = (field, items) => {
+  return items?.map((item) => item[field.itemTitle])
 }
 
 const form = ref(false)
@@ -265,6 +282,7 @@ const updateComboField = (field, value) => {
 }
 
 getRelations()
+getComboboxItems()
 
 const isFormDirty = computed(() => {
   return formData.isDirty
@@ -287,272 +305,319 @@ watch(isFormDirty, (value) => {
     >
     </slot>
     <v-row>
-      <v-col
-        cols="12"
-        v-show="!field.hidden && (type !== 'create' || !field.onlyUpdate)"
-        :md="
-          filteredFormFields.length - hiddenFormFieldsLength > 1 &&
-          field.type !== 'image' &&
-          field.type !== 'file'
-            ? 6
-            : 12
-        "
-        v-for="field in filteredFormFields"
-      >
-        <v-text-field
-          v-if="
-            !field.relation &&
-            !field.comboField &&
-            field.type !== 'boolean' &&
-            field.type !== 'date' &&
-            field.type !== 'datetime' &&
-            field.type !== 'password' &&
-            field.type !== 'select' &&
-            field.type !== 'text' &&
-            field.type !== 'image' &&
-            field.type !== 'file'
-          "
-          :label="field.rules?.required ? field.name + ' *' : field.name"
-          v-model="formData[field.field]"
-          :rules="getFieldRules(formData[field.field], field)"
-        ></v-text-field>
-
-        <div v-if="field.type === 'image'">
-          <v-file-input
-            v-if="!imagePreview[field.field]"
-            :label="field.rules?.required ? field.name + ' *' : field.name"
-            v-model="formData[field.field]"
-            :rules="getFieldRules(formData[field.field], field)"
-            @change="(file) => handleImageUpload(file, field.field)"
-            accept="image/*"
-            prepend-icon="mdi-file-image"
-          ></v-file-input>
-
-          <v-row
-            v-else
-            class="align-center justify-center my-3 mx-1 elevation-6 rounded pa-2"
-          >
-            <v-col cols="12" md="1" class="text-center">
-              {{ field.name }}
-            </v-col>
-            <v-col cols="12" md="10" class="my-3 d-flex justify-center">
-              <v-img
-                v-if="imagePreview"
-                :src="imagePreview[field.field]"
-                max-width="200"
-                max-height="200"
-                contain
-              ></v-img>
-            </v-col>
-            <v-col cols="12" md="1" class="text-center">
-              <v-btn
-                icon
-                @click="removeImage(field.field)"
-                color="red"
-                class="mt-2"
-              >
-                <v-icon>mdi-delete</v-icon>
-              </v-btn>
-            </v-col>
-          </v-row>
-        </div>
-
-        <div v-if="field.type === 'file'">
-          <v-file-input
-            v-if="!filePreview[field.field]"
-            :label="field.rules?.required ? field.name + ' *' : field.name"
-            v-model="formData[field.field]"
-            :rules="getFieldRules(formData[field.field], field)"
-            @change="(file) => handleFileUpload(file, field.field)"
-            :accept="field.rules?.accept"
-            prepend-icon="mdi-file"
-          ></v-file-input>
-
-          <v-row
-            v-else
-            class="align-center justify-center my-3 mx-1 elevation-6 rounded pa-2"
-          >
-            <v-col cols="12" md="10" class="text-center">
-              {{ field.name }}
-            </v-col>
-
-            <v-col cols="12" md="2" class="text-center">
-              <v-btn
-                icon
-                @click="downloadFile(field.field)"
-                color="blue"
-                class="mr-2"
-              >
-                <v-icon>mdi-download</v-icon>
-
-                <v-tooltip activator="parent">Descargar</v-tooltip>
-              </v-btn>
-              <v-btn icon @click="removeFile(field.field)" color="red" class="">
-                <v-icon>mdi-delete</v-icon>
-              </v-btn>
-            </v-col>
-          </v-row>
-        </div>
-
-        <v-checkbox
-          v-else-if="field.type === 'boolean'"
-          :label="field.rules?.required ? field.name + ' *' : field.name"
-          v-model="formData[field.field]"
-          :rules="getFieldRules(formData[field.field], field)"
-        ></v-checkbox>
-
-        <v-text-field
-          v-else-if="field.type === 'date'"
-          type="date"
-          :label="field.rules?.required ? field.name + ' *' : field.name"
-          v-model="formData[field.field]"
-          :rules="getFieldRules(formData[field.field], field)"
-        ></v-text-field>
-
-        <v-datetime-picker
-          v-else-if="field.type === 'datetime'"
-          :label="field.rules?.required ? field.name + ' *' : field.name"
-          v-model:datetime="formData[field.field]"
-          :rules="getFieldRules(formData[field.field], field)"
-        ></v-datetime-picker>
-
-        <v-text-field
-          v-else-if="field.type === 'password'"
-          :label="field.rules?.required ? field.name + ' *' : field.name"
-          v-model="formData[field.field]"
-          :rules="getFieldRules(formData[field.field], field)"
-          type="password"
-        ></v-text-field>
-
-        <v-select
-          v-else-if="field.type === 'select'"
-          :items="field.options"
-          :label="field.rules?.required ? field.name + ' *' : field.name"
-          v-model="formData[field.field]"
-          :rules="getFieldRules(formData[field.field], field)"
-          :clearable="!field.rules?.required"
-          :multiple="field.multiple"
-        ></v-select>
-
-        <v-textarea
-          v-else-if="field.type === 'text'"
-          :label="field.rules?.required ? field.name + ' *' : field.name"
-          v-model="formData[field.field]"
-          :rules="getFieldRules(formData[field.field], field)"
-        ></v-textarea>
-
-        <v-autocomplete
-          v-else-if="
-            field.relation && !field.comboField && !field.relation.serverSide
-          "
-          :items="
-            props.filteredItems?.[field.relation.relation]
-              ? props.filteredItems[field.relation.relation](
-                  relations[field.field]
-                )
-              : relations[field.field]
-          "
-          :label="field.rules?.required ? field.name + ' *' : field.name"
-          :item-props="props.customItemProps?.[field.relation.relation]"
-          :item-title="generateItemTitle(field.relation.formKey)"
-          :custom-filter="
-            (item, queryText, itemText) =>
-              searchByWords(
-                item,
-                queryText,
-                itemText,
-                props.customFilters?.[field.relation.relation]
-              )
-          "
-          item-value="id"
-          v-model="formData[field.field]"
-          :rules="getFieldRules(formData[field.field], field)"
-          @update:model-value="updateRelatedFields(field.field, $event)"
+      <!-- Recorremos cada field -->
+      <template v-for="field in filteredFormFields" :key="field.field">
+        <!-- Creamos un slot con name dinámico: "field.[nombreDelCampo]" -->
+        <slot
+          :name="`field.${field.field}`"
+          :formData="formData"
+          :field="field"
+          :item="item"
+          :type="type"
+          :submit="submit"
+          :getFieldRules="getFieldRules"
         >
-          <template v-if="field.relation.storeShortcut" v-slot:prepend>
-            <v-btn
-              icon="mdi-plus-circle"
-              @click="storeShortcutShows[field.field] = true"
-            >
-            </v-btn>
-            <auto-form-dialog
-              v-model:show="storeShortcutShows[field.field]"
-              type="create"
-              :filteredItems="props.filteredItems"
-              :customFilters="props.customFilters"
-              :customItemProps="props.customItemProps"
-              @update:show="getRelations"
-              :modelName="field.relation.model"
-            />
-          </template>
-        </v-autocomplete>
+          <!-- Fallback que se muestra si el padre NO define este slot -->
+          <!-- Aquí dentro va toda tu lógica habitual de if/else para cada type -->
+          <v-col
+            cols="12"
+            v-show="!field.hidden && (type !== 'create' || !field.onlyUpdate)"
+            :md="
+              filteredFormFields.length - hiddenFormFieldsLength > 1 &&
+              field.type !== 'image' &&
+              field.type !== 'file'
+                ? 6
+                : 12
+            "
+          >
+            <v-text-field
+              v-if="
+                !field.relation &&
+                !field.comboField &&
+                field.type !== 'boolean' &&
+                field.type !== 'date' &&
+                field.type !== 'datetime' &&
+                field.type !== 'password' &&
+                field.type !== 'select' &&
+                field.type !== 'text' &&
+                field.type !== 'image' &&
+                field.type !== 'file' &&
+                field.type !== 'combobox'
+              "
+              :label="field.rules?.required ? field.name + ' *' : field.name"
+              v-model="formData[field.field]"
+              :rules="getFieldRules(formData[field.field], field)"
+            ></v-text-field>
 
-        <autocomplete-server
-          v-else-if="
-            field.relation && !field.comboField && field.relation.serverSide
-          "
-          :label="field.rules?.required ? field.name + ' *' : field.name"
-          :item-props="props.customItemProps?.[field.relation.relation]"
-          :item-title="field.relation.formKey"
-          :custom-filter="
-            (item, queryText, itemText) =>
-              searchByWords(
-                item,
-                queryText,
-                itemText,
-                props.customFilters?.[field.relation.relation]
-              )
-          "
-          v-model="formData[field.field]"
-          :end-point="field.relation.endPoint"
-          :rules="getFieldRules(formData[field.field], field)"
-          @update:model-value="updateRelatedFields(field.field, $event)"
-          :item="formData[field.field] ? item?.[field.relation.relation] : null"
-        >
-          <template v-if="field.relation.storeShortcut" v-slot:prepend>
-            <v-btn
-              icon="mdi-plus-circle"
-              @click="storeShortcutShows[field.field] = true"
-            >
-            </v-btn>
-            <auto-form-dialog
-              v-model:show="storeShortcutShows[field.field]"
-              type="create"
-              :filteredItems="props.filteredItems"
-              :customFilters="props.customFilters"
-              :customItemProps="props.customItemProps"
-              @update:show="getRelations"
-              :modelName="field.relation.model"
-            />
-          </template>
-        </autocomplete-server>
+            <div v-if="field.type === 'image'">
+              <v-file-input
+                v-if="!imagePreview[field.field]"
+                :label="field.rules?.required ? field.name + ' *' : field.name"
+                v-model="formData[field.field]"
+                :rules="getFieldRules(formData[field.field], field)"
+                @change="(file) => handleImageUpload(file, field.field)"
+                accept="image/*"
+                prepend-icon="mdi-file-image"
+              ></v-file-input>
 
-        <v-combobox
-          v-else-if="field.relation && field.comboField"
-          :label="field.rules?.required ? field.name + ' *' : field.name"
-          v-model="formData[field.comboField]"
-          :rules="getFieldRules(formData[field.field], field)"
-          :items="
-            props.filteredItems?.[field.relation.relation]
-              ? props.filteredItems[field.relation.relation](
-                  relations[field.field]
-                )
-              : relations[field.field]
-          "
-          :item-title="generateItemTitle(field.relation.formKey)"
-          :item-props="props.customItemProps?.[field.relation.relation]"
-          :custom-filter="
-            (item, queryText, itemText) =>
-              searchByWords(
-                item,
-                queryText,
-                itemText,
-                props.customFilters?.[field.relation.relation]
-              )
-          "
-          @update:model-value="updateComboField(field, $event)"
-        ></v-combobox>
-      </v-col>
+              <v-row
+                v-else
+                class="align-center justify-center my-3 mx-1 elevation-6 rounded pa-2"
+              >
+                <v-col cols="12" md="1" class="text-center">
+                  {{ field.name }}
+                </v-col>
+                <v-col cols="12" md="10" class="my-3 d-flex justify-center">
+                  <v-img
+                    v-if="imagePreview"
+                    :src="imagePreview[field.field]"
+                    max-width="200"
+                    max-height="200"
+                    contain
+                  ></v-img>
+                </v-col>
+                <v-col cols="12" md="1" class="text-center">
+                  <v-btn
+                    icon
+                    @click="removeImage(field.field)"
+                    color="red"
+                    class="mt-2"
+                  >
+                    <v-icon>mdi-delete</v-icon>
+                  </v-btn>
+                </v-col>
+              </v-row>
+            </div>
+
+            <div v-if="field.type === 'file'">
+              <v-file-input
+                v-if="!filePreview[field.field]"
+                :label="field.rules?.required ? field.name + ' *' : field.name"
+                v-model="formData[field.field]"
+                :rules="getFieldRules(formData[field.field], field)"
+                @change="(file) => handleFileUpload(file, field.field)"
+                :accept="field.rules?.accept"
+                prepend-icon="mdi-file"
+              ></v-file-input>
+
+              <v-row
+                v-else
+                class="align-center justify-center my-3 mx-1 elevation-6 rounded pa-2"
+              >
+                <v-col cols="12" md="10" class="text-center">
+                  {{ field.name }}
+                </v-col>
+
+                <v-col cols="12" md="2" class="text-center">
+                  <v-btn
+                    icon
+                    @click="downloadFile(field.field)"
+                    color="blue"
+                    class="mr-2"
+                  >
+                    <v-icon>mdi-download</v-icon>
+
+                    <v-tooltip activator="parent">Descargar</v-tooltip>
+                  </v-btn>
+                  <v-btn
+                    icon
+                    @click="removeFile(field.field)"
+                    color="red"
+                    class=""
+                  >
+                    <v-icon>mdi-delete</v-icon>
+                  </v-btn>
+                </v-col>
+              </v-row>
+            </div>
+
+            <v-checkbox
+              v-else-if="field.type === 'boolean'"
+              :label="field.rules?.required ? field.name + ' *' : field.name"
+              v-model="formData[field.field]"
+              :rules="getFieldRules(formData[field.field], field)"
+            ></v-checkbox>
+
+            <v-text-field
+              v-else-if="field.type === 'date'"
+              type="date"
+              :label="field.rules?.required ? field.name + ' *' : field.name"
+              v-model="formData[field.field]"
+              :rules="getFieldRules(formData[field.field], field)"
+            ></v-text-field>
+
+            <v-datetime-picker
+              v-else-if="field.type === 'datetime'"
+              :label="field.rules?.required ? field.name + ' *' : field.name"
+              v-model:datetime="formData[field.field]"
+              :rules="getFieldRules(formData[field.field], field)"
+            ></v-datetime-picker>
+
+            <v-text-field
+              v-else-if="field.type === 'password'"
+              :label="field.rules?.required ? field.name + ' *' : field.name"
+              v-model="formData[field.field]"
+              :rules="getFieldRules(formData[field.field], field)"
+              type="password"
+            ></v-text-field>
+
+            <v-select
+              v-else-if="field.type === 'select'"
+              :items="field.options"
+              :label="field.rules?.required ? field.name + ' *' : field.name"
+              v-model="formData[field.field]"
+              :rules="getFieldRules(formData[field.field], field)"
+              :clearable="!field.rules?.required"
+              :multiple="field.multiple"
+            ></v-select>
+
+            <v-textarea
+              v-else-if="field.type === 'text'"
+              :label="field.rules?.required ? field.name + ' *' : field.name"
+              v-model="formData[field.field]"
+              :rules="getFieldRules(formData[field.field], field)"
+            ></v-textarea>
+
+            <v-combobox
+              v-else-if="field.type === 'combobox'"
+              :items="
+                props.filteredItems?.[field.field]
+                  ? mapComboboxItems(
+                      field,
+                      props.filteredItems[field.field](
+                        comboboxItems[field.field],
+                        props.formData
+                      )
+                    )
+                  : mapComboboxItems(field, comboboxItems[field.field])
+              "
+              :label="field.rules?.required ? field.name + ' *' : field.name"
+              :custom-filter="props.customFilters?.[field.field]"
+              v-model="formData[field.field]"
+              :rules="getFieldRules(formData[field.field], field)"
+            ></v-combobox>
+
+            <v-autocomplete
+              v-else-if="
+                field.relation &&
+                !field.comboField &&
+                !field.relation.serverSide &&
+                !field.relation.polymorphic
+              "
+              :items="
+                props.filteredItems?.[field.relation.relation]
+                  ? props.filteredItems[field.relation.relation](
+                      relations[field.field],
+                      props.formData
+                    )
+                  : relations[field.field]
+              "
+              :label="field.rules?.required ? field.name + ' *' : field.name"
+              :item-props="props.customItemProps?.[field.relation.relation]"
+              :item-title="generateItemTitle(field.relation.formKey)"
+              :custom-filter="
+                (item, queryText, itemText) =>
+                  searchByWords(
+                    item,
+                    queryText,
+                    itemText,
+                    props.customFilters?.[field.relation.relation]
+                  )
+              "
+              item-value="id"
+              v-model="formData[field.field]"
+              :rules="getFieldRules(formData[field.field], field)"
+              @update:model-value="updateRelatedFields(field.field, $event)"
+            >
+              <template v-if="field.relation.storeShortcut" v-slot:prepend>
+                <v-btn
+                  icon="mdi-plus-circle"
+                  @click="storeShortcutShows[field.field] = true"
+                >
+                </v-btn>
+                <auto-form-dialog
+                  v-model:show="storeShortcutShows[field.field]"
+                  type="create"
+                  :filteredItems="props.filteredItems"
+                  :customFilters="props.customFilters"
+                  :customItemProps="props.customItemProps"
+                  @update:show="getRelations"
+                  :modelName="field.relation.model"
+                />
+              </template>
+            </v-autocomplete>
+
+            <autocomplete-server
+              v-else-if="
+                field.relation && !field.comboField && field.relation.serverSide
+              "
+              :label="field.rules?.required ? field.name + ' *' : field.name"
+              :item-props="props.customItemProps?.[field.relation.relation]"
+              :item-title="field.relation.formKey"
+              :custom-filter="
+                (item, queryText, itemText) =>
+                  searchByWords(
+                    item,
+                    queryText,
+                    itemText,
+                    props.customFilters?.[field.relation.relation]
+                  )
+              "
+              v-model="formData[field.field]"
+              :end-point="field.relation.endPoint"
+              :rules="getFieldRules(formData[field.field], field)"
+              @update:model-value="updateRelatedFields(field.field, $event)"
+              :item="
+                formData[field.field] ? item?.[field.relation.relation] : null
+              "
+            >
+              <template v-if="field.relation.storeShortcut" v-slot:prepend>
+                <v-btn
+                  icon="mdi-plus-circle"
+                  @click="storeShortcutShows[field.field] = true"
+                >
+                </v-btn>
+                <auto-form-dialog
+                  v-model:show="storeShortcutShows[field.field]"
+                  type="create"
+                  :filteredItems="props.filteredItems"
+                  :customFilters="props.customFilters"
+                  :customItemProps="props.customItemProps"
+                  @update:show="getRelations"
+                  :modelName="field.relation.model"
+                />
+              </template>
+            </autocomplete-server>
+
+            <v-combobox
+              v-else-if="field.relation && field.comboField"
+              :label="field.rules?.required ? field.name + ' *' : field.name"
+              v-model="formData[field.comboField]"
+              :rules="getFieldRules(formData[field.field], field)"
+              :items="
+                props.filteredItems?.[field.relation.relation]
+                  ? props.filteredItems[field.relation.relation](
+                      relations[field.field],
+                      props.formData
+                    )
+                  : relations[field.field]
+              "
+              :item-title="generateItemTitle(field.relation.formKey)"
+              :item-props="props.customItemProps?.[field.relation.relation]"
+              :custom-filter="
+                (item, queryText, itemText) =>
+                  searchByWords(
+                    item,
+                    queryText,
+                    itemText,
+                    props.customFilters?.[field.relation.relation]
+                  )
+              "
+              @update:model-value="updateComboField(field, $event)"
+            ></v-combobox>
+          </v-col>
+        </slot>
+      </template>
     </v-row>
     <slot
       name="append"
@@ -577,9 +642,16 @@ watch(isFormDirty, (value) => {
     v-if="type === 'edit' && model.externalRelations.length > 0"
     v-for="relation in model.externalRelations"
   >
-    <v-divider :thickness="3" class="mt-2"></v-divider>
+    <v-divider
+      :thickness="3"
+      class="mt-2"
+      v-if="relation.form === true || relation.form === undefined"
+    ></v-divider>
     <auto-external-relation
-      v-if="type === 'edit'"
+      v-if="
+        type === 'edit' &&
+        (relation.form === true || relation.form === undefined)
+      "
       :endPoint="model.endPoint"
       :item="item"
       :externalRelation="relation"
@@ -587,7 +659,15 @@ watch(isFormDirty, (value) => {
       :customFilters="props.customFilters"
       :customItemProps="props.customItemProps"
       :withTitle="false"
+      :formData="formData"
     >
+      <template v-slot:[`${relation.relation}.actions`]="{ item }">
+        <slot
+          :name="`auto-external-relation.${relation.relation}.actions`"
+          :item="item"
+        >
+        </slot>
+      </template>
     </auto-external-relation>
   </div>
 </template>

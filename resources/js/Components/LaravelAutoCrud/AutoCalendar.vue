@@ -183,7 +183,7 @@ const loadEvents = () => {
                 originalEnd: event.end,
                 title: generateItemTitle(event.title, event.item),
                 position: i,
-                class: styleClass,
+                class: styleClass + " " + event.class,
               })
             } else {
               // Agregar placeholder

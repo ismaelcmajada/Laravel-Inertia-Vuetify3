@@ -2,6 +2,7 @@
 import AutoForm from "./AutoForm.vue"
 import { computed, ref } from "vue"
 import { usePage } from "@inertiajs/vue3"
+import AutoExternalRelation from "./AutoExternalRelation.vue"
 
 const page = usePage()
 
@@ -38,7 +39,7 @@ const model = computed(() => {
 const show = computed({
   get: () => props.show,
   set: (value) => {
-    emit("update:show", value)
+    emit("update:show")
     if (!value) {
       item.value = null
     }
@@ -118,8 +119,40 @@ const handleIsFormDirty = (value) => {
               <template #prepend="slotProps">
                 <slot name="auto-form.prepend" v-bind="slotProps"> </slot>
               </template>
+
+              <template
+                v-for="field in model.formFields"
+                :key="field.field"
+                #[`field.${field.field}`]="slotProps"
+              >
+                <!-- 
+                  Aquí, reexponemos un slot "auto-form.field.xxx" 
+                  de modo que 'AutoTable.vue' (o quien invoque) 
+                  pueda personalizarlo. 
+                -->
+                <slot
+                  :name="`auto-form.field.${field.field}`"
+                  v-bind="slotProps"
+                >
+                  <!-- fallback vacío -->
+                </slot>
+              </template>
+
               <template #append="slotProps">
                 <slot name="auto-form.append" v-bind="slotProps"> </slot>
+              </template>
+
+              <template
+                v-for="relation in model.externalRelations"
+                :key="relation.relation"
+                v-slot:[`auto-external-relation.${relation.relation}.actions`]="{
+                  item,
+                }"
+              >
+                <slot
+                  :name="`auto-external-relation.${relation.relation}.actions`"
+                  :item="item"
+                ></slot>
               </template>
             </auto-form>
           </slot>

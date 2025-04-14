@@ -3,7 +3,7 @@ import { ref, computed, watch, onMounted } from "vue"
 import { format, parse } from "date-fns"
 
 const DEFAULT_DATE = null // Cambiado a null para representar la ausencia de fecha
-const DEFAULT_TIME = "00:00:00"
+const DEFAULT_TIME = null
 const DEFAULT_DATE_FORMAT = "dd-MM-yyyy"
 const DEFAULT_TIME_FORMAT = "HH:mm"
 const DEFAULT_DIALOG_WIDTH = 340
