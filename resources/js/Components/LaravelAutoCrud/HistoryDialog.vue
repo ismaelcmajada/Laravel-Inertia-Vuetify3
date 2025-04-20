@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from "vue"
 
-const props = defineProps(["show", "records"])
+const props = defineProps(["show", "item"])
 const emit = defineEmits(["closeDialog"])
 
 const dialogState = computed({
@@ -33,7 +33,7 @@ const formatDate = (date) => {
       <v-divider></v-divider>
       <v-card-text>
         <v-container>
-          <div v-for="record in props.records" :key="record.id">
+          <div v-for="record in props.item.records" :key="record.id">
             <div class="elevation-6 rounded">
               <v-row class="ma-0 mb-3 px-2 pt-2 pt-md-0">
                 <v-col cols="12" md="3" class="d-flex align-center">

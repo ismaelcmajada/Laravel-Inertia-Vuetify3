@@ -198,10 +198,10 @@ const openHistoryDialog = (historyItem) => {
 
 // Image dialog
 const showImageDialog = ref(false)
-const currentImageUrl = ref('')
-const currentImageAlt = ref('')
+const currentImageUrl = ref("")
+const currentImageAlt = ref("")
 
-const openImageDialog = (imageUrl, altText = '') => {
+const openImageDialog = (imageUrl, altText = "") => {
   currentImageUrl.value = imageUrl
   currentImageAlt.value = altText
   showImageDialog.value = true
@@ -485,7 +485,12 @@ watch(item, (value) => {
                 max-width="150"
                 max-height="150"
                 class="mx-auto cursor-pointer"
-                @click="openImageDialog(`/laravel-auto-crud/${item[header.key]}`, item[header.key])"
+                @click="
+                  openImageDialog(
+                    `/laravel-auto-crud/${item[header.key]}`,
+                    item[header.key]
+                  )
+                "
                 :title="'Click para ampliar'"
               ></v-img>
             </template>
