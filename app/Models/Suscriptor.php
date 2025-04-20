@@ -111,7 +111,6 @@ class Suscriptor extends Model
                 'table' => false,
                 'form' => true,
                 'public' => true,
-                'onlyUpdate' => true,
                 'rules' => [
                     'required' => false,
                     'mimes' => 'jpeg,png,jpg,gif,svg',

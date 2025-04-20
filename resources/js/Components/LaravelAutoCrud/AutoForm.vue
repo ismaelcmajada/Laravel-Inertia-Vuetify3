@@ -113,7 +113,7 @@ const initFields = () => {
         }
       } else {
         formData[field.field] = item.value[field.field]
-        if (field.type === "image") {
+        if (field.type === "image" && item.value[field.field]) {
           imagePreview.value[field.field] = `/laravel-auto-crud/${
             item.value[field.field]
           }`
