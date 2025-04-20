@@ -9,6 +9,7 @@ import LoadingOverlay from "./LoadingOverlay.vue"
 import useTableServer from "../../Composables/LaravelAutoCrud/useTableServer"
 import useDialogs from "../../Composables/LaravelAutoCrud/useDialogs"
 import HistoryDialog from "./HistoryDialog.vue"
+import ImageDialog from "./ImageDialog.vue"
 import { usePage } from "@inertiajs/vue3"
 import { useDisplay } from "vuetify"
 import { computed, watch, ref } from "vue"
@@ -195,6 +196,21 @@ const openHistoryDialog = (historyItem) => {
   showHistoryDialog.value = true
 }
 
+// Image dialog
+const showImageDialog = ref(false)
+const currentImageUrl = ref('')
+const currentImageAlt = ref('')
+
+const openImageDialog = (imageUrl, altText = '') => {
+  currentImageUrl.value = imageUrl
+  currentImageAlt.value = altText
+  showImageDialog.value = true
+}
+
+const closeImageDialog = () => {
+  showImageDialog.value = false
+}
+
 if (props.itemsPerPageOptions)
   itemsPerPageOptions.value = props.itemsPerPageOptions
 
@@ -315,8 +331,15 @@ watch(item, (value) => {
 
   <history-dialog
     :show="showHistoryDialog"
-    @closeDialog="showHistoryDialog = false"
-    :records="item?.records"
+    :item="item"
+    @close-dialog="showHistoryDialog = false"
+  />
+
+  <image-dialog
+    :show="showImageDialog"
+    :image-url="currentImageUrl"
+    :alt-text="currentImageAlt"
+    @close-dialog="closeImageDialog"
   />
 
   <destroy-dialog
@@ -461,7 +484,9 @@ watch(item, (value) => {
                 :src="`/laravel-auto-crud/${item[header.key]}`"
                 max-width="150"
                 max-height="150"
-                class="mx-auto"
+                class="mx-auto cursor-pointer"
+                @click="openImageDialog(`/laravel-auto-crud/${item[header.key]}`, item[header.key])"
+                :title="'Click para ampliar'"
               ></v-img>
             </template>
 
