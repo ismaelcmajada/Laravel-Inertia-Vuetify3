@@ -108,7 +108,7 @@ class Suscriptor extends Model
                 'name' => 'Foto',
                 'field' => 'foto',
                 'type' => 'image',
-                'table' => false,
+                'table' => true,
                 'form' => true,
                 'public' => true,
                 'rules' => [

@@ -56,14 +56,18 @@ const finalHeaders = computed(() => {
   }
 
   // Sort custom headers into groups: those with specific positions and those without
-  const headersWithPosition = extraHeaders.filter(h => h.position || h.before || h.after)
-  const headersWithoutPosition = extraHeaders.filter(h => !h.position && !h.before && !h.after)
+  const headersWithPosition = extraHeaders.filter(
+    (h) => h.position || h.before || h.after
+  )
+  const headersWithoutPosition = extraHeaders.filter(
+    (h) => !h.position && !h.before && !h.after
+  )
 
   // Start with the original headers
   let result = [...originalHeaders]
 
   // Process headers with specific position settings
-  headersWithPosition.forEach(header => {
+  headersWithPosition.forEach((header) => {
     // Create a copy of the header without position metadata for actual insertion
     const cleanHeader = { ...header }
     delete cleanHeader.position
@@ -72,41 +76,37 @@ const finalHeaders = computed(() => {
 
     if (header.before) {
       // Insert before specified column
-      const targetIndex = result.findIndex(h => h.key === header.before)
+      const targetIndex = result.findIndex((h) => h.key === header.before)
       if (targetIndex !== -1) {
         result = [
           ...result.slice(0, targetIndex),
           cleanHeader,
-          ...result.slice(targetIndex)
+          ...result.slice(targetIndex),
         ]
       } else {
         // If target not found, append to end
         result.push(cleanHeader)
       }
-    } 
-    else if (header.after) {
+    } else if (header.after) {
       // Insert after specified column
-      const targetIndex = result.findIndex(h => h.key === header.after)
+      const targetIndex = result.findIndex((h) => h.key === header.after)
       if (targetIndex !== -1) {
         result = [
           ...result.slice(0, targetIndex + 1),
           cleanHeader,
-          ...result.slice(targetIndex + 1)
+          ...result.slice(targetIndex + 1),
         ]
       } else {
         // If target not found, append to end
         result.push(cleanHeader)
       }
-    }
-    else if (header.position === 'start') {
+    } else if (header.position === "start") {
       // Insert at beginning
       result = [cleanHeader, ...result]
-    }
-    else if (header.position === 'end') {
+    } else if (header.position === "end") {
       // Insert at end
       result.push(cleanHeader)
-    }
-    else {
+    } else {
       // Default: append to end
       result.push(cleanHeader)
     }
@@ -383,9 +383,7 @@ watch(item, (value) => {
               </v-btn>
 
               <v-btn
-                v-if="
-                  forbiddenActions.indexOf('store') === -1
-                "
+                v-if="forbiddenActions.indexOf('store') === -1"
                 icon
                 @click="openDialog('create')"
               >
@@ -456,6 +454,17 @@ watch(item, (value) => {
                 )
               }}
             </template>
+
+            <!-- Si el header tiene type image -->
+            <template v-else-if="header.type === 'image'">
+              <v-img
+                :src="`/laravel-auto-crud/${item[header.key]}`"
+                max-width="150"
+                max-height="150"
+                class="mx-auto"
+              ></v-img>
+            </template>
+
             <!-- Si no, usamos el valor normal -->
             <template v-else>
               {{ getValueByNestedKey(item, header.key) }}
