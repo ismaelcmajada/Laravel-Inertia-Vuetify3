@@ -1128,12 +1128,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/ismaelcmajada/laravel-auto-crud.git",
-                "reference": "f8e1f281a17f8a81203d91d655ad44c8d3d0398c"
+                "reference": "d5a014deb78d1c3a1a109f5d97162d477b6f91ea"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ismaelcmajada/laravel-auto-crud/zipball/f8e1f281a17f8a81203d91d655ad44c8d3d0398c",
-                "reference": "f8e1f281a17f8a81203d91d655ad44c8d3d0398c",
+                "url": "https://api.github.com/repos/ismaelcmajada/laravel-auto-crud/zipball/d5a014deb78d1c3a1a109f5d97162d477b6f91ea",
+                "reference": "d5a014deb78d1c3a1a109f5d97162d477b6f91ea",
                 "shasum": ""
             },
             "require": {
@@ -1172,7 +1172,7 @@
                 "issues": "https://github.com/ismaelcmajada/laravel-auto-crud/issues",
                 "source": "https://github.com/ismaelcmajada/laravel-auto-crud/tree/main"
             },
-            "time": "2025-04-20T12:35:29+00:00"
+            "time": "2025-04-21T07:55:09+00:00"
         },
         {
             "name": "laravel/framework",
@@ -11168,23 +11168,23 @@
         },
         {
             "name": "ta-tikoma/phpunit-architecture-test",
-            "version": "0.8.4",
+            "version": "0.8.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ta-tikoma/phpunit-architecture-test.git",
-                "reference": "89f0dea1cb0f0d5744d3ec1764a286af5e006636"
+                "reference": "cf6fb197b676ba716837c886baca842e4db29005"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ta-tikoma/phpunit-architecture-test/zipball/89f0dea1cb0f0d5744d3ec1764a286af5e006636",
-                "reference": "89f0dea1cb0f0d5744d3ec1764a286af5e006636",
+                "url": "https://api.github.com/repos/ta-tikoma/phpunit-architecture-test/zipball/cf6fb197b676ba716837c886baca842e4db29005",
+                "reference": "cf6fb197b676ba716837c886baca842e4db29005",
                 "shasum": ""
             },
             "require": {
                 "nikic/php-parser": "^4.18.0 || ^5.0.0",
                 "php": "^8.1.0",
                 "phpdocumentor/reflection-docblock": "^5.3.0",
-                "phpunit/phpunit": "^10.5.5  || ^11.0.0",
+                "phpunit/phpunit": "^10.5.5  || ^11.0.0 || ^12.0.0",
                 "symfony/finder": "^6.4.0 || ^7.0.0"
             },
             "require-dev": {
@@ -11221,9 +11221,9 @@
             ],
             "support": {
                 "issues": "https://github.com/ta-tikoma/phpunit-architecture-test/issues",
-                "source": "https://github.com/ta-tikoma/phpunit-architecture-test/tree/0.8.4"
+                "source": "https://github.com/ta-tikoma/phpunit-architecture-test/tree/0.8.5"
             },
-            "time": "2024-01-05T14:10:56+00:00"
+            "time": "2025-04-20T20:23:40+00:00"
         },
         {
             "name": "theseer/tokenizer",
@@ -11286,6 +11286,6 @@
     "platform": {
         "php": "^8.2"
     },
-    "platform-dev": {},
-    "plugin-api-version": "2.6.0"
+    "platform-dev": [],
+    "plugin-api-version": "2.3.0"
 }
