@@ -61,15 +61,40 @@ const item = computed({
 })
 
 const isFormDirty = ref(false)
+const showConfirmDialog = ref(false)
 
 const handleIsFormDirty = (value) => {
   isFormDirty.value = value
   emit("isDirty", value)
 }
+
+const handleClose = () => {
+  if (isFormDirty.value) {
+    showConfirmDialog.value = true
+  } else {
+    show.value = false
+  }
+}
+
+const confirmClose = () => {
+  showConfirmDialog.value = false
+  isFormDirty.value = false
+  show.value = false
+}
+
+const cancelClose = () => {
+  showConfirmDialog.value = false
+}
 </script>
 
 <template>
-  <v-dialog scrollable v-model="show" width="1024">
+  <v-dialog
+    scrollable
+    v-model="show"
+    width="1024"
+    :persistent="isFormDirty"
+    @click:outside="handleClose"
+  >
     <v-card>
       <v-card-title class="mt-2 position-relative d-flex align-middle">
         <div class="text-center" style="flex: 1">
@@ -125,10 +150,10 @@ const handleIsFormDirty = (value) => {
                 :key="field.field"
                 #[`field.${field.field}`]="slotProps"
               >
-                <!-- 
-                  Aquí, reexponemos un slot "auto-form.field.xxx" 
-                  de modo que 'AutoTable.vue' (o quien invoque) 
-                  pueda personalizarlo. 
+                <!--
+                  Aquí, reexponemos un slot "auto-form.field.xxx"
+                  de modo que 'AutoTable.vue' (o quien invoque)
+                  pueda personalizarlo.
                 -->
                 <slot
                   :name="`auto-form.field.${field.field}`"
@@ -170,8 +195,28 @@ const handleIsFormDirty = (value) => {
       <v-divider></v-divider>
 
       <v-card-actions class="d-flex justify-center">
-        <v-btn color="red-darken-1" variant="text" @click="show = false">
+        <v-btn color="red-darken-1" variant="text" @click="handleClose">
           Cerrar
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
+  <!-- Confirmation dialog for unsaved changes -->
+  <v-dialog v-model="showConfirmDialog" max-width="400">
+    <v-card>
+      <v-card-title class="text-h6"> Cambios sin guardar </v-card-title>
+      <v-card-text>
+        Tienes cambios sin guardar. ¿Estás seguro de que quieres cerrar el
+        formulario? Los cambios se perderán.
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn color="grey" variant="text" @click="cancelClose">
+          Cancelar
+        </v-btn>
+        <v-btn color="red-darken-1" variant="text" @click="confirmClose">
+          Cerrar sin guardar
         </v-btn>
       </v-card-actions>
     </v-card>

@@ -21,8 +21,6 @@ import "@mdi/font/css/materialdesignicons.css"
 import AppLayout from "@/Layouts/App.vue"
 import DashboardLayout from "@/Layouts/Dashboard.vue"
 
-import { VTimePicker } from "vuetify/labs/VTimePicker"
-
 const appName =
   window.document.getElementsByTagName("title")[0]?.innerText || "Dashboard"
 
@@ -82,7 +80,6 @@ createInertiaApp({
       .use(plugin)
       .use(Toast)
       .use(vuetify)
-      .component("VTimePicker", VTimePicker)
       .use(link)
       .use(ZiggyVue, Ziggy)
       .mount(el)
