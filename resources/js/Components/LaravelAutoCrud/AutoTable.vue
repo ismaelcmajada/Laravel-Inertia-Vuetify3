@@ -30,6 +30,7 @@ const props = defineProps([
   "itemsPerPage",
   "itemsPerPageOptions",
   "customHeaders",
+  "hideReset",
 ])
 
 const emit = defineEmits([
@@ -281,7 +282,7 @@ watch(item, (value) => {
               :key="field.field"
               #[`field.${field.field}`]="fieldSlotProps"
             >
-              <!-- 
+              <!--
                 Reexponemos un slot llamado:
                 "auto-form-dialog.auto-form.field.nombreCampo"
 
@@ -399,12 +400,13 @@ watch(item, (value) => {
             :tableData="tableData"
             :loadItems="loadItems"
           >
-            <template v-if="!tableData.deleted">
+            <template v-if="!tableData.deleted && !hideReset">
               <v-btn icon @click="resetTable(props.search, props.orderBy)">
                 <v-icon>mdi-refresh</v-icon>
                 <v-tooltip activator="parent">Recargar tabla</v-tooltip>
               </v-btn>
-
+            </template>
+            <template v-if="!tableData.deleted">
               <v-btn
                 v-if="forbiddenActions.indexOf('store') === -1"
                 icon

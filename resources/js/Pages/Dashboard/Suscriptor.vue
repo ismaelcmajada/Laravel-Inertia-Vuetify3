@@ -5,6 +5,7 @@ import { usePage } from "@inertiajs/vue3"
 const page = usePage()
 
 const model = page.props.models.suscriptor
+console.log(model)
 </script>
 
 <template>

@@ -23,6 +23,7 @@ const emit = defineEmits([
   "update:item",
   "formChange",
   "isDirty",
+  "success",
 ])
 
 const model = computed(() => {
@@ -140,6 +141,7 @@ const cancelClose = () => {
               :customItemProps="props.customItemProps"
               @formChange="emit('formChange', $event)"
               @isDirty="handleIsFormDirty($event)"
+              @success="emit('success', $event)"
             >
               <template #prepend="slotProps">
                 <slot name="auto-form.prepend" v-bind="slotProps"> </slot>
@@ -150,10 +152,10 @@ const cancelClose = () => {
                 :key="field.field"
                 #[`field.${field.field}`]="slotProps"
               >
-                <!--
-                  Aquí, reexponemos un slot "auto-form.field.xxx"
-                  de modo que 'AutoTable.vue' (o quien invoque)
-                  pueda personalizarlo.
+                <!-- 
+                  Aquí, reexponemos un slot "auto-form.field.xxx" 
+                  de modo que 'AutoTable.vue' (o quien invoque) 
+                  pueda personalizarlo. 
                 -->
                 <slot
                   :name="`auto-form.field.${field.field}`"

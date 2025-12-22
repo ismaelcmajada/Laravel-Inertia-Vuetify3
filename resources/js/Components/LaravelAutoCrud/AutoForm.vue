@@ -27,6 +27,7 @@ const emit = defineEmits([
   "update:type",
   "formChange",
   "isDirty",
+  "success",
 ])
 
 const model = computed(() => {
@@ -162,12 +163,14 @@ const submit = () => {
       forceFormData: true,
       onSuccess: (page) => {
         item.value = page.props.flash.data
+        emit("success", page.props.flash)
       },
     })
   } else if (type.value === "create") {
     formData.post(model.value.endPoint, {
       onSuccess: (page) => {
         item.value = page.props.flash.data
+        emit("success", page.props.flash)
         if (model.value.externalRelations.length > 0) {
           type.value = "edit"
         }

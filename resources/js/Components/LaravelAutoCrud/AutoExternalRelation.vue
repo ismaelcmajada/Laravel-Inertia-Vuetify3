@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from "vue"
-import { router } from "@inertiajs/vue3"
+import { router, usePage } from "@inertiajs/vue3"
 import AutocompleteServer from "./AutocompleteServer.vue"
 import axios from "axios"
 import { ruleRequired, getFieldRules } from "../../Utils/LaravelAutoCrud/rules"
@@ -9,8 +9,9 @@ import {
   generateItemTitle,
   searchByWords,
 } from "../../Utils/LaravelAutoCrud/autocompleteUtils"
-
 import { generateItemTitle as tableItemTitle } from "../../Utils/LaravelAutoCrud/datatableUtils"
+
+const page = usePage()
 
 const props = defineProps([
   "item",
@@ -21,9 +22,16 @@ const props = defineProps([
   "filteredItems",
   "customItemProps",
   "formData",
+  "noFilterItems",
 ])
 
-const emit = defineEmits(["bound", "unbound"])
+const emit = defineEmits([
+  "bound",
+  "unbound",
+  "childCreated",
+  "childUpdated",
+  "childDeleted",
+])
 
 // ------------------------------------------------------------
 // REFS & STATES
@@ -31,6 +39,11 @@ const emit = defineEmits(["bound", "unbound"])
 const items = ref([])
 const selectedItem = ref(null)
 const pivotData = ref({})
+
+// hasMany specific
+const showChildDialog = ref(false)
+const childDialogType = ref("create")
+const childDialogItem = ref(null)
 
 // Manejo de formularios de añadir/editar
 const addForm = ref(false)
@@ -71,11 +84,13 @@ const getItems = async () => {
   const response = await axios.get(`${props.externalRelation.endPoint}/all`)
   items.value = response.data
   // Filtra los items que ya están vinculados en la relación
-  items.value = items.value.filter((relatedItem) => {
-    return !item.value[props.externalRelation.relation].some(
-      (relatedItemFromItem) => relatedItem.id === relatedItemFromItem.id
-    )
-  })
+  if (!props.noFilterItems) {
+    items.value = items.value.filter((relatedItem) => {
+      return !item.value[props.externalRelation.relation].some(
+        (relatedItemFromItem) => relatedItem.id === relatedItemFromItem.id
+      )
+    })
+  }
 }
 
 const addItem = () => {
@@ -147,9 +162,86 @@ const removeItem = (relationId) => {
 }
 
 // ------------------------------------------------------------
+// FUNCIONES PARA hasMany
+// ------------------------------------------------------------
+const isHasMany = computed(() => props.externalRelation.type === "hasMany")
+
+// Modelo hijo modificado con FK hidden y default
+const childModel = computed(() => {
+  if (!isHasMany.value || !props.externalRelation.model) return null
+
+  const parts = props.externalRelation.model.split("\\")
+  const modelName = parts[parts.length - 1].toLowerCase()
+  const baseModel = page.props.models?.[modelName]
+
+  if (!baseModel) return null
+
+  // Clonar el modelo y modificar el campo FK
+  const modifiedFormFields = baseModel.formFields.map((field) => {
+    if (field.field === props.externalRelation.foreignKey) {
+      return {
+        ...field,
+        hidden: true,
+        default: item.value?.id,
+      }
+    }
+    return field
+  })
+
+  return {
+    ...baseModel,
+    formFields: modifiedFormFields,
+  }
+})
+
+const openCreateChildDialog = () => {
+  childDialogType.value = "create"
+  childDialogItem.value = null
+  showChildDialog.value = true
+}
+
+const openEditChildDialog = (childItem) => {
+  childDialogType.value = "edit"
+  childDialogItem.value = childItem
+  showChildDialog.value = true
+}
+
+const reloadParent = () => {
+  axios.get(`${props.endPoint}/${item.value.id}`).then((response) => {
+    item.value = response.data
+  })
+}
+
+const handleChildSuccess = () => {
+  showChildDialog.value = false
+  childDialogItem.value = null
+  reloadParent()
+  if (childDialogType.value === "create") {
+    emit("childCreated")
+  } else {
+    emit("childUpdated")
+  }
+}
+
+const deleteChild = (childItem) => {
+  router.post(
+    `${childModel.value.endPoint}/${childItem.id}/destroy`,
+    {},
+    {
+      onSuccess: () => {
+        reloadParent()
+        emit("childDeleted")
+      },
+    }
+  )
+}
+
+// ------------------------------------------------------------
 // INICIALIZACIÓN
 // ------------------------------------------------------------
-getItems()
+if (!isHasMany.value) {
+  getItems()
+}
 if (props.externalRelation.pivotFields) {
   getRelations()
 }
@@ -163,8 +255,12 @@ if (props.externalRelation.pivotFields) {
     </v-col>
   </v-row>
 
+  <!-- ============================================== -->
+  <!-- BELONGSTOMANY (n:m) -->
+  <!-- ============================================== -->
+
   <!-- FORM para añadir un nuevo elemento a la tabla pivote -->
-  <v-form v-model="addForm" @submit.prevent="addItem">
+  <v-form v-if="!isHasMany" v-model="addForm" @submit.prevent="addItem">
     <v-row
       class="align-center justify-center my-3 mx-1 elevation-6 rounded pa-5'"
     >
@@ -188,7 +284,10 @@ if (props.externalRelation.pivotFields) {
           v-model="selectedItem"
           :items="
             props.filteredItems?.[props.externalRelation.relation]
-              ? props.filteredItems[props.externalRelation.relation](items, props.formData)
+              ? props.filteredItems[props.externalRelation.relation](
+                  items,
+                  props.formData
+                )
               : items
           "
           :custom-filter="
@@ -231,7 +330,10 @@ if (props.externalRelation.pivotFields) {
           v-model="selectedItem"
           :items="
             props.filteredItems?.[props.externalRelation.relation]
-              ? props.filteredItems[props.externalRelation.relation](items, props.formData)
+              ? props.filteredItems[props.externalRelation.relation](
+                  items,
+                  props.formData
+                )
               : items
           "
           :item-title="generateItemTitle(props.externalRelation.formKey)"
@@ -475,9 +577,9 @@ if (props.externalRelation.pivotFields) {
     </v-row>
   </v-form>
 
-  <!-- LISTADO DE ELEMENTOS YA RELACIONADOS -->
+  <!-- LISTADO DE ELEMENTOS YA RELACIONADOS (belongsToMany) -->
   <v-row
-    v-if="item && item[props.externalRelation.relation]"
+    v-if="!isHasMany && item && item[props.externalRelation.relation]"
     v-for="relationItem in item[props.externalRelation.relation]"
     :key="relationItem.id"
     class="pa-0 ma-0"
@@ -702,4 +804,82 @@ if (props.externalRelation.pivotFields) {
       </v-row>
     </v-form>
   </v-row>
+
+  <!-- ============================================== -->
+  <!-- HASMANY (1:n) -->
+  <!-- ============================================== -->
+
+  <template v-if="isHasMany">
+    <!-- Botón para añadir nuevo hijo -->
+    <v-row class="align-center justify-center my-3 mx-1">
+      <v-col cols="12" class="d-flex align-center">
+        <span class="text-subtitle-1 mr-2">{{
+          props.externalRelation.name
+        }}</span>
+        <v-btn
+          icon="mdi-plus-circle"
+          color="primary"
+          variant="text"
+          @click="openCreateChildDialog"
+        >
+          <v-icon>mdi-plus-circle</v-icon>
+          <v-tooltip activator="parent"
+            >Añadir {{ props.externalRelation.name }}</v-tooltip
+          >
+        </v-btn>
+      </v-col>
+    </v-row>
+
+    <!-- Diálogo para crear/editar hijo usando AutoFormDialog -->
+    <auto-form-dialog
+      v-model:show="showChildDialog"
+      :type="childDialogType"
+      :item="childDialogItem"
+      :model="childModel"
+      :filteredItems="props.filteredItems"
+      :customFilters="props.customFilters"
+      :customItemProps="props.customItemProps"
+      @success="handleChildSuccess"
+    />
+
+    <!-- LISTADO DE ELEMENTOS HIJOS (hasMany) -->
+    <v-row
+      v-if="item && item[props.externalRelation.relation]"
+      v-for="childItem in item[props.externalRelation.relation]"
+      :key="childItem.id"
+      class="pa-0 ma-0"
+    >
+      <v-row
+        class="align-center justify-center my-2 mx-1 elevation-6 rounded pa-2"
+      >
+        <v-col class="my-3">
+          {{ generateItemTitle(props.externalRelation.formKey)(childItem) }}
+        </v-col>
+        <v-col class="text-end">
+          <slot
+            :name="`${props.externalRelation.relation}.actions`"
+            :item="childItem"
+          />
+          <v-btn
+            icon
+            density="compact"
+            variant="text"
+            @click="openEditChildDialog(childItem)"
+          >
+            <v-icon>mdi-pencil</v-icon>
+            <v-tooltip activator="parent">Editar</v-tooltip>
+          </v-btn>
+          <v-btn
+            icon
+            density="compact"
+            variant="text"
+            @click="deleteChild(childItem)"
+          >
+            <v-icon>mdi-delete</v-icon>
+            <v-tooltip activator="parent">Eliminar</v-tooltip>
+          </v-btn>
+        </v-col>
+      </v-row>
+    </v-row>
+  </template>
 </template>

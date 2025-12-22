@@ -12,12 +12,12 @@ class Suscriptor extends Model
     use SoftDeletes;
     /**
      * The table associated with the model.
-     * 
+     *
      * @var string
      */
     protected $table = 'suscriptores';
 
-    protected static $includes = ['pais.presidente', 'paises.presidente'];
+    protected static $includes = ['pais'];
 
     protected static function getFields()
     {
@@ -95,8 +95,8 @@ class Suscriptor extends Model
                 'relation' => [
                     'model' => Pais::class,
                     'relation' => 'pais',
-                    'tableKey' => 'Mi país es {pais} que tiene el presidente {presidente.name}',
-                    'formKey' => 'Mi país es {pais} que tiene el presidente {presidente.name}',
+                    'tableKey' => 'Mi país es {pais}',
+                    'formKey' => 'Mi país es {pais}',
                     'storeShortcut' => false,
                     'serverSide' => false,
                 ],
@@ -124,7 +124,7 @@ class Suscriptor extends Model
         [
             'name' => 'País',
             'relation' => 'paises',
-            'formKey' => 'Mi país es {pais} que tiene el presidente {presidente.name}',
+            'formKey' => 'Mi país es {pais}',
             'pivotTable' => 'suscriptores_paises',
             'foreignKey' => 'suscriptor_id',
             'relatedKey' => 'pais_id',
