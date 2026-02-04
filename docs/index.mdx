@@ -1,0 +1,156 @@
+---
+title: Laravel AutoCrud
+description: Comprehensive guide for implementing the AutoCrud trait in Laravel applications
+---
+
+# Laravel AutoCrud
+
+A Laravel package that automatically generates CRUD operations, forms, tables, and API endpoints for your Eloquent models.
+
+## Features
+
+- **Automatic CRUD Operations** - Create, read, update, delete with soft deletes
+- **Dynamic Forms** - Auto-generated forms based on field definitions
+- **Data Tables** - Sortable, filterable tables with pagination
+- **Relationships** - BelongsTo, HasMany, ManyToMany, Polymorphic
+- **Validation** - Built-in and custom validation rules
+- **Event Hooks** - Lifecycle event handling
+- **Vue Components** - Ready-to-use Vuetify components
+
+## Requirements
+
+- PHP 7.2+
+- Laravel 7.x - 12.x
+- Vue 3 + Vuetify 3
+- Inertia.js
+
+## Installation
+
+```bash
+composer require ismaelcmajada/laravel-auto-crud
+```
+
+## Publishing Assets
+
+```bash
+# Configuration
+php artisan vendor:publish --tag=laravel-auto-crud-config --force
+
+# Vue Components, Utils and Composables
+php artisan vendor:publish --tag=laravel-auto-crud --force
+
+# Migrations (optional, for custom fields)
+php artisan vendor:publish --tag=laravel-auto-crud-migrations --force
+```
+
+## Quick Start
+
+### 1. Create a Model
+
+```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Ismaelcmajada\LaravelAutoCrud\Models\Traits\AutoCrud;
+
+class Product extends Model
+{
+    use AutoCrud, SoftDeletes;
+
+    protected static function getFields(): array
+    {
+        return [
+            [
+                'name' => 'Name',
+                'field' => 'name',
+                'type' => 'string',
+                'table' => true,
+                'form' => true,
+                'rules' => ['required' => true],
+            ],
+            [
+                'name' => 'Price',
+                'field' => 'price',
+                'type' => 'decimal',
+                'table' => true,
+                'form' => true,
+                'rules' => ['required' => true],
+            ],
+            [
+                'name' => 'Active',
+                'field' => 'is_active',
+                'type' => 'boolean',
+                'table' => true,
+                'form' => true,
+                'default' => true,
+            ],
+        ];
+    }
+}
+```
+
+### 2. Share Models via Inertia
+
+In `HandleInertiaRequests` middleware:
+
+```php
+public function share(Request $request): array
+{
+    return array_merge(parent::share($request), [
+        'models' => [
+            'product' => Product::getModelConfig(),
+        ],
+        'flash' => [
+            'data' => fn () => $request->session()->get('data'),
+            'message' => fn () => $request->session()->get('message'),
+        ],
+    ]);
+}
+```
+
+### 3. Create the Vue Page
+
+```vue
+<script setup>
+import AutoTable from "@/Components/LaravelAutoCrud/AutoTable.vue"
+import { usePage } from "@inertiajs/vue3"
+
+const page = usePage()
+const model = page.props.models.product
+</script>
+
+<template>
+  <v-container>
+    <auto-table title="Products" :model="model" />
+  </v-container>
+</template>
+```
+
+### 4. Add the Route
+
+```php
+Route::get('/products', fn () => Inertia::render('Products'))->name('products');
+```
+
+That's it! You now have a fully functional CRUD interface.
+
+## Documentation
+
+**Backend:**
+
+- [Field Definitions](/fields/) - Field types and options
+- [Relationships](/relationships/) - Model relationships
+- [Validation](/validation/) - Custom validation rules
+- [Custom Search](/custom-search/) - Search scopes
+- [Event Hooks](/hooks/) - Lifecycle events
+- [API Reference](/api/) - Complete API docs
+- [Examples](/examples/) - Real-world examples
+
+**Frontend:**
+
+- [AutoTable](/frontend/auto-table/) - Data table component
+- [AutoFormDialog](/frontend/auto-form-dialog/) - Dialog wrapper
+- [AutoForm](/frontend/auto-form/) - Form component

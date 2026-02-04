@@ -83,7 +83,7 @@ const loadEvents = () => {
     .then((response) => {
       let rawEvents = response.data.eventsData.items
 
-      // Ordenar los eventos por created_at
+      //Ordenar los eventos por created_at
       rawEvents.sort(
         (a, b) => new Date(a.item.created_at) - new Date(b.item.created_at)
       )

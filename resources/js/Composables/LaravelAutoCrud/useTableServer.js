@@ -12,6 +12,7 @@ export default function useTableServer() {
     sortBy: [],
     items: [],
     search: {},
+    exactFilters: {},
     itemsLength: 0,
     deleted: false,
   })
@@ -28,7 +29,10 @@ export default function useTableServer() {
   )
   const selectedHeaders = ref([])
   const itemHeaders = ref([])
-  const allHeaders = computed(() => selectedHeaders.value.length == itemHeaders.value.length)
+  const dynamicModel = ref(null)
+  const allHeaders = computed(
+    () => selectedHeaders.value.length == itemHeaders.value.length
+  )
 
   const toggleAllHeaders = () => {
     if (allHeaders.value) selectedHeaders.value = []
@@ -51,6 +55,7 @@ export default function useTableServer() {
 
     const searchJson = JSON.stringify(cleanedSearch)
     const sortByJson = JSON.stringify(tableData.sortBy)
+    const exactFiltersJson = JSON.stringify(tableData.exactFilters)
 
     axios
       .post(`${endPoint.value}/load-items`, {
@@ -58,11 +63,30 @@ export default function useTableServer() {
         itemsPerPage: tableData.itemsPerPage,
         sortBy: sortByJson,
         search: searchJson,
+        exactFilters: exactFiltersJson,
         deleted: tableData.deleted,
       })
       .then((response) => {
         tableData.items = response.data.tableData.items
         tableData.itemsLength = response.data.tableData.itemsLength
+        // Actualizar modelo completo si viene en la respuesta
+        if (response.data.model) {
+          dynamicModel.value = response.data.model
+          // Actualizar headers desde el modelo
+          if (response.data.model.tableHeaders) {
+            itemHeaders.value = response.data.model.tableHeaders
+            // Actualizar selectedHeaders para incluir nuevos headers
+            const currentKeys = selectedHeaders.value
+            const newKeys = response.data.model.tableHeaders.map((h) => h.key)
+            selectedHeaders.value = newKeys.filter(
+              (k) => currentKeys.includes(k) || !currentKeys.length
+            )
+            // Si no hay ninguno seleccionado, seleccionar todos
+            if (selectedHeaders.value.length === 0) {
+              selectedHeaders.value = newKeys
+            }
+          }
+        }
         loading.value = false
       })
   }
@@ -72,6 +96,7 @@ export default function useTableServer() {
     tableData.itemsPerPage = 10
     tableData.sortBy = []
     tableData.search = {}
+    // exactFilters no se resetea - son filtros fijos (ej: FK en hasMany)
     tableData.itemsLength = 0
     tableData.deleted = false
     tableData.items = []
@@ -92,6 +117,7 @@ export default function useTableServer() {
     selectedHeaders,
     allHeaders,
     itemHeaders,
+    dynamicModel,
     endPoint,
     loading,
     updateItems,

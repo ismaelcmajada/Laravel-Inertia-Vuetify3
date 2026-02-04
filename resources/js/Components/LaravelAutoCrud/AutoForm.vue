@@ -1,7 +1,7 @@
 <script setup>
 import { useForm } from "@inertiajs/vue3"
 import axios from "axios"
-import { ref, computed, watch } from "vue"
+import { ref, computed, watch, nextTick } from "vue"
 import AutoExternalRelation from "./AutoExternalRelation.vue"
 import AutocompleteServer from "./AutocompleteServer.vue"
 import { formatDate, formatDateTime } from "../../Utils/LaravelAutoCrud/dates"
@@ -63,6 +63,8 @@ const storeExternalShortcutShows = ref({})
 
 const imagePreview = ref({})
 const filePreview = ref({})
+const filesToDelete = ref({})
+const fileInputKey = ref(0)
 
 const getRelations = () => {
   const relationsFromFormFields = filteredFormFields.value.filter(
@@ -95,15 +97,25 @@ const mapComboboxItems = (field, items) => {
 const form = ref(false)
 
 const formData = useForm(
-  Object.fromEntries(filteredFormFields.value.map(({ field }) => [field, null]))
+  Object.fromEntries(filteredFormFields.value.map((f) => [f.field, null]))
 )
 
 const initFields = () => {
+  // Resetear archivos a eliminar, previews y forzar reseteo del input
+  filesToDelete.value = {}
+  filePreview.value = {}
+  imagePreview.value = {}
+  fileInputKey.value++
+
   if (type.value === "edit" && item.value) {
     filteredFormFields.value.forEach((field) => {
       if (field.type === "password") {
         formData[field.field] = ""
-        field.rules.required = false
+        if (field.rules) field.rules.required = false
+      } else if (field.type === "boolean") {
+        // Convertir a booleano real (puede venir como 1, 0, "1", "0", true, false)
+        const val = item.value[field.field]
+        formData[field.field] = val === true || val === 1 || val === "1"
       } else if (field.type === "date") {
         if (item.value[field.field]) {
           formData[field.field] = formatDate(item.value[field.field])
@@ -120,12 +132,32 @@ const initFields = () => {
           }`
         }
         if (field.type === "file") {
-          filePreview.value[field.field] = item.value[field.field]
+          if (field.multiple) {
+            // Múltiples archivos - limpiar archivos pendientes y parsear JSON existente
+            formData[field.field] = null
+            if (item.value[field.field]) {
+              try {
+                filePreview.value[field.field] = JSON.parse(
+                  item.value[field.field]
+                )
+              } catch (e) {
+                filePreview.value[field.field] = []
+              }
+            } else {
+              filePreview.value[field.field] = []
+            }
+          } else if (item.value[field.field]) {
+            filePreview.value[field.field] = item.value[field.field]
+          }
         }
         if (field.type === "select") {
           if (field.multiple) {
-            formData[field.field] = item.value[field.field].split(", ")
+            formData[field.field] = item.value[field.field]?.split(", ") || []
           }
+        }
+        // Custom fields: cargar valor si existe
+        if (field.isCustomField && item.value[field.field] !== undefined) {
+          formData[field.field] = item.value[field.field]
         }
       }
 
@@ -135,7 +167,12 @@ const initFields = () => {
     })
   } else if (type.value === "create") {
     filteredFormFields.value.forEach((field) => {
-      formData[field.field] = field.default ?? null
+      // Booleanos: inicializar a false por defecto
+      if (field.type === "boolean") {
+        formData[field.field] = field.default ?? false
+      } else {
+        formData[field.field] = field.default ?? null
+      }
 
       if (item.value?.[field.field] && field.type === "date") {
         formData[field.field] = formatDate(item.value[field.field])
@@ -143,6 +180,11 @@ const initFields = () => {
 
       if (field.relation?.storeShortcut) {
         storeShortcutShows.value[field.field] = false
+      }
+
+      // Custom fields: inicializar con valor por defecto
+      if (field.isCustomField) {
+        formData[field.field] = field.default ?? null
       }
     })
   }
@@ -152,8 +194,12 @@ const initFields = () => {
       storeExternalShortcutShows.value[relation.relation] = false
     }
   })
-  formData.defaults()
-  emit("isDirty", false)
+
+  // Esperar al siguiente tick para que Vue procese los cambios antes de resetear defaults
+  nextTick(() => {
+    formData.defaults()
+    emit("isDirty", false)
+  })
 }
 
 const submit = () => {
@@ -163,6 +209,10 @@ const submit = () => {
       forceFormData: true,
       onSuccess: (page) => {
         item.value = page.props.flash.data
+        filesToDelete.value = {}
+        // Limpiar transform para evitar re-envío de archivos y flags
+        formData.transform((data) => data)
+        initFields()
         emit("success", page.props.flash)
       },
     })
@@ -170,6 +220,10 @@ const submit = () => {
     formData.post(model.value.endPoint, {
       onSuccess: (page) => {
         item.value = page.props.flash.data
+        filesToDelete.value = {}
+        // Limpiar transform para evitar re-envío de archivos y flags
+        formData.transform((data) => data)
+        initFields()
         emit("success", page.props.flash)
         if (model.value.externalRelations.length > 0) {
           type.value = "edit"
@@ -197,17 +251,63 @@ const handleImageUpload = (file, imageFieldName) => {
   }
 }
 
-const handleFileUpload = (file, fileFieldName) => {
-  formData.transform((data) => ({
-    ...data,
-    [fileFieldName + "_edited"]: true,
-  }))
-  if (file) {
-    const reader = new FileReader()
-    reader.readAsDataURL(file.target.files[0])
-    formData[fileFieldName] = file.target.files[0]
+const handleFileUpload = (file, fileFieldName, multiple = false) => {
+  if (file && file.target.files.length > 0) {
+    if (multiple) {
+      // Múltiples archivos
+      const files = Array.from(file.target.files)
+      formData[fileFieldName] = files
+      // Incluir también archivos a eliminar si los hay
+      const deleteFiles = filesToDelete.value[fileFieldName] || []
+      formData.transform((data) => ({
+        ...data,
+        [fileFieldName]: files,
+        [fileFieldName + "_edited"]: true,
+        ...(deleteFiles.length > 0 && {
+          [fileFieldName + "_delete"]: deleteFiles,
+        }),
+      }))
+    } else {
+      // Un solo archivo
+      formData[fileFieldName] = file.target.files[0]
+      formData.transform((data) => ({
+        ...data,
+        [fileFieldName + "_edited"]: true,
+      }))
+    }
   } else {
-    formData[fileFieldName] = null
+    // Si se vacía el input, limpiar archivos pendientes
+    clearFileInput(fileFieldName)
+  }
+}
+
+const clearFileInput = (fileFieldName) => {
+  // Verificar si hay archivos marcados para eliminar
+  const hasFilesToDelete =
+    filesToDelete.value[fileFieldName] &&
+    filesToDelete.value[fileFieldName].length > 0
+
+  // Limpiar solo los archivos nuevos del input
+  formData[fileFieldName] = null
+
+  if (hasFilesToDelete) {
+    // Hay archivos marcados para eliminar, mantener dirty
+    formData.transform((data) => ({
+      ...data,
+      [fileFieldName]: null,
+      [fileFieldName + "_delete"]: filesToDelete.value[fileFieldName],
+      [fileFieldName + "_edited"]: true,
+    }))
+  } else {
+    // No hay archivos marcados para eliminar, resetear el campo
+    formData.defaults(fileFieldName, null)
+    formData.reset(fileFieldName)
+    formData.transform((data) => {
+      const newData = { ...data }
+      delete newData[fileFieldName + "_edited"]
+      delete newData[fileFieldName + "_delete"]
+      return newData
+    })
   }
 }
 
@@ -221,20 +321,48 @@ const removeImage = (imageFieldName) => {
   formData[imageFieldName] = null
 }
 
-const removeFile = (fileFieldName) => {
-  formData.transform((data) => ({
-    ...data,
-    [fileFieldName + "_edited"]: true,
-  }))
-  formData[fileFieldName + "_edited"] = true
-  filePreview.value[fileFieldName] = null
-  formData[fileFieldName] = null
+const removeFile = (fileFieldName, index = null) => {
+  if (index !== null && Array.isArray(filePreview.value[fileFieldName])) {
+    // Eliminar un archivo específico de múltiples - guardar para eliminar en backend
+    const fileToDelete = filePreview.value[fileFieldName][index]
+    if (!filesToDelete.value[fileFieldName]) {
+      filesToDelete.value[fileFieldName] = []
+    }
+    filesToDelete.value[fileFieldName].push(fileToDelete)
+
+    filePreview.value[fileFieldName].splice(index, 1)
+    if (filePreview.value[fileFieldName].length === 0) {
+      filePreview.value[fileFieldName] = null
+    }
+
+    // Forzar dirty asignando al campo principal y transform
+    formData[fileFieldName] = "__DELETE_MARKER__"
+    formData[fileFieldName + "_delete"] = [
+      ...filesToDelete.value[fileFieldName],
+    ]
+    formData.transform((data) => ({
+      ...data,
+      [fileFieldName]: null,
+      [fileFieldName + "_delete"]: filesToDelete.value[fileFieldName],
+      [fileFieldName + "_edited"]: true,
+    }))
+  } else {
+    // Archivo único
+    filePreview.value[fileFieldName] = null
+    formData[fileFieldName] = "__DELETE_MARKER__"
+    formData.transform((data) => ({
+      ...data,
+      [fileFieldName]: null,
+      [fileFieldName + "_edited"]: true,
+    }))
+  }
 }
 
-const downloadFile = (fileFieldName) => {
+const downloadFile = (fileFieldName, filePath = null) => {
   const link = document.createElement("a")
-  link.href = filePreview.value[fileFieldName]
-  link.download = fileFieldName
+  const path = filePath || filePreview.value[fileFieldName]
+  link.href = `/laravel-auto-crud/${path}`
+  link.download = filePath ? filePath.split("/").pop() : fileFieldName
   link.click()
 }
 
@@ -395,18 +523,42 @@ watch(isFormDirty, (value) => {
             </div>
 
             <div v-if="field.type === 'file'">
+              <!-- Input para archivo único -->
               <v-file-input
-                v-if="!filePreview[field.field]"
+                v-if="!field.multiple && !filePreview[field.field]"
                 :label="field.rules?.required ? field.name + ' *' : field.name"
                 v-model="formData[field.field]"
                 :rules="getFieldRules(formData[field.field], field)"
-                @change="(file) => handleFileUpload(file, field.field)"
+                @change="(file) => handleFileUpload(file, field.field, false)"
                 :accept="field.rules?.accept"
                 prepend-icon="mdi-file"
               ></v-file-input>
 
+              <!-- Input para múltiples archivos (sin v-model para evitar bug) -->
+              <v-file-input
+                v-if="field.multiple"
+                :key="`file-${field.field}-${fileInputKey}`"
+                :label="field.rules?.required ? field.name + ' *' : field.name"
+                :rules="getFieldRules(formData[field.field], field)"
+                @change="(file) => handleFileUpload(file, field.field, true)"
+                @click:clear="() => clearFileInput(field.field)"
+                :accept="field.rules?.accept"
+                prepend-icon="mdi-file"
+                multiple
+                :chips="true"
+                :hint="
+                  filePreview[field.field]?.length
+                    ? `${
+                        filePreview[field.field].length
+                      } archivo(s) guardado(s)`
+                    : ''
+                "
+                persistent-hint
+              ></v-file-input>
+
+              <!-- Preview archivo único -->
               <v-row
-                v-else
+                v-if="!field.multiple && filePreview[field.field]"
                 class="align-center justify-center my-3 mx-1 elevation-6 rounded pa-2"
               >
                 <v-col cols="12" md="10" class="text-center">
@@ -421,19 +573,53 @@ watch(isFormDirty, (value) => {
                     class="mr-2"
                   >
                     <v-icon>mdi-download</v-icon>
-
                     <v-tooltip activator="parent">Descargar</v-tooltip>
                   </v-btn>
-                  <v-btn
-                    icon
-                    @click="removeFile(field.field)"
-                    color="red"
-                    class=""
-                  >
+                  <v-btn icon @click="removeFile(field.field)" color="red">
                     <v-icon>mdi-delete</v-icon>
                   </v-btn>
                 </v-col>
               </v-row>
+
+              <!-- Preview múltiples archivos existentes -->
+              <div
+                v-if="
+                  field.multiple &&
+                  Array.isArray(filePreview[field.field]) &&
+                  filePreview[field.field].length > 0
+                "
+              >
+                <v-row
+                  v-for="(filePath, index) in filePreview[field.field]"
+                  :key="index"
+                  class="align-center justify-center my-2 mx-1 elevation-3 rounded pa-2"
+                >
+                  <v-col cols="12" md="10" class="text-center">
+                    {{ filePath.split("/").pop() }}
+                  </v-col>
+
+                  <v-col cols="12" md="2" class="text-center">
+                    <v-btn
+                      icon
+                      size="small"
+                      @click="downloadFile(field.field, filePath)"
+                      color="blue"
+                      class="mr-1"
+                    >
+                      <v-icon>mdi-download</v-icon>
+                      <v-tooltip activator="parent">Descargar</v-tooltip>
+                    </v-btn>
+                    <v-btn
+                      icon
+                      size="small"
+                      @click="removeFile(field.field, index)"
+                      color="red"
+                    >
+                      <v-icon>mdi-delete</v-icon>
+                    </v-btn>
+                  </v-col>
+                </v-row>
+              </div>
             </div>
 
             <v-checkbox
@@ -643,6 +829,13 @@ watch(isFormDirty, (value) => {
       </v-btn>
     </div>
   </v-form>
+  <slot
+    name="after-save"
+    :model="model"
+    :type="type"
+    :item="item"
+    :formData="formData"
+  ></slot>
   <div
     v-if="type === 'edit' && model.externalRelations.length > 0"
     v-for="relation in model.externalRelations"
