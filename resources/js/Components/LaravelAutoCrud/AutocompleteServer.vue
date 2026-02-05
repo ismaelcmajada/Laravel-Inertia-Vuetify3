@@ -17,6 +17,8 @@ const props = defineProps([
   "customFilters",
   "item",
   "items",
+  "filteredItems",
+  "formData",
 ])
 const emit = defineEmits(["update:modelValue"])
 
@@ -53,11 +55,17 @@ const debounceLoadAutocompleteItems = debounce((search) => {
       .then((response) => {
         items.value = response.data.autocompleteItems
 
-        if (props.items) {
+        if (props.items && props.items.length > 0) {
           items.value = items.value?.filter((item) =>
-            props.items.some((relatedItem) => relatedItem.id === item.id)
+            props.items.some((relatedItem) => relatedItem.id === item.id),
           )
         }
+
+        // Apply filteredItems function if provided
+        if (props.filteredItems) {
+          items.value = props.filteredItems(items.value, props.formData)
+        }
+
         waitingForData = false
         loading.value = false
       })

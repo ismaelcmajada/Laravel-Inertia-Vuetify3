@@ -273,7 +273,7 @@ const childExactFilters = computed(() => {
 // ------------------------------------------------------------
 // INICIALIZACIÓN
 // ------------------------------------------------------------
-if (!isHasMany.value) {
+if (!isHasMany.value && !props.externalRelation.serverSide) {
   getItems()
 }
 if (props.externalRelation.pivotFields) {
@@ -437,6 +437,10 @@ watch(
           :item-title="props.externalRelation.formKey"
           hide-details
           :items="items"
+          :filtered-items="
+            props.filteredItems?.[props.externalRelation.relation]
+          "
+          :form-data="props.formData"
           @update:modelValue="addItem"
         >
           <!-- storeShortcut para la relación principal -->
@@ -477,6 +481,10 @@ watch(
           density="compact"
           :end-point="props.externalRelation.endPoint"
           :items="items"
+          :filtered-items="
+            props.filteredItems?.[props.externalRelation.relation]
+          "
+          :form-data="props.formData"
         >
           <!-- storeShortcut para la relación principal -->
           <template v-if="props.externalRelation.storeShortcut" v-slot:prepend>
@@ -578,6 +586,8 @@ watch(
           :rules="getFieldRules(pivotData[field.field], field)"
           density="compact"
           :end-point="field.relation.endPoint"
+          :filtered-items="props.filteredItems?.[field.relation.relation]"
+          :form-data="props.formData"
         >
           <template v-if="field.relation.storeShortcut" v-slot:prepend>
             <v-btn
@@ -862,6 +872,8 @@ watch(
             :item="
               serverSideRelationItems[field.field]?.[pivotEditData[field.field]]
             "
+            :filtered-items="props.filteredItems?.[field.relation.relation]"
+            :form-data="props.formData"
           >
             <template v-if="field.relation.storeShortcut" v-slot:prepend>
               <v-btn
