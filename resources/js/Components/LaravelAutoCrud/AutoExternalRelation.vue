@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue"
+import { ref, computed, watch, onMounted } from "vue"
 import { usePage } from "@inertiajs/vue3"
 import AutocompleteServer from "./AutocompleteServer.vue"
 import axios from "axios"
@@ -55,6 +55,9 @@ const pivotEditing = ref(null)
 // Aquí guardamos las listas para las relaciones que se van a usar en los pivotFields
 const relations = ref({})
 
+// Aquí guardamos los elementos individuales obtenidos para relaciones serverSide
+const serverSideRelationItems = ref({})
+
 // Aquí guardamos el estado de "show" para cada pivotField con storeShortcut
 const storePivotShortcutShows = ref({})
 
@@ -66,7 +69,7 @@ const item = ref(props.item)
 // ------------------------------------------------------------
 const getRelations = () => {
   const relationsFromFormFields = props.externalRelation.pivotFields?.filter(
-    (field) => field.relation
+    (field) => field.relation && !field.relation.serverSide,
   )
 
   relationsFromFormFields?.forEach((field) => {
@@ -76,6 +79,59 @@ const getRelations = () => {
   })
 }
 
+const getRelationItem = async (field, itemId) => {
+  if (!serverSideRelationItems.value[field.field]) {
+    serverSideRelationItems.value[field.field] = {}
+  }
+
+  if (!serverSideRelationItems.value[field.field][itemId]) {
+    try {
+      const response = await axios.get(`${field.relation.endPoint}/${itemId}`)
+      serverSideRelationItems.value[field.field][itemId] = response.data
+    } catch (error) {
+      console.error(
+        `Error fetching item ${itemId} from ${field.relation.endPoint}:`,
+        error,
+      )
+      serverSideRelationItems.value[field.field][itemId] = null
+    }
+  }
+
+  return serverSideRelationItems.value[field.field][itemId]
+}
+
+const getServerSideRelationItemTitle = (field, itemId) => {
+  const item = serverSideRelationItems.value[field.field]?.[itemId]
+  if (item) {
+    return tableItemTitle(field.relation.formKey, item)
+  }
+  return "Cargando..."
+}
+
+const loadServerSideRelationItem = (field, itemId) => {
+  if (!serverSideRelationItems.value[field.field]?.[itemId]) {
+    getRelationItem(field, itemId)
+  }
+}
+
+const loadAllServerSideRelationItems = () => {
+  if (item.value && item.value[props.externalRelation.relation]) {
+    const serverSideFields =
+      props.externalRelation.pivotFields?.filter(
+        (field) => field.relation && field.relation.serverSide,
+      ) || []
+
+    serverSideFields.forEach((field) => {
+      item.value[props.externalRelation.relation].forEach((relationItem) => {
+        const itemId = relationItem.pivot[field.field]
+        if (itemId) {
+          loadServerSideRelationItem(field, itemId)
+        }
+      })
+    })
+  }
+}
+
 const getItems = async () => {
   const response = await axios.get(`${props.externalRelation.endPoint}/all`)
   items.value = response.data
@@ -83,7 +139,7 @@ const getItems = async () => {
   if (!props.noFilterItems) {
     items.value = items.value.filter((relatedItem) => {
       return !item.value[props.externalRelation.relation].some(
-        (relatedItemFromItem) => relatedItem.id === relatedItemFromItem.id
+        (relatedItemFromItem) => relatedItem.id === relatedItemFromItem.id,
       )
     })
   }
@@ -109,7 +165,7 @@ const addItem = () => {
           getItems()
           emit("bound")
         },
-      }
+      },
     )
   }
 }
@@ -128,13 +184,13 @@ const updateItem = (id) => {
         pivotEditData.value = {}
         pivotEditing.value = null
       },
-    }
+    },
   )
 }
 
 const editItem = (id) => {
   const pivotItem = item.value[props.externalRelation.relation].find(
-    (p) => p.id === id
+    (p) => p.id === id,
   )?.pivot
 
   pivotEditData.value = { ...pivotItem }
@@ -160,7 +216,7 @@ const removeItem = (relationId) => {
         getItems()
         emit("unbound")
       },
-    }
+    },
   )
 }
 
@@ -195,7 +251,7 @@ const childModel = computed(() => {
 
   // Filtrar la columna FK de tableHeaders
   const modifiedTableHeaders = baseModel.tableHeaders.filter(
-    (header) => header.key !== foreignKey
+    (header) => header.key !== foreignKey,
   )
 
   return {
@@ -222,6 +278,20 @@ if (!isHasMany.value) {
 if (props.externalRelation.pivotFields) {
   getRelations()
 }
+
+// Cargar items de relaciones serverSide al inicializar
+onMounted(() => {
+  loadAllServerSideRelationItems()
+})
+
+// Observar cambios en el item para recargar relaciones serverSide
+watch(
+  () => item.value,
+  () => {
+    loadAllServerSideRelationItems()
+  },
+  { deep: true },
+)
 </script>
 
 <template>
@@ -263,7 +333,7 @@ if (props.externalRelation.pivotFields) {
             props.filteredItems?.[props.externalRelation.relation]
               ? props.filteredItems[props.externalRelation.relation](
                   items,
-                  props.formData
+                  props.formData,
                 )
               : items
           "
@@ -273,7 +343,7 @@ if (props.externalRelation.pivotFields) {
                 item,
                 queryText,
                 itemText,
-                props.customFilters?.[props.externalRelation.relation]
+                props.customFilters?.[props.externalRelation.relation],
               )
           "
           :item-props="props.customItemProps?.[props.externalRelation.relation]"
@@ -309,7 +379,7 @@ if (props.externalRelation.pivotFields) {
             props.filteredItems?.[props.externalRelation.relation]
               ? props.filteredItems[props.externalRelation.relation](
                   items,
-                  props.formData
+                  props.formData,
                 )
               : items
           "
@@ -321,7 +391,7 @@ if (props.externalRelation.pivotFields) {
                 item,
                 queryText,
                 itemText,
-                props.customFilters?.[props.externalRelation.relation]
+                props.customFilters?.[props.externalRelation.relation],
               )
           "
           item-value="id"
@@ -358,7 +428,7 @@ if (props.externalRelation.pivotFields) {
                 item,
                 queryText,
                 itemText,
-                props.customFilters?.[props.externalRelation.relation]
+                props.customFilters?.[props.externalRelation.relation],
               )
           "
           :end-point="props.externalRelation.endPoint"
@@ -399,7 +469,7 @@ if (props.externalRelation.pivotFields) {
                 item,
                 queryText,
                 itemText,
-                props.customFilters?.[props.externalRelation.relation]
+                props.customFilters?.[props.externalRelation.relation],
               )
           "
           :rules="[ruleRequired]"
@@ -488,13 +558,51 @@ if (props.externalRelation.pivotFields) {
           v-model="pivotData[field.field]"
           :rules="getFieldRules(pivotData[field.field], field)"
         />
-        <!-- Campo RELACIÓN en el pivote -->
+        <!-- Campo RELACIÓN en el pivote (serverSide) -->
+        <autocomplete-server
+          v-else-if="field.relation && field.relation.serverSide"
+          :label="field.rules?.required ? field.name + ' *' : field.name"
+          v-model="pivotData[field.field]"
+          :item-title="field.relation.formKey"
+          :item-props="props.customItemProps?.[field.relation.relation]"
+          :custom-filter="
+            (item, queryText, itemText) =>
+              searchByWords(
+                item,
+                queryText,
+                itemText,
+                props.customFilters?.[field.relation.relation],
+              )
+          "
+          :rules="getFieldRules(pivotData[field.field], field)"
+          density="compact"
+          :end-point="field.relation.endPoint"
+        >
+          <template v-if="field.relation.storeShortcut" v-slot:prepend>
+            <v-btn
+              icon="mdi-plus-circle"
+              density="compact"
+              @click="storePivotShortcutShows[field.field] = true"
+            >
+            </v-btn>
+            <auto-form-dialog
+              v-model:show="storePivotShortcutShows[field.field]"
+              type="create"
+              :filteredItems="props.filteredItems"
+              :customFilters="props.customFilters"
+              :customItemProps="props.customItemProps"
+              :modelName="field.relation.model"
+            />
+          </template>
+        </autocomplete-server>
+
+        <!-- Campo RELACIÓN en el pivote (NO serverSide) -->
         <v-autocomplete
-          v-else-if="field.relation"
+          v-else-if="field.relation && !field.relation.serverSide"
           :items="
             props.filteredItems?.[field.relation.relation]
               ? props.filteredItems[field.relation.relation](
-                  relations[field.field]
+                  relations[field.field],
                 )
               : relations[field.field]
           "
@@ -507,7 +615,7 @@ if (props.externalRelation.pivotFields) {
                 item,
                 queryText,
                 itemText,
-                props.customFilters?.[field.relation.relation]
+                props.customFilters?.[field.relation.relation],
               )
           "
           item-value="id"
@@ -515,7 +623,7 @@ if (props.externalRelation.pivotFields) {
           :rules="getFieldRules(pivotData[field.field], field)"
           density="compact"
         >
-          <!-- AQUÍ VIENE TU storeShortcut para el campo de pivote -->
+          <!-- storeShortcut para el campo de pivote -->
           <template v-if="field.relation.storeShortcut" v-slot:prepend>
             <v-btn
               icon="mdi-plus-circle"
@@ -577,15 +685,33 @@ if (props.externalRelation.pivotFields) {
       >
         <v-chip>
           {{ field.name }}:
-          <template v-if="field.relation && relations[field.field]">
+          <!-- Relación NO serverSide -->
+          <template
+            v-if="
+              field.relation &&
+              !field.relation.serverSide &&
+              relations[field.field]
+            "
+          >
             {{
               tableItemTitle(
                 field.relation.formKey,
                 relations[field.field]?.find(
-                  (r) => r.id === relationItem.pivot[field.field]
-                )
+                  (r) => r.id === relationItem.pivot[field.field],
+                ),
               )
             }}
+          </template>
+          <!-- Relación serverSide -->
+          <template v-else-if="field.relation && field.relation.serverSide">
+            <span>
+              {{
+                getServerSideRelationItemTitle(
+                  field,
+                  relationItem.pivot[field.field],
+                )
+              }}
+            </span>
           </template>
           <v-checkbox
             density="compact"
@@ -713,13 +839,53 @@ if (props.externalRelation.pivotFields) {
             v-model="pivotEditData[field.field]"
             :rules="getFieldRules(pivotEditData[field.field], field)"
           />
-          <!-- Relación en modo edición pivote -->
+          <!-- Relación en modo edición pivote (serverSide) -->
+          <autocomplete-server
+            v-else-if="field.relation && field.relation.serverSide"
+            :label="field.rules?.required ? field.name + ' *' : field.name"
+            v-model="pivotEditData[field.field]"
+            :item-title="field.relation.formKey"
+            :item-props="props.customItemProps?.[field.relation.relation]"
+            :custom-filter="
+              (item, queryText, itemText) =>
+                searchByWords(
+                  item,
+                  queryText,
+                  itemText,
+                  props.customFilters?.[field.relation.relation],
+                )
+            "
+            :rules="getFieldRules(pivotEditData[field.field], field)"
+            density="compact"
+            :end-point="field.relation.endPoint"
+            :item="
+              serverSideRelationItems[field.field]?.[pivotEditData[field.field]]
+            "
+          >
+            <template v-if="field.relation.storeShortcut" v-slot:prepend>
+              <v-btn
+                icon="mdi-plus-circle"
+                density="compact"
+                @click="storePivotShortcutShows[field.field] = true"
+              />
+              <auto-form-dialog
+                v-model:show="storePivotShortcutShows[field.field]"
+                type="create"
+                :filteredItems="props.filteredItems"
+                :customFilters="props.customFilters"
+                :customItemProps="props.customItemProps"
+                :modelName="field.relation.model"
+              />
+            </template>
+          </autocomplete-server>
+
+          <!-- Relación en modo edición pivote (NO serverSide) -->
           <v-autocomplete
-            v-else-if="field.relation"
+            v-else-if="field.relation && !field.relation.serverSide"
             :items="
               props.filteredItems?.[field.relation.relation]
                 ? props.filteredItems[field.relation.relation](
-                    relations[field.field]
+                    relations[field.field],
                   )
                 : relations[field.field]
             "
@@ -732,7 +898,7 @@ if (props.externalRelation.pivotFields) {
                   item,
                   queryText,
                   itemText,
-                  props.customFilters?.[field.relation.relation]
+                  props.customFilters?.[field.relation.relation],
                 )
             "
             item-value="id"
