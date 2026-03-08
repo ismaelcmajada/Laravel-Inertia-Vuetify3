@@ -50,7 +50,7 @@ const openDrawer = () => {
 <template>
   <v-navigation-drawer theme="appTheme" elevation="6" :rail="rail" permanent>
     <v-list>
-      <v-list-item title="Suscriptores"></v-list-item>
+      <v-list-item title="Plantilla"></v-list-item>
     </v-list>
     <template v-for="pageRoute in navigation">
       <template
@@ -114,7 +114,7 @@ const openDrawer = () => {
   <v-app-bar elevation="1">
     <v-app-bar-nav-icon @click="closeAll"></v-app-bar-nav-icon>
     <slot name="top">
-      <v-toolbar-title>Suscriptores</v-toolbar-title>
+      <v-toolbar-title>Plantilla</v-toolbar-title>
     </slot>
     <slot name="top-right">
       <v-switch

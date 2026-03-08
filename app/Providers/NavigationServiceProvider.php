@@ -5,8 +5,6 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Auth;
 
-use App\Models\Suscriptor;
-use App\Models\Pais;
 use App\Models\User;
 
 class NavigationServiceProvider extends ServiceProvider
@@ -27,18 +25,6 @@ class NavigationServiceProvider extends ServiceProvider
                 'icon' => 'mdi-account-circle',
                 'dividers' => true,
             ],
-            [
-                'name' => 'Suscriptores',
-                'icon' => 'mdi-account-group',
-                'model' => Suscriptor::class,
-            ],
-
-            [
-                'name' => 'Países',
-                'icon' => 'mdi-earth',
-                'model' => Pais::class,
-            ],
-
             [
                 'name' => 'Usuarios',
                 'icon' => 'mdi-account-group',
