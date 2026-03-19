@@ -27,6 +27,19 @@ const items = ref([])
 
 const selectedItem = ref(props.item)
 
+watch(
+  () => props.item,
+  (newItem) => {
+    if (newItem && newItem.id !== selectedItem.value?.id) {
+      selectedItem.value = newItem
+      // Inyectar el item en la lista para que el autocomplete lo muestre
+      if (!items.value.some((i) => i.id === newItem.id)) {
+        items.value = [newItem, ...items.value]
+      }
+    }
+  },
+)
+
 watch(selectedItem, (value) => {
   emit("update:modelValue", value?.id)
 })

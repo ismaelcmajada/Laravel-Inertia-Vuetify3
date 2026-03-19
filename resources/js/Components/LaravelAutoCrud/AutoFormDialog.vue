@@ -96,19 +96,21 @@ const cancelClose = () => {
     @click:outside="handleClose"
   >
     <v-card>
-      <v-card-title class="mt-2 position-relative d-flex align-middle">
+      <v-card-title class="mt-2 position-relative d-flex align-center">
         <div class="text-center" style="flex: 1">
           <span v-if="type == 'create'"> Crear elemento </span>
           <span v-else> Editar elemento </span>
         </div>
-        <v-chip
-          v-if="isFormDirty"
-          color="warning"
-          size="small"
-          class="position-absolute right-0 mr-10"
+        <div
+          class="d-flex align-center"
+          style="position: absolute; right: 0; margin-right: 10px; gap: 8px"
         >
-          Sin guardar
-        </v-chip>
+          <slot name="header-actions" :item="item" :type="type" :model="model">
+          </slot>
+          <v-chip v-if="isFormDirty" color="warning" size="small">
+            Sin guardar
+          </v-chip>
+        </div>
       </v-card-title>
 
       <v-divider></v-divider>
@@ -141,6 +143,7 @@ const cancelClose = () => {
               @formChange="emit('formChange', $event)"
               @isDirty="handleIsFormDirty($event)"
               @success="emit('success', $event)"
+              @close="((isFormDirty = false), (show = false))"
             >
               <template #prepend="slotProps">
                 <slot name="auto-form.prepend" v-bind="slotProps"> </slot>

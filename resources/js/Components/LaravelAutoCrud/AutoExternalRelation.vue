@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, onMounted } from "vue"
+import { ref, computed, watch, onMounted, nextTick } from "vue"
 import { usePage } from "@inertiajs/vue3"
 import AutocompleteServer from "./AutocompleteServer.vue"
 import axios from "axios"
@@ -62,8 +62,63 @@ const serverSideRelationItems = ref({})
 // Aquí guardamos el estado de "show" para cada pivotField con storeShortcut
 const storePivotShortcutShows = ref({})
 
+// Aquí guardamos items creados via storeShortcut para relaciones serverSide en pivot
+const storePivotShortcutCreatedItems = ref({})
+
+// Item creado via storeShortcut para la relación principal serverSide
+const storeExternalShortcutCreatedItem = ref(null)
+
 // Clonamos `item` para manipularlo localmente
 const item = ref(props.item)
+
+const handleExternalStoreShortcutSuccess = async (flash) => {
+  const createdItem = flash.data
+  if (!createdItem) return
+
+  if (props.externalRelation.pivotFields) {
+    // Con pivotFields: recargar items y pre-seleccionar después para que el autocomplete lo muestre
+    if (props.externalRelation.serverSide) {
+      // Para serverSide: guardar el item creado para pasarlo al autocomplete-server
+      storeExternalShortcutCreatedItem.value = createdItem
+    } else {
+      const response = await axios.get(`${props.externalRelation.endPoint}/all`)
+      items.value = response.data
+      if (!props.noFilterItems) {
+        items.value = items.value.filter((relatedItem) => {
+          return !item.value[props.externalRelation.relation].some(
+            (relatedItemFromItem) => relatedItem.id === relatedItemFromItem.id,
+          )
+        })
+      }
+      await nextTick()
+    }
+    selectedItem.value = createdItem.id
+  } else {
+    // Sin pivotFields: auto-vincular directamente (no necesita mostrar en autocomplete)
+    selectedItem.value = createdItem.id
+    await nextTick()
+    addItem()
+  }
+}
+
+const handlePivotStoreShortcutSuccess = (field, flash) => {
+  const createdItem = flash.data
+  if (!createdItem) return
+
+  if (field.relation.serverSide) {
+    // Para serverSide: guardar el item creado y asignar el id
+    storePivotShortcutCreatedItems.value[field.field] = createdItem
+    pivotData.value[field.field] = createdItem.id
+  } else {
+    // Para no-serverSide: recargar items y asignar el id después de que carguen
+    axios.get(`${field.relation.endPoint}/all`).then((response) => {
+      relations.value[field.field] = response.data
+      nextTick(() => {
+        pivotData.value[field.field] = createdItem.id
+      })
+    })
+  }
+}
 
 // ------------------------------------------------------------
 // FUNCIONES
@@ -366,6 +421,7 @@ watch(
               :customFilters="props.customFilters"
               :customItemProps="props.customItemProps"
               :modelName="props.externalRelation.model"
+              @success="handleExternalStoreShortcutSuccess"
               @update:show="getItems"
             />
           </template>
@@ -413,6 +469,7 @@ watch(
               :customFilters="props.customFilters"
               :customItemProps="props.customItemProps"
               :modelName="props.externalRelation.model"
+              @success="handleExternalStoreShortcutSuccess"
               @update:show="getItems"
             />
           </template>
@@ -456,6 +513,7 @@ watch(
               :customFilters="props.customFilters"
               :customItemProps="props.customItemProps"
               :modelName="props.externalRelation.model"
+              @success="handleExternalStoreShortcutSuccess"
               @update:show="getItems"
             />
           </template>
@@ -485,6 +543,7 @@ watch(
             props.filteredItems?.[props.externalRelation.relation]
           "
           :form-data="props.formData"
+          :item="storeExternalShortcutCreatedItem"
         >
           <!-- storeShortcut para la relación principal -->
           <template v-if="props.externalRelation.storeShortcut" v-slot:prepend>
@@ -500,6 +559,7 @@ watch(
               :customFilters="props.customFilters"
               :customItemProps="props.customItemProps"
               :modelName="props.externalRelation.model"
+              @success="handleExternalStoreShortcutSuccess"
               @update:show="getItems"
             />
           </template>
@@ -588,6 +648,7 @@ watch(
           :end-point="field.relation.endPoint"
           :filtered-items="props.filteredItems?.[field.relation.relation]"
           :form-data="props.formData"
+          :item="storePivotShortcutCreatedItems[field.field] || null"
         >
           <template v-if="field.relation.storeShortcut" v-slot:prepend>
             <v-btn
@@ -603,6 +664,9 @@ watch(
               :customFilters="props.customFilters"
               :customItemProps="props.customItemProps"
               :modelName="field.relation.model"
+              @success="
+                (flash) => handlePivotStoreShortcutSuccess(field, flash)
+              "
             />
           </template>
         </autocomplete-server>
@@ -649,6 +713,9 @@ watch(
               :customFilters="props.customFilters"
               :customItemProps="props.customItemProps"
               :modelName="field.relation.model"
+              @success="
+                (flash) => handlePivotStoreShortcutSuccess(field, flash)
+              "
               @update:show="getRelations"
             />
           </template>
@@ -888,6 +955,9 @@ watch(
                 :customFilters="props.customFilters"
                 :customItemProps="props.customItemProps"
                 :modelName="field.relation.model"
+                @success="
+                  (flash) => handlePivotStoreShortcutSuccess(field, flash)
+                "
               />
             </template>
           </autocomplete-server>
@@ -933,6 +1003,9 @@ watch(
                 :customFilters="props.customFilters"
                 :customItemProps="props.customItemProps"
                 :modelName="field.relation.model"
+                @success="
+                  (flash) => handlePivotStoreShortcutSuccess(field, flash)
+                "
                 @update:show="getRelations"
               />
             </template>

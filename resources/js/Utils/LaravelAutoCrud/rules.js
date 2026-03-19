@@ -72,7 +72,7 @@ export function ruleTelephone(v, label = null) {
   return (
     !v ||
     /^((\+\d{1,3}(-| )?\(?\d\)?(-| )?\d{1,5})|(\(?\d{2,6}\)?))(-| )?(\d{3,4})(-| )?(\d{4})(( x| ext)\d{1,5}){0,1}$/.test(
-      String(v)
+      String(v),
     ) ||
     `El ${label ?? "campo"} debe ser un teléfono válido`
   )
@@ -136,7 +136,7 @@ export function ruleFloat(v, label = null) {
 
 export const getFieldRules = (v, field, ty) => {
   const rules = []
-  if (field.rules?.required) {
+  if (field.rules?.required && ty !== "skipRequired") {
     rules.push(ruleRequired(v))
   }
   switch (field.type) {

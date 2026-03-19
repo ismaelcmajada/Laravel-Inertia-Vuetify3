@@ -34,6 +34,8 @@ const props = defineProps([
   "customHeaders",
   "hideReset",
   "listMode",
+  "rowProps",
+  "hiddenColumns",
 ])
 
 const emit = defineEmits([
@@ -132,6 +134,13 @@ const finalHeaders = computed(() => {
     itemHeaders.value.length > 0
       ? [...itemHeaders.value]
       : [...model.value.tableHeaders]
+
+  // Filtrar columnas ocultas por hiddenColumns prop
+  if (Array.isArray(props.hiddenColumns) && props.hiddenColumns.length > 0) {
+    originalHeaders = originalHeaders.filter(
+      (h) => !props.hiddenColumns.includes(h.key),
+    )
+  }
 
   // En listMode, filtrar columnas que fueron excluidas en props.model.tableHeaders
   // (por ejemplo, el FK en relaciones hasMany)
@@ -409,6 +418,7 @@ watch(item, (value) => {
             :customItemProps="props.customItemProps"
             @formChange="emit('formChange', $event)"
             @isDirty="handleIsFormDirty($event)"
+            @close="showFormDialog = false"
           >
             <template #prepend="slotProps">
               <slot
@@ -885,6 +895,7 @@ watch(item, (value) => {
       v-model:sort-by="tableData.sortBy"
       v-model:items-per-page="tableData.itemsPerPage"
       @update:options="loadItems()"
+      :row-props="props.rowProps"
     >
       <template v-slot:top>
         <v-toolbar :class="{ 'bg-red-lighten-2': tableData.deleted }" flat>
